@@ -1,0 +1,51 @@
+{
+  "name": "drone-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Property-intelligence drone platform — owned, plug-and-play React components (MapLibre layer viewer + 3D + video annotation). Build the viewer, buy only compute.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "maplibre-gl": "^4.7.0",
+    "pmtiles": "^3.2.0",
+    "@geomatico/maplibre-cog-protocol": "^0.4.0",
+    "@turf/turf": "^7.1.0",
+    "terra-draw": "^1.0.0",
+    "three": "^0.169.0",
+    "@react-three/fiber": "^8.17.0",
+    "@react-three/drei": "^9.114.0",
+    "hls.js": "^1.5.0",
+    "embla-carousel-react": "^8.3.0",
+    "@aws-sdk/client-s3": "^3.670.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.5.0",
+    "lucide-react": "^0.454.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.169.0",
+    "tailwindcss": "^4.0.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0"
+  },
+  "_deferred_phase3_3d": [
+    "copc",
+    "@pnext/three-loader (potree)",
+    "3d-tiles-renderer",
+    "deck.gl + @deck.gl/layers"
+  ],
+  "_pipeline_not_bundled": "WebODM (docker), GDAL (gdal2tiles/gdaldem/gdal_contour), rio-cogeo, rio-pmtiles, rio-rgbify, PDAL (LAZ->COPC), tippecanoe, gltf-transform/obj2gltf — live in /pipeline as scripts+docker, never in the Vercel bundle."
+}

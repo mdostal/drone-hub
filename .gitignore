@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.vercel/
+.env*
+# gated/un-released property assets
+public/property-samples/
+*.tif
+*.laz
+*.las
