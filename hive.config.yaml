@@ -1,0 +1,32 @@
+# Hive workflow configuration for drone-hub.
+# NOT a duplicate of CLAUDE.md — build/test/lint commands and code conventions
+# live there. This file is Hive-specific: methodology, task tracking, gates,
+# developer preferences.
+
+metrics:
+  enabled: true
+
+execution:
+  default_methodology: bdd
+  # Nuance (kickoff discovery, 2026-08-07): mostly BDD for full component
+  # build-out (spec-style, matches "test them individually as we build the
+  # site to use the component library" / any good UI framework), with TDD for
+  # complex backend/logic units (e.g. tour-graph traversal, alignment math).
+  # No test framework is chosen yet — first VideoTour work should pick one.
+
+developer:
+  pr_style: single-commit
+  commit_granularity: medium
+  review_depth: standard
+  notes: null
+
+planning:
+  collaborative_review: true
+
+meta_team:
+  github_forwarding: false
+
+task_tracking:
+  adapter: null
+  # No Linear/GitHub Issues integration detected at kickoff (linearis CLI not
+  # found). Falls back to prose-runbook mode until an adapter is configured.
