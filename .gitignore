@@ -22,3 +22,5 @@ public/property-samples/
 !.pHive/epics/layer-viewer/**
 !.pHive/epics/model3d/
 !.pHive/epics/model3d/**
+!.pHive/epics/land-overlay/
+!.pHive/epics/land-overlay/**
