@@ -1,0 +1,69 @@
+id: model3d-docs-acceptance-closeout
+epic: model3d
+title: Write the Model3D spec doc, reconcile all docs, close acceptance criteria
+status: pending
+complexity: low
+methodology: classic
+depends_on: [model3d-test-suite]
+
+description: |
+  Two things this story owns (unlike prior epics, there's no pre-existing
+  docs/components/model3d.md — write it here rather than as a separate
+  early story, since Model3D's real shape is now fully known and this
+  avoids the sync-drift risk that shape-changed after an early doc pass):
+
+  1. Write docs/components/model3d.md following docs/components/
+     video-tour.md and layer-viewer.md's established shape (why/model/
+     behavior/tech/acceptance-criteria/phase-fit), documenting the actual
+     shipped <Model3D> API and the deliberately-deferred scale/position
+     fields (explain why, point at the land-overlay epic as where that
+     lands).
+  2. Update .pHive/CONTEXT.md with: the showcase-site convention (public
+     route group, <ComponentShowcase>, per-component pages) as a standing
+     pattern future components should follow; the "showcase demo data must
+     independently qualify as public-safe" rule the design discussion
+     established.
+  3. Verify every acceptance criterion (new model3d.md doc + this epic's
+     design discussion) against real shipped code — read the actual files,
+     not prior stories' self-reports.
+  4. Confirm, one more time, independently: grep the entire repo for any
+     reference to public/tours/2806-prado from anywhere under
+     app/(showcase)/ — must return zero results.
+  5. Run `npm run build` and `npm test` as final verification.
+
+acceptance_criteria:
+  - "Given docs/components/model3d.md, when written, then it follows the established doc shape and accurately describes the shipped component"
+  - "Given a repo-wide grep for 'tours/2806-prado' under app/(showcase)/, when run, then it returns zero matches"
+  - "Given .pHive/CONTEXT.md, when checked, then the showcase-site convention and the public-safe-demo-data rule are both documented"
+  - "Given npm run build and npm test, when run, then both pass with no regressions"
+
+steps:
+  - id: implement
+    description: Write docs/components/model3d.md, update .pHive/CONTEXT.md, run the final rights-verification grep.
+    agent: technical-writer
+  - id: test
+    description: Full build + test verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent final check of the rights-status grep result and the showcase pattern's documentation.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/layer-viewer.md
+      purpose: "Precedent doc shape to follow for model3d.md."
+
+files_to_modify:
+  - file: docs/components/model3d.md
+    change: "Create"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic."

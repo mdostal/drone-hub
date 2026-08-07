@@ -1,0 +1,87 @@
+id: model3d-showcase-shell
+epic: model3d
+title: Build the public component-showcase route + <ComponentShowcase> layout
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Operator vision expansion (CLAUDE.md, "Vision expansion" section): this is
+  a component framework (shadcn-style) — every component needs its own
+  showcase page (live demo + docs), not just to exist as code. Build the
+  shared infrastructure once.
+
+  Create a new App Router route group (e.g. `app/(showcase)/components/`)
+  that is DELIBERATELY NOT covered by middleware.ts's GATED_PATH_PREFIXES —
+  this is a public surface, confirmed in the design discussion. Do NOT add
+  `/components` (or whatever path you choose) to the gating matcher.
+
+  Build:
+  - `<ComponentShowcase>` — a presentational layout component: title,
+    one-line description, a `demo` slot (renders whatever the caller passes
+    — the actual live component instance), a `code` slot (a usage snippet,
+    e.g. via a `<pre>`/syntax-highlighted block — keep it simple, no new
+    syntax-highlighting dependency needed for a `<pre><code>` block with
+    Tailwind styling). Deliberately gating-agnostic (no opinion on public vs
+    gated) so it can be reused later inside the gated content-engine page
+    (queued next in priority order) without rework.
+  - An index page (`/components`) listing every component as a card
+    (name + one-line description + link). For THIS story, list VideoTour,
+    LayerViewer, and Model3D as cards linking to
+    `/components/video-tour`, `/components/layer-viewer`,
+    `/components/model3d` — even though those pages don't exist yet (built
+    by a sibling/later story in this epic). Use Next.js `<Link>` so they're
+    real navigable routes once those pages land; a 404 until then is fine.
+
+acceptance_criteria:
+  - "Given /components, when visited without a passcode cookie, then it renders successfully (not redirected to /enter-passcode) — proves the route is genuinely public"
+  - "Given middleware.ts, when inspected, then GATED_PATH_PREFIXES/config.matcher do NOT include the showcase route prefix"
+  - "Given <ComponentShowcase title description demo code />, when rendered, then all four render in a consistent layout"
+  - "Given the index page, when rendered, then it lists VideoTour/LayerViewer/Model3D as linked cards"
+
+steps:
+  - id: research
+    description: Confirm the App Router route-group syntax that keeps this path out of middleware.ts's matcher (route groups don't affect URL paths, just organization — the matcher exclusion is what actually matters, verify by reading middleware.ts's current matcher).
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs for the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the route group, <ComponentShowcase>, and the index page.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Verify the route is genuinely ungated (no cookie, no redirect) and the layout renders correctly.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm middleware.ts was NOT touched to add this path (staying public is the point) and <ComponentShowcase> has no gating opinion baked in.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: middleware.ts
+      purpose: "The gating matcher this route must stay OUTSIDE of — read only, do not modify."
+
+files_to_modify:
+  - file: "app/(showcase)/components/page.tsx"
+    change: "Create — index page"
+  - file: "components/showcase/ComponentShowcase.tsx"
+    change: "Create — shared layout"
+  - file: "components/showcase/index.ts"
+    change: "Create — export surface"
+
+do_not:
+  - "Do not add the showcase route to middleware.ts's matcher/GATED_PATH_PREFIXES — it must stay public."
+  - "Do not build the individual component pages (video-tour/layer-viewer/model3d) here — that's model3d-showcase-pages' job."
+  - "Do not add a syntax-highlighting dependency for the code snippet — a plain styled <pre><code> block is sufficient for P1."

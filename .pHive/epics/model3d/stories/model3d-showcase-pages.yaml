@@ -1,0 +1,79 @@
+id: model3d-showcase-pages
+epic: model3d
+title: Give VideoTour, LayerViewer, and Model3D each a real showcase page
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [model3d-showcase-shell, model3d-videotour-demo-data, model3d-component]
+
+description: |
+  Proves the docs-site pattern against all 3 components that exist so far —
+  2 retrofitted, 1 built fresh in this same epic.
+
+  Build three pages under the showcase route group from model3d-showcase-shell:
+  - `/components/video-tour` — <ComponentShowcase> wrapping a live
+    <VideoTour> mounted against public/showcase-samples/demo-house/tour.json
+    (the NEW safe demo data — NEVER the real
+    public/tours/2806-prado/tour.json). A short description + a usage code
+    snippet (`<VideoTour manifest="..." />`).
+  - `/components/layer-viewer` — <ComponentShowcase> wrapping live
+    <LayerViewer>+<LayerControl> against
+    public/layer-viewer-samples/2806-prado/layers.json (safe to reuse
+    directly — already confirmed public-safe sample data, not gated).
+  - `/components/model3d` — <ComponentShowcase> wrapping a live <Model3D>
+    against the sample glTF from model3d-component.
+
+  Every heavy viewer still gets next/dynamic({ssr:false}) per CLAUDE.md's
+  convention, same as the gated routes.
+
+acceptance_criteria:
+  - "Given /components/video-tour visited with no passcode, when loaded, then <VideoTour> renders the DEMO manifest and is navigable — no redirect to /enter-passcode"
+  - "Given /components/video-tour, when inspected, then it fetches ONLY public/showcase-samples/demo-house/tour.json — never public/tours/2806-prado/tour.json (grep/read the page source to confirm, don't just trust it visually looks fine)"
+  - "Given /components/layer-viewer visited with no passcode, when loaded, then <LayerViewer>+<LayerControl> render and are interactive (toggle/opacity work) — no redirect"
+  - "Given /components/model3d visited with no passcode, when loaded, then <Model3D> renders the sample glTF, orbit-controllable — no redirect"
+  - "Given the index page from model3d-showcase-shell, when its links are followed, then all three now resolve to real pages (no more 404s)"
+
+steps:
+  - id: research
+    description: Re-confirm exactly which sample manifest path each component's demo must point at (per the design discussion's rights-status resolution) before writing any page.
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs for the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the three pages.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Live-verify all three pages via Playwright with NO passcode cookie set — confirm none redirect, all render and are interactive. Explicitly verify (via network tab or source grep) that the video-tour page never fetches the real Prado data.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: This review step is a hard gate, not a formality — independently confirm the video-tour showcase page's fetched URL is the demo dataset, not the real one. Confirm no page in this story got accidentally added to middleware.ts's matcher.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/tours/[slug]/page.tsx"
+      purpose: "Precedent for the next/dynamic({ssr:false}) + manifest-fetch pattern — same shape, different (safe) data source and no gating wrapper."
+    - path: components/showcase/ComponentShowcase.tsx
+      purpose: "The shared layout every page here wraps its demo in."
+
+files_to_modify:
+  - file: "app/(showcase)/components/video-tour/page.tsx"
+    change: "Create"
+  - file: "app/(showcase)/components/layer-viewer/page.tsx"
+    change: "Create"
+  - file: "app/(showcase)/components/model3d/page.tsx"
+    change: "Create"
+
+do_not:
+  - "Do not, under any circumstances, point the video-tour showcase page at public/tours/2806-prado/tour.json or /tours/[slug]."
+  - "Do not add any of these three paths to middleware.ts's matcher."
