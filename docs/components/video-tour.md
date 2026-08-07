@@ -27,6 +27,14 @@ See `lib/tour-types.ts`. A tour is `nodes` (rooms) + `edges` (doorways):
 
 Authoring a new property = write one `tour.json` manifest + drop the clips on R2. No code.
 
+> **Implementation note (deviation from this section's wording):** the shipped
+> `Tour` type (`lib/tour-types.ts`) doesn't have a top-level `edges` array — it's
+> an adjacency list: `Tour.rooms: TourRoom[]`, and each room carries its own
+> outgoing doorways as `TourRoom.neighbors: TourEdge[]`. Same graph, same
+> per-edge shape (`{ to, clip, label? }`); just nested under the room rather
+> than a parallel list. Decided during `video-tour-prado-manifest` — see
+> `public/tours/2806-prado/tour.json` for a real example.
+
 ## Behavior (state machine — as in the prototype)
 1. Render current node: `spin` clip looping (muted, `playsInline`) OR the still with a slow
    Ken-Burns as the placeholder.
@@ -40,6 +48,9 @@ Authoring a new property = write one `tour.json` manifest + drop the clips on R2
 - **Next.js 15 · React · Tailwind · shadcn**, heavy player `next/dynamic({ssr:false})`.
 - Video: **`hls.js`** (already a dep) for adaptive playback of large clips; short clips can be
   progressive MP4. Host on **Cloudflare R2 / Stream** (zero-egress; NOT Vercel bandwidth).
+  *(Not yet true: `TourStage.tsx` ships plain `<video>` tags for the P2 spin/transition
+  branches, no `hls.js` wiring. Deferred to P2 along with the real clips it would serve —
+  there's nothing adaptive to stream until real spin/transition footage exists.)*
 - No new heavy deps required. Minimap = SVG/CSS (no map lib needed — it's a schematic, not geo).
 - Component API: `<VideoTour manifest={url|Tour} startNode? poster? onRoomChange? />`.
   Subcomponents: `<TourStage>` (player), `<DoorwayControls>`, `<FloorPlanMap>`.
@@ -53,12 +64,30 @@ Authoring a new property = write one `tour.json` manifest + drop the clips on R2
    Stills alone = a valid tour; clips upgrade it incrementally.
 
 ## Acceptance criteria
-- [ ] Loads a `Tour` manifest; renders nodes with spin-clip OR still fallback.
-- [ ] Doorway + minimap navigation with transition-clip OR wipe fallback; no double-fire (`busy`).
+- [x] Loads a `Tour` manifest; renders nodes with spin-clip OR still fallback.
+  Verified: `VideoTour.tsx` fetches a manifest URL (or accepts a `Tour` object directly); `TourStage.tsx` renders `room.spin` as a looping muted video when set, else `room.still` with the Ken-Burns treatment. Covered by `VideoTour.test.tsx` ("initial render") and `TourStage.test.tsx`.
+- [x] Doorway + minimap navigation with transition-clip OR wipe fallback; no double-fire (`busy`).
+  Verified: `VideoTour.tsx`'s `go()` plays `edge.clip` full-frame when set, else the timed "flying to X…" wipe; a `busyRef` (not just React state, to catch same-tick re-clicks) blocks re-entrant navigation until the wipe/clip finishes plus a cooldown. Covered by `VideoTour.test.tsx`'s "doorway navigation" busy-guard test, `DoorwayControls.test.tsx`, and `FloorPlanMap.test.tsx`. Note: the transition-clip branch itself is P2-structural — no manifest edge sets a real `clip` yet, so it's exercised only by "doesn't throw" smoke tests, not real clip playback.
 - [ ] Neighbor preloading; smooth on mobile (Mathew reviews on his phone).
-- [ ] Floor-plan minimap: positions, edges, current-room highlight, clickable.
-- [ ] Importable into personal-site; renders behind the drone gate; passes `pnpm build`.
-- [ ] Prototype parity: a stranger can navigate the Prado house with zero instructions.
+  Preloading is implemented and thoroughly tested: `useNeighborPreload.ts` preloads direct (1-hop) neighbors' media on every arrival, priority `edge.clip → neighbor.spin → neighbor.still`, no recursive/2-hop preloading (`useNeighborPreload.test.ts`, 9 specs). Left unchecked because the "smooth on mobile" half of this criterion is literally an on-device pass on Mathew's phone — that hasn't happened, and there's no automated substitute for it in this verification pass.
+- [x] Floor-plan minimap: positions, edges, current-room highlight, clickable.
+  Verified: `FloorPlanMap.tsx` renders one node per room at `room.pos`, deduped connecting lines between neighbors, `aria-current` on the current room, and click-to-navigate restricted to rooms actually reachable from here. Covered by `FloorPlanMap.test.tsx` (7 specs) and `VideoTour.test.tsx`'s "minimap" block.
+- [x] Importable into personal-site; renders behind the drone gate; passes `npm run build`.
+  Verified: `components/VideoTour/index.ts` and everything it transitively imports (`VideoTour.tsx`, `TourStage.tsx`, `DoorwayControls.tsx`, `FloorPlanMap.tsx`, `useNeighborPreload.ts`, `cx.ts`, `lib/tour-types.ts`) contain zero imports from `app/` or `middleware.ts` — see "Importable standalone" below. The real route (`app/tours/[slug]/page.tsx`) sits under `middleware.ts`'s `/tours/:path*` matcher, so it's gated. `npm run build` passes clean. (Corrected from "passes `pnpm build`" — this repo uses npm, see `package-lock.json` and `package.json`'s scripts; there was never a pnpm lockfile here.)
+- [x] Prototype parity: a stranger can navigate the Prado house with zero instructions.
+  Verified by interaction-pattern parity with `docs/components/reference/prado-tour.prototype.html`: labeled doorway buttons (`→ Kitchen`), a clickable floor-plan minimap with a "here" highlight, and a "flying to X…" transition state — the same self-explanatory affordances as the prototype, wired to the real Prado manifest (`public/tours/2806-prado/tour.json`, 6 rooms). No formal usability test with an actual stranger was run; this is inferred from UI/interaction equivalence, not observed firsthand.
+
+### Importable standalone — audit finding
+Walked `components/VideoTour/index.ts`'s full export surface (`VideoTour`,
+`TourStage`, `DoorwayControls`, `FloorPlanMap`, plus the `lib/tour-types.ts`
+types) and every file it transitively imports. Clean: nothing pulls from
+`app/`, `middleware.ts`, or `lib/gate.ts`. `VideoTour.tsx` explicitly documents
+this as a design intent ("Gate-agnostic by design — this component has no
+knowledge of middleware.ts / lib/gate.ts. It just renders whatever manifest
+it's given.") and the code matches the claim. `useNeighborPreload.ts` and
+`cx.ts` exist under `components/VideoTour/` but are internal-only (not
+re-exported from `index.ts`) — fine, since nothing outside the family needs
+them directly. The "plug-and-play" bar from `CLAUDE.md` holds.
 
 ## Phase fit
 - **P1 (this component):** stills + wipes working end-to-end on the Prado manifest (ship-able now
