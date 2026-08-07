@@ -1,7 +1,7 @@
 id: layer-viewer-gated-route-integration
 epic: layer-viewer
 title: Mount <LayerViewer> on a real gated route
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: [layer-viewer-core-components, layer-viewer-gating-extension]

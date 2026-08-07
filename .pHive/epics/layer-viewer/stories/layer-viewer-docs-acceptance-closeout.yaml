@@ -1,7 +1,7 @@
 id: layer-viewer-docs-acceptance-closeout
 epic: layer-viewer
 title: Reconcile docs and close out the acceptance criteria checklist
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [layer-viewer-gated-route-integration, layer-viewer-test-suite]

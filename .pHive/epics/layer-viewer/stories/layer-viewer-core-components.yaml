@@ -1,7 +1,7 @@
 id: layer-viewer-core-components
 epic: layer-viewer
 title: Build <LayerViewer> (MapLibre map) and <LayerControl> (toggle/opacity)
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: [layer-viewer-sample-data, layer-viewer-spec-doc]

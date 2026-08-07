@@ -1,7 +1,7 @@
 id: layer-viewer-spec-doc
 epic: layer-viewer
 title: Write the <LayerViewer> component spec doc
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: []

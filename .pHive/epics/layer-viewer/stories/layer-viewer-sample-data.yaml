@@ -1,7 +1,7 @@
 id: layer-viewer-sample-data
 epic: layer-viewer
 title: Source real public sample geospatial data + write the property-layers manifest
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [layer-viewer-registry-types]

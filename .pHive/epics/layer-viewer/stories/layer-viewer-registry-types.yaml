@@ -1,7 +1,7 @@
 id: layer-viewer-registry-types
 epic: layer-viewer
 title: Define the typed layer registry (lib/layer-types.ts)
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: []

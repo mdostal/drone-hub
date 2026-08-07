@@ -1,7 +1,7 @@
 id: layer-viewer-test-suite
 epic: layer-viewer
 title: Close out automated test coverage for <LayerViewer>/<LayerControl>
-status: pending
+status: complete
 complexity: medium
 methodology: tdd
 depends_on: [layer-viewer-core-components]

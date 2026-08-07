@@ -1,7 +1,7 @@
 id: layer-viewer-gating-extension
 epic: layer-viewer
 title: Extend gating to /properties/* and fix sanitizeNextPath's hardcode
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: []
