@@ -3,6 +3,7 @@ node_modules/
 out/
 .vercel/
 .env*
+!.env.example
 # gated/un-released property assets
 public/property-samples/
 *.tif
