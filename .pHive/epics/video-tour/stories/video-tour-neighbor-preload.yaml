@@ -1,0 +1,74 @@
+id: video-tour-neighbor-preload
+epic: video-tour
+title: Preload current node's neighbor assets
+status: pending
+complexity: medium
+methodology: tdd
+depends_on: [video-tour-core-components]
+
+description: |
+  The reference prototype does NOT implement preloading — this is real,
+  unproven component work, not a port. Per the spec's acceptance criteria:
+  "Preload the spin + outgoing-transition clips of the current node's
+  neighbors." P1 has no real clips yet, so this preloads neighbor still
+  images now, but the mechanism must be built to extend cleanly to spin +
+  transition clip preloading once P2 introduces real media — this story is
+  judged on that mechanism being right, not on P1's stills being fast (they
+  already are).
+
+  Methodology note: this is exactly the "complex logic unit" that
+  hive.config.yaml calls out for TDD rather than BDD — write the neighbor-
+  selection + preload-trigger logic tests first, then implement.
+
+acceptance_criteria:
+  - "Given the current room, when it renders, then the still images of all its direct neighbors are preloaded (fetched/decoded ahead of navigation)"
+  - "Given navigation to a neighbor, when it completes, then that room's own neighbors are preloaded in turn (rolling preload window, not a one-time preload of the start room only)"
+  - "Given a room with no neighbors (a dead end), when it renders, then no preload errors occur"
+  - "Given the preload mechanism, when a room's neighbor edge later gains a spin/transition clip (P2), then the same mechanism preloads that clip without structural rework (verify by writing the logic against the clip|null branch now, not stills-only)"
+
+steps:
+  - id: research
+    description: Confirm the neighbor-list access pattern already established in <VideoTour>'s state (room.neighbors from video-tour-core-components) and decide the preload mechanism (e.g. <link rel="preload">, new Image()/fetch, or a hook).
+    agent: researcher
+  - id: test-spec
+    description: |
+      Write failing tests for: preload triggers on render for all direct
+      neighbors; preload window rolls forward on navigation; dead-end rooms
+      don't error; the mechanism is written against both still and
+      spin/clip branches (even though clip is always null in P1 data) so it
+      doesn't need rework in P2. Do not read the implementation while writing
+      these — the tests define the contract from the acceptance criteria.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Implement the preload hook/logic to make the failing tests pass, without modifying the tests.
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm the mechanism genuinely generalizes to spin/transition clips (not stills-hardcoded) and doesn't regress busy-guard/navigation behavior from video-tour-core-components.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VideoTour/VideoTour.tsx
+      purpose: "Where current-node state lives; preload logic hooks off room changes here (written by video-tour-core-components)."
+
+files_to_modify:
+  - file: components/VideoTour/useNeighborPreload.ts
+    change: "Create — preload hook, or inline into VideoTour.tsx if a separate hook is overkill (developer's call, documented in the story's implementation notes)"
+
+references:
+  - path: docs/components/video-tour.md
+    relevant_excerpt: |
+      4. Preload the spin + outgoing-transition clips of the current node's
+         neighbors (snappy hops).
+
+do_not:
+  - "Do not preload beyond direct (1-hop) neighbors — no recursive/2-hop preloading; that's speculative scope not in the spec."
+  - "Do not change video-tour-core-components' render/navigate behavior — this story only adds a preload side-effect."

@@ -1,0 +1,70 @@
+name: video-tour
+title: "<VideoTour> — interactive fly-through room-graph tour (P1: Prado, stills + wipes)"
+description: >
+  Ship the first plug-and-play drone-hub component: <VideoTour>, seeded with
+  the real 2806 Prado house, matching the reference prototype's UX exactly.
+  Includes standing up the Next.js app shell (which doesn't exist yet),
+  gating middleware, the typed data manifest, the component itself, neighbor
+  preloading, and the project's first test framework. Explicitly excludes
+  <LayerViewer>/<Model3D> (queued behind the Phase-0 nadir grid pass) and P2
+  work (hls.js, real spin/transition clips, Cloudflare R2).
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+
+planning_team:
+  matched_tags: [ui-component, frontend, typescript, first-implementation]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  per_tag_reasoning:
+    ui-component: "Full React component build-out with a reference UX prototype to match."
+    frontend: "Next.js/React/Tailwind stack, no backend service in scope."
+    typescript: "Typed manifest schema (lib/tour-types.ts) already exists and gates the implementation."
+    first-implementation: "No app shell, tests, or components exist yet in this repo — this epic bootstraps all three."
+  confidence: "high — component is fully spec'd with a working reference prototype; main uncertainty was scope class (Medium vs Large), resolved via grill + operator sign-off"
+  gate_decisions:
+    grill: "one round, general-purpose adversarial reviewer (no dedicated tpm/grill persona spawned — solo-scale team); 6 findings, all resolved into the design discussion before user sign-off"
+    collaborative_review: "hive.config.yaml sets planning.collaborative_review: true, but no additional team personas were spawned beyond the grill pass given project scale; user acted as the sole human reviewer at the design-discussion gate"
+    hv_gate: "Medium scope, no --gate-hv requested — auto-proceeded past H/V without a separate user gate per default routing"
+
+stories:
+  - id: video-tour-app-shell-scaffold
+    title: Scaffold the Next.js app shell
+    complexity: low
+    depends_on: []
+  - id: video-tour-gating-middleware
+    title: Build passcode gating middleware
+    complexity: medium
+    depends_on: [video-tour-app-shell-scaffold]
+  - id: video-tour-prado-manifest
+    title: Extract Prado assets and write the tour.json manifest
+    complexity: low
+    depends_on: [video-tour-app-shell-scaffold]
+  - id: video-tour-core-components
+    title: Port the prototype's state machine into <VideoTour> + subcomponents
+    complexity: high
+    depends_on: [video-tour-prado-manifest]
+  - id: video-tour-gated-route-integration
+    title: Mount <VideoTour> on a real gated route
+    complexity: low
+    depends_on: [video-tour-core-components, video-tour-gating-middleware]
+  - id: video-tour-neighbor-preload
+    title: Preload current node's neighbor assets
+    complexity: medium
+    depends_on: [video-tour-core-components]
+  - id: video-tour-test-suite
+    title: Stand up Vitest + RTL and close out full spec test coverage
+    complexity: medium
+    depends_on: [video-tour-core-components, video-tour-neighbor-preload]
+  - id: video-tour-docs-acceptance-closeout
+    title: Reconcile docs and close out the acceptance criteria checklist
+    complexity: low
+    depends_on: [video-tour-gated-route-integration, video-tour-test-suite]
+
+deferred:
+  - LayerViewer and Model3D — blocked on the Phase-0 nadir grid pass (CLAUDE.md); not decomposed into stories, tracked as a placeholder only.
+  - "hls.js adaptive playback, real spin/transition clips, Cloudflare R2 asset hosting — P2, once real clips exist."

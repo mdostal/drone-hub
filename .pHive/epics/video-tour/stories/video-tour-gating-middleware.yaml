@@ -1,0 +1,78 @@
+id: video-tour-gating-middleware
+epic: video-tour
+title: Build passcode gating middleware
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [video-tour-app-shell-scaffold]
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  CLAUDE.md's hard rule: "never deploy un-released assets un-gated." No
+  gating/passcode convention exists anywhere in drone-hub yet (confirmed at
+  kickoff — only the separate personal-site has one). This story builds it as
+  real infrastructure, not an assumption: Next.js middleware that checks a
+  passcode (cookie or query param) before any /tours/* route renders. This is
+  a real hard-rule enforcement point, not a formality — 2806 Prado is a real,
+  currently-listed address.
+
+acceptance_criteria:
+  - "Given no passcode cookie/param, when a /tours/* route is requested, then it 307-redirects to /enter-passcode?next=<original-path> (pre-made decision: redirect+return-path, not a bare 401/403 — better UX for personal gated links Mathew shares directly)"
+  - "Given a correct passcode, when submitted, then subsequent requests to /tours/* succeed for the session"
+  - "Given an incorrect passcode, when submitted, then access remains blocked"
+
+steps:
+  - id: research
+    description: Look at how the sibling personal-site project gates /drone (CLAUDE.md references it) for a pattern to match, if accessible; otherwise design a minimal standard Next.js middleware passcode gate.
+    agent: researcher
+  - id: behavior-spec
+    description: "Given/When/Then specs for: unauthenticated access blocked, correct passcode grants access, incorrect passcode does not, session persists across requests."
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Implement middleware.ts scoped to /tours/* (and any other gated paths as they appear later), plus a minimal passcode-entry route.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Verify behavior specs pass against the real middleware.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the passcode is not hardcoded/committed in plaintext (env var), and that the gate genuinely blocks server-rendered content, not just client-side hiding.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  notes: |
+    <VideoTour> itself stays gate-agnostic (accepts a `gated?: boolean` on the
+    manifest per lib/tour-types.ts) — this story is entirely app-shell/
+    middleware, not component work. Runs in parallel with
+    video-tour-prado-manifest (bounded-slice: middleware.ts vs public/tours/**,
+    disjoint touch-sets).
+
+files_to_modify:
+  - file: middleware.ts
+    change: "Create — passcode check scoped to /tours/*"
+  - file: app/(gate)/enter-passcode/page.tsx
+    change: "Create — minimal passcode-entry form (exact path TBD during implementation)"
+
+cross_cutting:
+  - concern: documentation
+    action: "Add middleware.ts and the gating convention to .pHive/CONTEXT.md → Key paths / Conventions so future components know how gating works before assuming it exists."
+
+references:
+  - path: CLAUDE.md
+    relevant_excerpt: |
+      Property footage = shoot-permission being formalized (release forms) → private/gated
+      until signed; never deploy un-released assets un-gated.
+
+do_not:
+  - "Do not implement gating as client-side-only (e.g. hiding content with CSS/JS after render) — it must block at the middleware/server level."
+  - "Do not scope the middleware matcher beyond /tours/* and the passcode-entry route itself for this epic — other future gated paths are out of scope."
+  - "Do not build any UI beyond a minimal passcode form — no styling polish pass here."

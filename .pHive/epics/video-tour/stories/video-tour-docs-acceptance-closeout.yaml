@@ -1,0 +1,48 @@
+id: video-tour-docs-acceptance-closeout
+epic: video-tour
+title: Reconcile docs and close out the acceptance criteria checklist
+status: pending
+complexity: low
+methodology: classic
+depends_on: [video-tour-gated-route-integration, video-tour-test-suite]
+
+description: |
+  Final slice: make sure docs/components/video-tour.md matches what actually
+  shipped (any deviations from the original spec/prototype get documented,
+  not silently left stale), and formally verify every acceptance-criteria
+  checkbox in that spec is true — not eyeballed, but checked against the real
+  running app and test suite.
+
+acceptance_criteria:
+  - "Given docs/components/video-tour.md's Acceptance Criteria checklist, when each item is verified against the shipped app, then every P1-applicable item is checked true with a note on how it was verified"
+  - "Given any implementation deviation from the original spec (e.g. manifest format decisions made during video-tour-prado-manifest), when found, then docs/components/video-tour.md is updated to reflect reality"
+  - "Given `npm run build`, when run, then it passes (final end-to-end confirmation)"
+  - "Given the component's public export (components/VideoTour/index.ts), when inspected, then it's cleanly importable with no drone-hub-app-specific coupling (the 'plug-and-play' bar from CLAUDE.md)"
+
+steps:
+  - id: implement
+    description: Walk every item in docs/components/video-tour.md's Acceptance Criteria section against the running app; update the doc for any deviations found across this epic's stories.
+    agent: technical-writer
+  - id: test
+    description: Run the full test suite + npm run build as the final verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent pass confirming <VideoTour> is truly importable standalone (no coupling to drone-hub's specific app routes/middleware beyond the documented gated? prop contract).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+
+files_to_modify:
+  - file: docs/components/video-tour.md
+    change: "Update Acceptance Criteria checkboxes and note any implementation deviations"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic — verify no other story left a stale doc reference."

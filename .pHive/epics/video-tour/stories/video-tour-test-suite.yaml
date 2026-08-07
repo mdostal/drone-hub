@@ -1,0 +1,57 @@
+id: video-tour-test-suite
+epic: video-tour
+title: Stand up Vitest + RTL and close out full spec test coverage
+status: pending
+complexity: medium
+methodology: tdd
+depends_on: [video-tour-core-components, video-tour-neighbor-preload]
+
+description: |
+  This is the first test infrastructure in drone-hub — no framework is
+  configured yet. Earlier stories (core-components, neighbor-preload) already
+  wrote behavior/test specs inline per their own methodology (BDD/TDD), but
+  those specs need a real, running test framework underneath them. This story
+  installs Vitest + React Testing Library, wires `npm test`, and ensures every
+  acceptance criterion across this epic's stories is covered by an actual
+  passing test, not just prose.
+
+acceptance_criteria:
+  - "Given `npm test`, when run, then Vitest executes and all specs pass"
+  - "Given the acceptance criteria checklist in docs/components/video-tour.md, when cross-checked against the test suite, then every applicable P1 item has a corresponding automated test (stills+wipes items; spin/clip items are out of scope until P2 media exists)"
+  - "Given CI doesn't exist yet, when this story completes, then `npm test` is at least documented as the pre-push check in CLAUDE.md/README (actual CI wiring is a separate future concern, not blocking this story)"
+
+steps:
+  - id: research
+    description: Confirm Vitest + React Testing Library configuration for Next 15 App Router client components (jsdom environment, path aliases matching tsconfig).
+    agent: researcher
+  - id: test-spec
+    description: Consolidate/verify the behavior and TDD specs written inline by video-tour-core-components and video-tour-neighbor-preload actually run under the new Vitest config; identify any acceptance-criteria gaps not yet covered and write the missing specs.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add vitest.config.ts, testing-library setup file, and npm test script. Fix any config mismatches surfaced by the gap-filling specs.
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm every P1 acceptance criterion across the epic's stories maps to a real, passing test — not just that tests exist.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  tech_stack:
+    testing: "Vitest + React Testing Library (chosen during design discussion — zero extra runtime weight, ESM-native, standard for Next15/React19/TS)"
+
+files_to_modify:
+  - file: vitest.config.ts
+    change: "Create"
+  - file: package.json
+    change: "Add test script + devDependencies (vitest, @testing-library/react, jsdom, etc.)"
+
+cross_cutting:
+  - concern: documentation
+    action: "Record the Vitest + RTL choice and `npm test` as the standard test command in .pHive/CONTEXT.md → Conventions, since this is the first test framework decision for the whole project, not just this component."

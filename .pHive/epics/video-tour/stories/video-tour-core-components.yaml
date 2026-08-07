@@ -1,0 +1,113 @@
+id: video-tour-core-components
+epic: video-tour
+title: Port the prototype's state machine into <VideoTour> + subcomponents
+status: pending
+complexity: high
+methodology: bdd
+depends_on: [video-tour-prado-manifest]
+
+description: |
+  Port the reference prototype's proven render()/go() state machine into
+  typed React per lib/tour-types.ts and docs/components/video-tour.md.
+  "The prototype IS the spec" — match its UX exactly, don't redesign the
+  interaction model. P1 scope: stills + Ken-Burns fallback only (spin/clip
+  branches exist in the code but have no real media to exercise yet).
+
+  Prototype behavior to port (from the research brief, docs/components/reference/prado-tour.prototype.html):
+  - render(id): swap in a still (Ken-Burns `.live` scale+translate over ~14s)
+    since spin is null throughout P1; set caption; rebuild doorway buttons
+    from room.neighbors; toggle `.here` on the matching minimap node.
+  - go(edge): guarded by a `busy` flag (ignore clicks while busy); show a
+    "flying to {label}…" wipe overlay (~900ms, since clip is null throughout
+    P1); then arrive (render the target, clear busy).
+  - Floor-plan minimap: absolutely-positioned nodes at pos:[x%,y%], click
+    dispatches the same go() path as a doorway button.
+
+acceptance_criteria:
+  - "Given the Prado manifest, when <VideoTour> mounts, then it renders the startRoom (front) with its still + Ken-Burns animation and caption"
+  - "Given a doorway button is clicked, when navigation starts, then a busy-guard prevents a second navigation from firing until the wipe completes and the target room renders"
+  - "Given the minimap, when a node is clicked, then it navigates identically to the equivalent doorway button (same go() path) and the .here highlight moves to the new node"
+  - "Given no clip on an edge, when navigating, then a ~900ms timed wipe substitutes for the missing transition (matches prototype behavior)"
+  - "Given <VideoTour manifest startRoom poster onRoomChange />, when props are passed, then onRoomChange fires on every arrival and startRoom overrides the manifest's default"
+  - "A stranger can navigate the Prado house with zero instructions (the prototype's own acceptance bar)"
+
+steps:
+  - id: research
+    description: Re-confirm the prototype's exact render()/go() logic (already captured in the research brief) and check for any React 19 / Next 15 App Router constraints (e.g. client component boundaries — this must be a 'use client' component tree).
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given/When/Then specs from the acceptance criteria above, covering TourStage render, DoorwayControls, FloorPlanMap, and the top-level VideoTour orchestration.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: |
+      Implement <TourStage> (media render + Ken-Burns + caption + wipe overlay),
+      <DoorwayControls> (buttons from neighbors[]), <FloorPlanMap> (minimap
+      nodes/edges/highlight), and <VideoTour> (owns cur/busy state, go(),
+      wires the three subcomponents, accepts manifest as Tour|string per
+      VideoTourProps, resolves string via fetch if given a URL).
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run behavior specs against the implementation; manually verify UX parity against the prototype (same 6 rooms, same navigation feel).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the component stays gate-agnostic (no gating logic leaked in from video-tour-gating-middleware — that's a separate concern) and cleanly importable (no drone-hub-app-specific coupling).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  tech_stack:
+    frontend: "next.js 15 app router (client components) / react 19 / typescript"
+  key_files:
+    - path: lib/tour-types.ts
+      purpose: "TourEdge/TourRoom/Tour/VideoTourProps — the exact API contract to implement against."
+    - path: docs/components/video-tour.md
+      purpose: "Full behavior spec, acceptance criteria, and component API (<VideoTour manifest startRoom poster onRoomChange />, subcomponents TourStage/DoorwayControls/FloorPlanMap)."
+  code_examples:
+    - title: "Prototype's go() transition logic (the pattern to port)"
+      file: docs/components/reference/prado-tour.prototype.html
+      snippet: |
+        function go(n){
+          if(busy) return; busy=true;
+          transtxt.textContent='flying to '+LABELS[n.to];
+          trans.classList.add('on');
+          var arrive=function(){ trans.classList.remove('on'); render(n.to); setTimeout(function(){busy=false;},250); };
+          if(n.clip){ /* play transition clip, then arrive on 'ended' */ }
+          else { setTimeout(arrive, 900); }
+        }
+      lines: "84-98 (per research brief; prototype line numbers shift due to the embedded data-URI line)"
+
+files_to_modify:
+  - file: components/VideoTour/VideoTour.tsx
+    change: "Create — top-level orchestration component"
+  - file: components/VideoTour/TourStage.tsx
+    change: "Create"
+  - file: components/VideoTour/DoorwayControls.tsx
+    change: "Create"
+  - file: components/VideoTour/FloorPlanMap.tsx
+    change: "Create"
+  - file: components/VideoTour/index.ts
+    change: "Create — public export surface"
+
+references:
+  - path: docs/components/video-tour.md
+    relevant_excerpt: |
+      1. Render current node: spin clip looping (muted, playsInline) OR the still
+         with a slow Ken-Burns as the placeholder.
+      2. Show a doorway button per edge + sync the minimap highlight.
+      3. On doorway/minimap click → if busy ignore; set busy; if the edge has a
+         clip, play it full-frame then arrive; else show the wipe (~900ms) then
+         arrive.
+
+do_not:
+  - "Do not implement neighbor preloading here — that's video-tour-neighbor-preload's job; this story's job is correct render/navigate behavior first."
+  - "Do not implement hls.js playback or wire real spin/transition clips — P1 has none; the spin/clip code paths must exist structurally but are unexercised until P2."
+  - "Do not add gating logic to the component itself — it stays gate-agnostic per the design discussion; gating is video-tour-gating-middleware's responsibility."
+  - "Do not deviate from the prototype's UX (transition timing, Ken-Burns feel, doorway button styling) without flagging it — 'the prototype IS the spec.'"
