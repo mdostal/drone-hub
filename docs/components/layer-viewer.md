@@ -97,11 +97,16 @@ future thermal entry follows once a radiometric sensor is acquired):
 type:'raster', legend:'ironbow', disabled:true, url:null
 ```
 
-**Sync note:** `lib/layer-types.ts` is being built by a concurrent story in this same
-epic. This document was written against the type shape as resolved in
-`design-discussion.md`; it has not been diffed against the landed `lib/layer-types.ts`
-file. If the two drift, `lib/layer-types.ts` is the source of truth and this doc needs a
-follow-up sync pass — noted explicitly here rather than silently risking drift.
+**Sync check (docs-acceptance-closeout story):** diffed field-by-field against the landed
+`lib/layer-types.ts`. No drift — `LayerDef` and `PropertyLayers` above match the shipped
+interfaces exactly (field names, optionality, and the `'raster' | 'geojson'` /
+`'cog' | 'xyz'` unions all line up; only cosmetic differences are `export` keywords and
+double- vs single-quoted string literals, which don't affect the type shape). The CBA
+thermal-stub example above also matches the real sample manifest's `thermal` entry
+(`public/layer-viewer-samples/2806-prado/layers.json`) byte-for-byte on the fields that
+matter, and is asserted against verbatim in
+`public/layer-viewer-samples/2806-prado/manifest.test.ts`'s "matches CBA's exact thermal
+stub shape" spec.
 
 ## Behavior
 
@@ -177,25 +182,91 @@ rediscovered as a surprise later — not silently passed through as if it were s
 Scoped to this epic (P1: `<LayerViewer>` + `<LayerControl>` on sample data) only. Measure,
 Annotate, Compare, Align, and `<Model3D>` are explicitly out of scope — see Phase fit.
 
-- [ ] Renders a MapLibre GL map with the Esri World Imagery satellite basemap as the base
+- [x] Renders a MapLibre GL map with the Esri World Imagery satellite basemap as the base
       layer, independent of the layer registry.
-- [ ] Loads a `PropertyLayers` manifest and renders each non-disabled `LayerDef` as a
+  Verified: `LayerViewer.tsx`'s map-creation effect constructs the MapLibre `Map` with the
+  Esri World Imagery raster source/layer (`ESRI_WORLD_IMAGERY_URL`, `BASEMAP_SOURCE_ID`/
+  `BASEMAP_LAYER_ID`) unconditionally — before any registry layer is added, and regardless
+  of whether `layers` is empty.
+- [x] Loads a `PropertyLayers` manifest and renders each non-disabled `LayerDef` as a
       MapLibre source/layer: `raster`/`cog` via `@geomatico/maplibre-cog-protocol`,
       `geojson` via a plain MapLibre geojson source.
-- [ ] `disabled: true` entries (the thermal stub) add no MapLibre source/layer, but do
+  Verified: `resolveManifest()` fetches-or-passes-through the manifest; `loadMapLibreModules()`
+  registers the `cog://` protocol via `maplibregl.addProtocol("cog", cogModule.cogProtocol)`
+  from `@geomatico/maplibre-cog-protocol`; `buildLayerMapConfig()`/`addLayerToMap()` build a
+  `cog://`-prefixed raster source for `raster`/`cog` layers and a plain
+  `{type:"geojson", data:url}` source + fill/line layer pair for `geojson` layers. Unit-covered
+  by `LayerViewer.test.tsx`'s `buildLayerMapConfig` cases (raster+cog, raster+xyz, geojson);
+  live-verified end-to-end against the real Prado manifest in the core-components story's
+  Playwright pass (all four manifest layers — ortho, hillshade, boundary, thermal — loaded).
+- [x] `disabled: true` entries (the thermal stub) add no MapLibre source/layer, but do
       render an inert, greyed-out row in `<LayerControl>`.
-- [ ] `<LayerControl>` renders one row per `LayerDef` with a toggle and an opacity slider;
+  Verified: `buildLayerMapConfig()` returns `null` for `disabled: true` (unit-tested); the
+  `map.on("load")` handler explicitly `continue`s past disabled layers before ever calling
+  `addLayerToMap`, so `map.addSource`/`addLayer` never runs for them. `LayerControl.tsx`
+  still renders their row (`opacity-40`, `aria-disabled="true"`, disabled checkbox + slider,
+  unfocusable) — covered by `LayerControl.test.tsx`'s disabled-row tests.
+- [x] `<LayerControl>` renders one row per `LayerDef` with a toggle and an opacity slider;
       toggling/opacity changes are reflected live on the map for non-disabled layers.
-- [ ] Ships against real public sample data (sample COG ortho, hillshade/DEM layer, and a
-      synthetic parcel-boundary GeoJSON) under
+  Verified: `LayerControl.tsx` renders one toggle+slider row per layer, in manifest order
+  (`LayerControl.test.tsx`). The live-map-update half of this (`toggleLayer`/`setOpacity` on
+  `LayerViewerHandle` → state update → `updateLayerOnMap` → `setLayoutProperty`/
+  `setPaintProperty`) can't run under jsdom (`maplibre-gl` needs the `Worker` global, which
+  jsdom doesn't implement — see `LayerViewer.test.tsx`'s header comment), so it was verified
+  live instead: the core-components story's Playwright pass against a real
+  `next build && next start` server clicked the hillshade toggle (unchecked → checked) and
+  dragged the ortho opacity slider (→ 0.4), confirming both round-trips actually repaint the
+  map. Real but manual verification, not automated regression coverage — a gap worth noting,
+  not hiding.
+- [x] Ships against real public sample data (a real COG ortho, a synthetic hillshade/DEM
+      COG, and a synthetic parcel-boundary GeoJSON) under
       `public/layer-viewer-samples/<slug>/` — not mocks.
-- [ ] Mounted at a gated route, `/properties/[slug]`, via `next/dynamic({ ssr: false })`,
+  Wording corrected: the original phrasing read as if the hillshade were real sample data
+  alongside the ortho; it is a **synthetic placeholder**, not real elevation/LiDAR data —
+  see "Sample data provenance" above, which this bullet now matches. Verified: all three
+  files exist under `public/layer-viewer-samples/2806-prado/` as real files (not mocked in
+  code) and are validated by `public/layer-viewer-samples/2806-prado/manifest.test.ts`
+  (TIFF magic bytes, `rio-cogeo` strict COG validation when available, GeoJSON
+  polygon well-formedness) — re-confirmed directly during this closeout pass (`rasterio`:
+  both COGs share `EPSG:32621` and an identical bounding box; `ortho.tif` is single-band
+  `uint16`, `hillshade.tif` single-band `uint8`, matching the provenance notes).
+- [x] Mounted at a gated route, `/properties/[slug]`, via `next/dynamic({ ssr: false })`,
       behind the same passcode gate as `/tours/[slug]` (`middleware.ts` + `lib/gate.ts`,
       with `sanitizeNextPath` generalized to handle both prefixes correctly).
-- [ ] Importable standalone into personal-site: `<LayerViewer>`/`<LayerControl>` and
+  Verified: `app/properties/[slug]/page.tsx` loads `<LayerViewer>` via
+  `dynamic(..., { ssr: false })`; `middleware.ts`'s `config.matcher` includes
+  `/properties/:path*` (with a dev-time drift guard against `lib/gate.ts`'s
+  `GATED_PATH_MATCHERS`); `lib/gate.ts`'s `sanitizeNextPath` is generalized over
+  `GATED_PATH_PREFIXES = ["/tours", "/properties"]` rather than hardcoding `/tours`.
+  Live-verified: no cookie → 307 to `/enter-passcode?next=%2Fproperties%2F2806-prado`;
+  correct passcode submitted through the real form → lands back on the property page with
+  the layers rendered.
+- [x] Importable standalone into personal-site: `<LayerViewer>`/`<LayerControl>` and
       everything they transitively import carry no dependency on `app/`, `middleware.ts`,
       or `lib/gate.ts`.
-- [ ] Passes `npm run build`.
+  Verified — see "Importable standalone — audit finding" below.
+- [x] Passes `npm run build`.
+  Verified: clean `npm run build` (Next.js 15.5.23), `/properties/[slug]` present as a
+  dynamic route in the output. Re-verified after this closeout story deleted the now-
+  redundant `app/dev-preview-layers/` throwaway route (superseded by the real
+  `/properties/[slug]` route — confirmed via repo-wide grep that nothing else referenced
+  it first): build and `npm test` (92/92 passing, 11 test files, spanning both the
+  `video-tour` and `layer-viewer` epics with no regressions) both stayed green.
+
+### Importable standalone — audit finding
+
+Walked `components/LayerViewer/index.ts`'s full export surface (`LayerViewer`,
+`LayerControl`, plus the re-exported `lib/layer-types.ts` types) and every file it
+transitively imports: `LayerViewer.tsx`, `LayerControl.tsx`, `cx.ts`, `lib/layer-types.ts`,
+plus the lazily-`import()`ed `maplibre-gl` and `@geomatico/maplibre-cog-protocol` npm
+packages. Clean: nothing pulls from `app/`, `middleware.ts`, or `lib/gate.ts`.
+`index.ts`'s own header comment documents this as the intended contract ("copy this folder
+into a standalone consumer like personal-site — everything it transitively imports is
+scoped to this folder + lib/layer-types.ts, no app/ or gating deps") and the code matches
+the claim. `app/properties/[slug]/page.tsx` is a one-way consumer of this family (imports
+*from* `components/LayerViewer`, not the reverse) and itself carries zero gating logic —
+gating is enforced upstream by `middleware.ts`. The "plug-and-play" bar from `CLAUDE.md`
+holds.
 
 ## Phase fit
 
