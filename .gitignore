@@ -20,3 +20,5 @@ public/property-samples/
 !.pHive/epics/video-tour/**
 !.pHive/epics/layer-viewer/
 !.pHive/epics/layer-viewer/**
+!.pHive/epics/model3d/
+!.pHive/epics/model3d/**
