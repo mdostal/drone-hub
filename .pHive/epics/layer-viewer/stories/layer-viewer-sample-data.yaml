@@ -1,0 +1,103 @@
+id: layer-viewer-sample-data
+epic: layer-viewer
+title: Source real public sample geospatial data + write the property-layers manifest
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [layer-viewer-registry-types]
+
+description: |
+  <LayerViewer> needs real georeferenced data to build and test against —
+  the Phase-0 nadir-pass blocker only blocks REAL Prado/Omaha data, not
+  building/testing the component (CLAUDE.md corrected accordingly). Source
+  real public sample data, conforming to lib/layer-types.ts's PropertyLayers
+  manifest, under public/layer-viewer-samples/<slug>/.
+
+  Sources (researched and network-verified reachable during planning, but
+  finalize/re-verify at implementation time — network fixtures can move):
+  - **Ortho layer**: rio-tiler's own test fixture COG —
+    https://raw.githubusercontent.com/cogeotiff/rio-tiler/main/tests/fixtures/cog.tif
+    (a real, small, georeferenced Cloud-Optimized GeoTIFF; verified reachable
+    via HTTP redirect from the /raw/ URL during planning). Download it into
+    public/layer-viewer-samples/<slug>/ortho.tif.
+  - **Hillshade layer**: no specific URL was pre-verified during planning —
+    this is real work, not a formality. Try first to find a small, real,
+    public-domain elevation/hillshade COG (e.g. search for other small COG
+    test fixtures used by rasterio/rio-tiler/titiler's own test suites, or a
+    small AWS Open Data elevation sample). If nothing suitably small and
+    licensed turns up quickly, generate a synthetic hillshade-style raster
+    (grayscale gradient/noise GeoTIFF, e.g. via a short Python/rasterio or
+    Node script) — clearly label it as synthetic in both the manifest
+    (legend/title) and docs/components/layer-viewer.md (update that doc if
+    the spec-doc story's version doesn't already reflect this). Document
+    whichever path is taken and why.
+  - **Parcel boundary layer**: do NOT use any real address/parcel record.
+    Generate a synthetic rectangular or simple polygon GeoJSON (e.g. a
+    ~100m x 150m rectangle at arbitrary coordinates near wherever the ortho
+    sample is georeferenced, so it visually overlaps on the map) — clearly
+    labeled as a placeholder, not tied to any real property.
+  - **Basemap**: Esri World Imagery — no download needed, it's a live tile
+    service (`server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/
+    MapServer/tile/{z}/{y}/{x}`, verified reachable during planning). This is
+    wired into <LayerViewer> itself (layer-viewer-core-components), not part
+    of this story's manifest.
+  - **Thermal**: no data needed — the manifest's thermal entry is
+    `{id:'thermal', type:'raster', legend:'ironbow', disabled:true, url:null,
+    opacity:0, toggle:false}` (or equivalent — match lib/layer-types.ts
+    exactly once that story's landed).
+
+  `.gitignore` currently has a blanket `*.tif` rule (comment: "gated/
+  un-released property assets") that will incorrectly also exclude this
+  sample COG. Fix with a narrow, path-scoped negation
+  (`!public/layer-viewer-samples/**/*.tif`) — do NOT remove or loosen the
+  blanket rule itself, it exists to keep real gated ortho/DSM data out of git.
+
+acceptance_criteria:
+  - "Given the ortho sample, when downloaded, then it's a real COG (verify with a quick script/tool check, not just a file-size guess) under public/layer-viewer-samples/<slug>/"
+  - "Given the hillshade sample (real or synthetic), when documented, then the manifest and/or a code comment states clearly which it is and why"
+  - "Given the parcel boundary, when inspected, then it's a synthetic polygon not tied to any real address, clearly labeled as a placeholder"
+  - "Given the full PropertyLayers manifest, when validated against lib/layer-types.ts, then it type-checks with no errors"
+  - "Given the manifest's thermal entry, when checked, then disabled:true, url:null, matching CBA's exact stub shape"
+  - "Given .gitignore, when checked, then the sample COG(s) under public/layer-viewer-samples/** are actually trackable (not silently excluded by the blanket *.tif rule), while the blanket rule itself still applies everywhere else"
+
+steps:
+  - id: implement
+    description: Download/generate the sample assets, write public/layer-viewer-samples/<slug>/layers.json (or similar) as the PropertyLayers manifest, fix .gitignore's scoped negation.
+    agent: developer
+  - id: test
+    description: Write a small verification script (throwaway or kept, your call) asserting the manifest parses as valid PropertyLayers, every raster url points to a real file that exists and is a valid COG, and the geojson parcel is valid GeoJSON.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm no real address/parcel data was used, confirm the .gitignore fix is narrowly scoped (doesn't loosen the blanket rule for anything outside the sample path), confirm the hillshade sourcing decision is honestly documented.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/layer-types.ts
+      purpose: "The PropertyLayers/LayerDef shape this manifest must conform to (written by the layer-viewer-registry-types story)."
+    - path: .gitignore
+      purpose: "Has a blanket *.tif rule that needs a scoped negation for the sample COG path."
+
+files_to_modify:
+  - file: public/layer-viewer-samples/<slug>/ortho.tif
+    change: "Create — downloaded sample COG"
+  - file: public/layer-viewer-samples/<slug>/hillshade.tif
+    change: "Create — real or synthetic, documented either way"
+  - file: public/layer-viewer-samples/<slug>/parcel.geojson
+    change: "Create — synthetic placeholder polygon"
+  - file: public/layer-viewer-samples/<slug>/layers.json
+    change: "Create — the PropertyLayers manifest"
+  - file: .gitignore
+    change: "Add scoped negation for public/layer-viewer-samples/**/*.tif"
+
+do_not:
+  - "Do not use any real parcel/address record for the boundary layer."
+  - "Do not loosen the blanket *.tif rule beyond the sample-data path."
+  - "Do not wire R2 or any remote storage — public/ only, matching the epic's local-first stance."

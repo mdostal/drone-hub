@@ -1,0 +1,52 @@
+id: layer-viewer-docs-acceptance-closeout
+epic: layer-viewer
+title: Reconcile docs and close out the acceptance criteria checklist
+status: pending
+complexity: low
+methodology: classic
+depends_on: [layer-viewer-gated-route-integration, layer-viewer-test-suite]
+
+description: |
+  Final slice, same shape as video-tour-docs-acceptance-closeout: verify
+  docs/components/layer-viewer.md (written early, before the real
+  implementation existed) matches what actually shipped, fix any drift
+  found, and formally check off every acceptance criterion against the real
+  code — not against prior stories' self-reports.
+
+acceptance_criteria:
+  - "Given docs/components/layer-viewer.md's Acceptance Criteria checklist, when each item is verified against the shipped app, then every P1-applicable item is checked true with a note on how it was verified"
+  - "Given the hillshade sourcing decision (real vs. synthetic, made during layer-viewer-sample-data), when checked, then the doc accurately reflects which was actually used"
+  - "Given the layer registry type as documented vs. lib/layer-types.ts as shipped, when diffed, then any drift is fixed in the doc (the spec-doc story wrote this before the type existed — verify they still match)"
+  - "Given the known gating limitation (one global passcode, not per-dataset), when checked, then it's documented somewhere findable (layer-viewer.md or .pHive/CONTEXT.md), not just buried in the design discussion"
+  - "Given `npm run build` and `npm test`, when run, then both pass with no regressions to the video-tour epic's existing coverage"
+
+steps:
+  - id: implement
+    description: Walk every item in docs/components/layer-viewer.md's Acceptance Criteria against the running app and real code; fix drift; add the gating-limitation note if not already documented.
+    agent: technical-writer
+  - id: test
+    description: Run the full test suite + npm run build as the final verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent pass confirming <LayerViewer>/<LayerControl> are truly importable standalone (plug-and-play bar), same audit shape as video-tour-docs-acceptance-closeout's index.ts import-surface check.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/video-tour.md
+      purpose: "Precedent for what a closed-out acceptance-criteria checklist with verification notes looks like."
+
+files_to_modify:
+  - file: docs/components/layer-viewer.md
+    change: "Update Acceptance Criteria checkboxes, fix any drift, add gating-limitation note if missing"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic."

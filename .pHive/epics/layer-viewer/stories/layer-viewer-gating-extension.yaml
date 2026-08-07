@@ -1,0 +1,87 @@
+id: layer-viewer-gating-extension
+epic: layer-viewer
+title: Extend gating to /properties/* and fix sanitizeNextPath's hardcode
+status: pending
+complexity: low
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  A real bug, caught by grill review of this epic's design discussion:
+  lib/gate.ts's sanitizeNextPath hardcodes `next.startsWith("/tours")`,
+  falling back to `/tours` otherwise. Left as-is, extending middleware.ts's
+  matcher to cover a new /properties/* route would silently bounce a
+  /properties/[slug] passcode-entry redirect back to /tours instead of the
+  property the user actually wanted.
+
+  Fix: generalize sanitizeNextPath to accept any currently-gated path prefix
+  (derive this from middleware.ts's matcher config, or maintain an explicit
+  shared list both files import — your call, document which), then add
+  /properties/:path* to middleware.ts's matcher.
+
+  Known, accepted scope limitation (do NOT try to fix this in this story —
+  it's out of scope, just don't make it worse): gating stays ONE global
+  passcode/cookie for the whole app, covering both /tours/* and
+  /properties/*. CLAUDE.md's phrasing implies per-dataset control this
+  doesn't provide. Acceptable for now per the design discussion — flagged,
+  not solved.
+
+acceptance_criteria:
+  - "Given no cookie, when /properties/2806-prado is requested, then it 307-redirects to /enter-passcode?next=/properties/2806-prado (not /tours)"
+  - "Given a correct passcode submitted from that redirect, when the server action runs, then it lands the user back on /properties/2806-prado, not /tours"
+  - "Given the existing /tours/* gating behavior, when re-tested, then it's unchanged (no regression) — write/run a test proving both prefixes work correctly, not just the new one"
+  - "Given an arbitrary next= value not matching any known gated prefix, when sanitized, then it still falls back safely (open-redirect guard preserved) rather than allowing an arbitrary redirect target"
+
+steps:
+  - id: research
+    description: Read middleware.ts and lib/gate.ts in full to understand the exact current hardcode and how the matcher config is structured.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given/When/Then specs for the acceptance criteria above, covering both /tours/* (regression) and /properties/* (new) paths, plus the open-redirect-guard case.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Generalize sanitizeNextPath (lib/gate.ts) and extend middleware.ts's matcher to include /properties/:path*.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run the specs; confirm both prefixes behave correctly and the open-redirect guard still holds.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm no regression to /tours/* gating (video-tour's existing behavior) and that the fix is a genuine generalization, not a second hardcoded special-case bolted on next to the first.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/gate.ts
+      purpose: "sanitizeNextPath's current hardcoded /tours check — the bug to fix."
+    - path: middleware.ts
+      purpose: "The matcher config to extend with /properties/:path*."
+  code_examples:
+    - title: "The current hardcode (lib/gate.ts) — what needs generalizing"
+      file: lib/gate.ts
+      snippet: |
+        export function sanitizeNextPath(next: string | undefined | null): string {
+          if (next && next.startsWith("/tours")) return next;
+          return "/tours";
+        }
+      lines: "27-31 (approx, per the gating-middleware story's commit)"
+
+files_to_modify:
+  - file: lib/gate.ts
+    change: "Generalize sanitizeNextPath to accept /tours and /properties (and be easy to extend for future gated prefixes)"
+  - file: middleware.ts
+    change: "Extend matcher to include /properties/:path*"
+
+do_not:
+  - "Do not touch lib/layer-types.ts, components/, or public/layer-viewer-samples/ — this story is gating-only."
+  - "Do not attempt per-dataset/per-property passcodes — explicitly out of scope, a global passcode is the accepted limitation for this epic."

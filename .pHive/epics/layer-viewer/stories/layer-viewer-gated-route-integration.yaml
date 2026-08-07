@@ -1,0 +1,49 @@
+id: layer-viewer-gated-route-integration
+epic: layer-viewer
+title: Mount <LayerViewer> on a real gated route
+status: pending
+complexity: low
+methodology: bdd
+depends_on: [layer-viewer-core-components, layer-viewer-gating-extension]
+
+description: |
+  Connective tissue, same shape as video-tour-gated-route-integration: a real
+  Next.js route that mounts <LayerViewer> (+ <LayerControl>) against the real
+  sample manifest, sits behind the now-generalized passcode middleware, and
+  follows CLAUDE.md's next/dynamic({ssr:false}) convention.
+
+acceptance_criteria:
+  - "Given no passcode, when /properties/<slug> is requested, then it redirects to /enter-passcode?next=/properties/<slug> (not /tours — this is what layer-viewer-gating-extension's fix enables; verify it actually works end to end here, not just unit-tested in isolation)"
+  - "Given a valid passcode, when /properties/<slug> is requested, then <LayerViewer> renders with the real sample manifest and is interactive (toggles/opacity work)"
+  - "Given the route's implementation, when inspected, then <LayerViewer> is loaded via next/dynamic({ssr:false})"
+  - "Given `npm run build`, when run, then the route builds with no errors"
+
+steps:
+  - id: implement
+    description: Create app/properties/[slug]/page.tsx, loading /layer-viewer-samples/<slug>/layers.json as the manifest and rendering <LayerViewer>+<LayerControl> via next/dynamic({ssr:false}).
+    agent: developer
+  - id: test
+    description: Verify gated-access + rendering end to end (with and without passcode, confirming the /properties redirect target specifically, not just that /tours still works).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm next/dynamic ssr:false is genuinely used and the route contains no gating logic of its own (fully middleware-owned).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/tours/[slug]/page.tsx"
+      purpose: "The exact precedent to mirror — same next/dynamic pattern, same client-component-for-useParams workaround if still needed in this Next 15 version."
+
+files_to_modify:
+  - file: "app/properties/[slug]/page.tsx"
+    change: "Create"
+
+do_not:
+  - "Do not touch components/LayerViewer/**, lib/**, middleware.ts, or public/** — this story is the thin route only."
