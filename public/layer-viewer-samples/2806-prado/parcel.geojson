@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "placeholder": true,
+        "note": "SYNTHETIC placeholder parcel boundary \u2014 NOT a real address or parcel record. Generated as a ~120m x 100m rectangle centered on the geographic center of the sample ortho.tif COG's extent (rio-tiler test fixture), purely so the polygon visually overlaps the sample raster layers on a map. Do not treat as survey data.",
+        "slug": "2806-prado"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -56.809841329446044,
+              73.46712709072371
+            ],
+            [
+              -56.80606335414856,
+              73.46712363428145
+            ],
+            [
+              -56.80605313761328,
+              73.46802002408289
+            ],
+            [
+              -56.80983131193063,
+              73.46802348072295
+            ],
+            [
+              -56.809841329446044,
+              73.46712709072371
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
