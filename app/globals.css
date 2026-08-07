@@ -4,3 +4,46 @@
   /* Design tokens land here as brand-system/design-token work is done.
      Intentionally empty for this scaffold. */
 }
+
+/* <VideoTour> stage animations (components/VideoTour/TourStage.tsx).
+   Ported from the prototype's `.live` treatment — a slow Ken-Burns zoom/pan
+   on the room still, and a timed fade in/out for the "flying to X..." wipe
+   shown between rooms when an edge has no transition clip. */
+@keyframes tour-kenburns {
+  from {
+    transform: scale(1.02) translate(0, 0);
+  }
+  to {
+    transform: scale(1.14) translate(-1.5%, -1.5%);
+  }
+}
+
+.videotour-kenburns {
+  animation: tour-kenburns 14s ease-out forwards;
+}
+
+@keyframes tour-wipe {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.videotour-wipe {
+  animation: tour-wipe 900ms ease-in-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .videotour-kenburns,
+  .videotour-wipe {
+    animation: none;
+  }
+}
