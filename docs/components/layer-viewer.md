@@ -1,0 +1,191 @@
+# `<LayerViewer>` — georeferenced layer map viewer (hive spec)
+
+> Drape a **georeferenced ortho / thermal** over a **satellite map base**, and let the
+> operator **toggle layers on/off with opacity** — visual ortho · thermal · LiDAR
+> hillshade/heightmap · contours · parcel boundary. **This layer toggle is the killer
+> feature** (see root `CLAUDE.md`). Plug-and-play, importable into personal-site, gated
+> on drone.mdostal.com.
+
+**Design discussion (RESOLVED architecture — read first):**
+`.pHive/epics/layer-viewer/docs/design-discussion.md` — this doc documents those
+decisions, it does not re-derive them.
+
+## Why (operator intent — honor this)
+
+Hammer Missions (hub.hammermissions.com) is the reference: a drone data viewer where you
+drape imagery over a map base and flip layers on and off. Per `CLAUDE.md`, of everything
+that reference does, **the layer toggle is called out explicitly as the killer feature** —
+not the 3D viewer, not annotation, not compare. `<LayerViewer>` is CLAUDE.md's "the core"
+component and CBA's `MapLayerViewer` — the first plug-and-play component the hive kickoff
+brief says to ship.
+
+The operator (solo fractional CTO, DJI Mini 5 Pro, no thermal, no RTK) needs this to work
+against **real public sample geospatial data now**, proven end-to-end, so that when real
+Prado/Omaha nadir-pass data comes back from WebODM it drops in as new manifest entries —
+no rework. (The Phase-0 nadir-grid-pass blocker only blocks *real* data; it never blocked
+building and testing the components — see CLAUDE.md's 2026-08-07 correction and
+design-discussion.md §0.)
+
+## The model — a typed layer registry
+
+See `lib/layer-types.ts` (built by a concurrent story in this same epic — see note below).
+CBA's plug-and-play framing: `MapLayerViewer` is "MapLibre driven by a typed layer
+registry `{id,type,url,opacity,toggle}`."
+
+The registry's resolved shape (design-discussion.md §2.1), reproduced verbatim:
+
+```ts
+interface LayerDef {
+  id: string;
+  type: 'raster' | 'geojson';
+  url: string | null;
+  opacity: number;
+  toggle: boolean;
+  disabled?: boolean;
+  legend?: string;
+  format?: 'cog' | 'xyz'; // raster only, defaults to 'cog'
+}
+
+interface PropertyLayers {
+  slug: string;
+  title: string;
+  layers: LayerDef[];
+}
+```
+
+Key points, resolved by design-discussion.md and grill, not re-derived here:
+
+- `type` is exactly `'raster' | 'geojson'` — **not** a divergent `'raster-cog'` /
+  `'raster-tiles'` split. This matches CBA's own thermal-stub example literally.
+- Raster layers additionally carry `format?: 'cog' | 'xyz'` (default `'cog'`), so
+  `<LayerViewer>` knows which MapLibre source builder to use. Ortho and hillshade layers
+  in this epic are `raster` + `cog`.
+- `url` is `string | null`. `null` is valid and expected for a `disabled: true` stub (the
+  thermal slot — no data exists yet, so there's nothing to hold a URL).
+- The satellite basemap itself is **not** a registry entry — it's the map's base, handled
+  separately from the layer list.
+- `PropertyLayers` (`{slug, title, layers}`) is the per-property manifest, analogous to
+  `video-tour`'s `Tour` type — one manifest per property, folder-per-property convention
+  (`public/layer-viewer-samples/<slug>/` for this epic's sample data).
+
+**CBA's canonical thermal-stub example, reproduced verbatim** (this is the shape every
+future thermal entry follows once a radiometric sensor is acquired):
+
+```
+type:'raster', legend:'ironbow', disabled:true, url:null
+```
+
+**Sync note:** `lib/layer-types.ts` is being built by a concurrent story in this same
+epic. This document was written against the type shape as resolved in
+`design-discussion.md`; it has not been diffed against the landed `lib/layer-types.ts`
+file. If the two drift, `lib/layer-types.ts` is the source of truth and this doc needs a
+follow-up sync pass — noted explicitly here rather than silently risking drift.
+
+## Behavior
+
+1. **Map renders.** `<LayerViewer>` mounts a MapLibre GL map with the **Esri World
+   Imagery** satellite basemap (free, no token) as the base layer — always present,
+   never part of the registry.
+2. **Each non-disabled `LayerDef` becomes a MapLibre source/layer:**
+   - `type: 'raster'` (`format: 'cog'`, the case this epic exercises) → added via
+     `@geomatico/maplibre-cog-protocol`, which registers a `cog://` protocol MapLibre can
+     source a raster layer from directly.
+   - `type: 'geojson'` → added as a plain MapLibre `geojson` source + a matching
+     fill/line layer (e.g. the parcel boundary).
+   - Initial visibility and paint opacity come from the registry's `toggle` and
+     `opacity` fields.
+3. **`disabled: true` entries get NO map source/layer at all** — `<LayerViewer>`
+   explicitly skips the add-source/add-layer step for them (there is no data to render).
+   This is the thermal-stub behavior: the entry exists in the registry and renders as an
+   inert row in `<LayerControl>` (greyed out, toggle non-functional), but nothing is
+   added to the map. Not a "layer with opacity 0" — genuinely absent from the map's
+   source list.
+4. **`<LayerControl>`** renders one row per `LayerDef` (a shadcn toggle + opacity slider
+   per CBA) — including disabled entries, which render greyed-out and inert rather than
+   being omitted from the list. This is the visible "killer feature" UI: flipping a
+   toggle or dragging an opacity slider updates the corresponding MapLibre layer's
+   `visibility`/`opacity` paint property live. Toggling/opacity has no effect on a
+   disabled entry's row (there's no underlying map layer for it to control).
+
+## Tech
+
+- **MapLibre GL** — the map engine (already a dep, `maplibre-gl`).
+- **`@geomatico/maplibre-cog-protocol`** — COG raster source builder (already a dep,
+  locked in `package.json`, unused before this epic — its first real exercise).
+- **Plain MapLibre `geojson` source** — for boundary/vector layers, no extra dep.
+- **Esri World Imagery** — the satellite basemap, free, no token required.
+- **`next/dynamic({ ssr: false })`** — `<LayerViewer>` is a heavy client-only viewer like
+  every other viewer in this stack; it must not attempt to render on the server.
+- Not used by this epic despite being locked in `package.json`: `pmtiles` (CBA's target
+  pipeline tiles to PMTiles for large datasets; this epic's sample/real COGs are small
+  enough that the raw-COG path via `maplibre-cog-protocol` is the right fit — PMTiles
+  isn't rejected, just not needed at this data scale yet), `@turf/turf` and `terra-draw`
+  (Measure/Annotate, Phase 2).
+
+## The gated-route convention
+
+`<LayerViewer>` mounts at `/properties/[slug]`, extending the same gating pattern
+`video-tour` shipped for `/tours/[slug]`:
+
+- `middleware.ts`'s matcher is extended to also cover `/properties/*`.
+- `lib/gate.ts` provides the same cookie-based, fails-closed passcode gate.
+- The route mounts `<LayerViewer>` via `next/dynamic({ ssr: false })`, same as
+  `video-tour`'s heavy-player convention.
+
+**Generalization required, not a copy-paste:** `lib/gate.ts`'s `sanitizeNextPath`
+hardcoded `next.startsWith("/tours")`, falling back to `/tours` for anything else. Left
+as-is, a `/properties/[slug]` passcode redirect would silently bounce the user to
+`/tours` instead of back to their property. This epic generalizes `sanitizeNextPath` to
+accept any gated prefix (checked against the same prefix list the middleware matcher
+uses), not just add `/properties` on top of the old hardcoded check.
+
+### Known limitation — flagged, not solved
+
+Gating stays **one global passcode/cookie for the whole app**, covering both `/tours/*`
+and `/properties/*`. `CLAUDE.md`'s phrasing ("until Mathew explicitly flips a given
+tour/dataset public") implies **per-dataset** control — this implementation does **not**
+provide that; every gated property and tour shares one switch. This is acceptable for now
+(it matches what `video-tour` already shipped, and there is exactly one operator), but is
+a real gap if this ever needs to share different properties with different people (e.g. a
+client who should only see their own property). Documented here explicitly so it isn't
+rediscovered as a surprise later — not silently passed through as if it were solved.
+
+## Acceptance criteria
+
+Scoped to this epic (P1: `<LayerViewer>` + `<LayerControl>` on sample data) only. Measure,
+Annotate, Compare, Align, and `<Model3D>` are explicitly out of scope — see Phase fit.
+
+- [ ] Renders a MapLibre GL map with the Esri World Imagery satellite basemap as the base
+      layer, independent of the layer registry.
+- [ ] Loads a `PropertyLayers` manifest and renders each non-disabled `LayerDef` as a
+      MapLibre source/layer: `raster`/`cog` via `@geomatico/maplibre-cog-protocol`,
+      `geojson` via a plain MapLibre geojson source.
+- [ ] `disabled: true` entries (the thermal stub) add no MapLibre source/layer, but do
+      render an inert, greyed-out row in `<LayerControl>`.
+- [ ] `<LayerControl>` renders one row per `LayerDef` with a toggle and an opacity slider;
+      toggling/opacity changes are reflected live on the map for non-disabled layers.
+- [ ] Ships against real public sample data (sample COG ortho, hillshade/DEM layer, and a
+      synthetic parcel-boundary GeoJSON) under
+      `public/layer-viewer-samples/<slug>/` — not mocks.
+- [ ] Mounted at a gated route, `/properties/[slug]`, via `next/dynamic({ ssr: false })`,
+      behind the same passcode gate as `/tours/[slug]` (`middleware.ts` + `lib/gate.ts`,
+      with `sanitizeNextPath` generalized to handle both prefixes correctly).
+- [ ] Importable standalone into personal-site: `<LayerViewer>`/`<LayerControl>` and
+      everything they transitively import carry no dependency on `app/`, `middleware.ts`,
+      or `lib/gate.ts`.
+- [ ] Passes `npm run build`.
+
+## Phase fit
+
+- **P1 (this epic):** `<LayerViewer>` + `<LayerControl>` on the typed layer registry,
+  proven against real public sample data (sample COG ortho, hillshade/DEM, synthetic
+  parcel boundary), mounted at a gated `/properties/[slug]` route. The thermal slot exists
+  in the registry as a `disabled: true` stub with no map rendering.
+- **P2:** `MeasureTool` (terra-draw + turf → distance/area), `AnnotationLayer` (draw/
+  persist shapes to `annotations.json`), `CompareSwipe` (two-date before/after swipe),
+  `AlignControl` (manual affine nudge — the no-RTK workaround), and 2.5D DSM drape. Not
+  specified or scoped by this document.
+- **P3:** `<Model3D>` (glTF mesh + point-cloud viewer) — a **separate epic**, not planned
+  here.
+- **P4 (per CBA):** thermal activation — flip `disabled: false` on the existing stub once
+  a radiometric sensor is acquired; zero component rework required, by design.
