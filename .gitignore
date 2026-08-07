@@ -9,5 +9,7 @@ public/property-samples/
 *.laz
 *.las
 
-# hive runtime state
-.pHive/
+# hive runtime state (per-epic allowlist below re-includes tracked epics)
+.pHive/*
+!.pHive/epics/video-tour/
+!.pHive/epics/video-tour/**
