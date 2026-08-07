@@ -16,3 +16,5 @@ public/property-samples/
 .pHive/epics/*
 !.pHive/epics/video-tour/
 !.pHive/epics/video-tour/**
+!.pHive/epics/layer-viewer/
+!.pHive/epics/layer-viewer/**
