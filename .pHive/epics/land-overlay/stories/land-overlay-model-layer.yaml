@@ -1,0 +1,132 @@
+id: land-overlay-model-layer
+epic: land-overlay
+title: Build the MapLibre custom-layer engine for geo-anchored 3D models
+status: pending
+complexity: high
+methodology: bdd
+depends_on: []
+
+description: |
+  The hardest, highest-risk piece of this epic — read the full design
+  discussion at .pHive/epics/land-overlay/docs/design-discussion.md before
+  starting, it contains 5 corrections from an adversarial design review that
+  MUST all be implemented, not just the happy-path recipe.
+
+  Build a standalone module (NOT inlined into LayerViewer.tsx — that was
+  explicitly rejected during design review to preserve LayerViewer's
+  pure-testable-logic property) implementing MapLibre GL JS's documented
+  "3D model via custom layer" pattern:
+
+  1. `lib/geo-model-types.ts` — `GeoAnchoredModel {id: string, url: string,
+     title: string, lat: number, lon: number, altitudeMeters?: number,
+     rotationDegrees?: number, scale?: number}`. A genuinely different type
+     from components/Model3D/Model3D.tsx's `ModelDef` (geo-space vs.
+     scene-space) — do not import/extend/alias that type.
+
+  2. `lib/maplibre-model-layer.ts` — `createModelLayer(model: GeoAnchoredModel):
+     maplibregl.CustomLayerInterface`, implementing:
+     - `onAdd(map, gl)`: dynamically import `three` and
+       `three/examples/jsm/loaders/GLTFLoader` (mirror
+       components/LayerViewer/LayerViewer.tsx's lazy-module-loading pattern
+       for maplibre-gl itself — same reasoning: avoid touching browser-only
+       APIs at module-eval time). Create a `THREE.Scene`, a
+       `THREE.Camera` (its `projectionMatrix` gets overwritten every frame
+       in `render()`, so its constructor params barely matter), and a
+       `THREE.WebGLRenderer({ canvas: map.getCanvas(), context: gl,
+       antialias: true })`. Kick off `GLTFLoader.load(model.url, ...)`
+       async; do NOT block onAdd on it.
+     - An internal `ready` flag, false until the glTF has loaded AND been
+       added to the scene. `render(gl, matrix)` MUST check this flag first
+       and return immediately (no-op) if not ready — this is the fix for the
+       async-readiness gap the design review caught (onAdd is called
+       synchronously by MapLibre; loading is async; render() can and will
+       fire before loading completes without this guard).
+     - Position/orient the loaded model using
+       `maplibregl.MercatorCoordinate.fromLngLat({lng: model.lon, lat:
+       model.lat}, model.altitudeMeters ?? 0)` and
+       `MercatorCoordinate.meterInMercatorCoordinateUnits()` for scale,
+       applying `model.rotationDegrees`/`model.scale` as additional
+       transforms.
+     - `render(gl, matrix)`: build the combined projection (MapLibre's
+       `matrix` param × the model's own transform matrix), assign it to the
+       three.js camera's `projectionMatrix`, call `renderer.render(scene,
+       camera)`, THEN call `renderer.resetState()` before returning —
+       required per the design review's GL-state-pollution finding, or
+       MapLibre's own subsequent layer draws (raster/geojson) can render
+       corrupted.
+     - `onRemove()`: dispose every geometry/material/texture from the loaded
+       glTF scene graph, drop the renderer/scene/camera references. If a
+       `GLTFLoader.load()` call is still in flight when `onRemove` fires, a
+       `cancelled` flag (checked before `scene.add(gltf.scene)` in the load
+       callback) must prevent it from adding anything after removal —
+       mirror `LayerViewer.tsx`'s existing `cancelled` pattern in its
+       manifest-resolution effect.
+     - An opacity mechanism: expose a method (e.g. `setOpacity(value:
+       number)`) that traverses the loaded scene graph and sets
+       `material.transparent = true; material.opacity = value` on every
+       mesh's material(s) — there is no single top-level opacity knob in
+       raw three.js.
+     - A toggle/visibility mechanism: expose a method (e.g. `setVisible(v:
+       boolean)`) — when false, `render()` early-returns without drawing.
+       Cheaper than repeatedly add/removing the MapLibre layer and avoids
+       re-triggering the glTF load.
+
+  Write unit tests for whatever is genuinely pure and WebGL-independent
+  (the Mercator-coordinate/matrix math, the GeoAnchoredModel type, the
+  ready/cancelled flag state machine in isolation if you can extract it as
+  pure logic) — same honesty standard as LayerViewer's/Model3D's test-suite
+  stories: if the render/GL parts can't be meaningfully unit-tested, say so,
+  they'll get real coverage via Playwright in a later story in this epic.
+
+acceptance_criteria:
+  - "Given a GeoAnchoredModel, when createModelLayer() is called, then it returns a valid maplibregl.CustomLayerInterface (has onAdd/render/onRemove)"
+  - "Given render() is called before the glTF has finished loading, when invoked, then it returns without throwing and without calling renderer.render() (the ready-guard)"
+  - "Given onRemove() fires while a GLTFLoader.load() is still in flight, when that load later resolves, then it does NOT call scene.add() (the cancelled-guard)"
+  - "Given render() completes a frame, when inspected, then renderer.resetState() was called before render() returns"
+  - "Given setOpacity(0.5) is called after the model has loaded, when inspected, then every mesh material in the loaded scene graph has transparent:true and opacity:0.5"
+  - "Given setVisible(false), when render() is next called, then it does not call renderer.render()"
+
+steps:
+  - id: research
+    description: Confirm the exact MapLibre GL JS version installed (package.json) supports CustomLayerInterface + MercatorCoordinate as documented, and confirm three.js's GLTFLoader import path for the installed three version.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given/When/Then specs from the acceptance criteria above, covering the ready-guard, cancelled-guard, resetState call, opacity traversal, and visibility toggle.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Implement lib/geo-model-types.ts and lib/maplibre-model-layer.ts per the description above, incorporating all 5 design-review corrections.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run the specs; confirm what's genuinely testable without WebGL passes, and honestly document what needs live/Playwright verification (deferred to land-overlay-test-suite).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Line-by-line confirm all 5 design-review corrections are actually implemented (ready-guard, cancelled-guard, resetState, cleanup disposal, opacity-via-material-traversal) — not just claimed in comments.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/land-overlay.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: "The lazy-module-loading pattern (loadMapLibreModules) and the cancelled-flag pattern in the manifest-resolution effect — both mirrored here."
+    - path: .pHive/epics/land-overlay/docs/design-discussion.md
+      purpose: "All 5 grill corrections this story must implement — read in full, not just this story's summary of it."
+
+files_to_modify:
+  - file: lib/geo-model-types.ts
+    change: "Create"
+  - file: lib/maplibre-model-layer.ts
+    change: "Create"
+
+do_not:
+  - "Do not inline this logic into components/LayerViewer/LayerViewer.tsx — it must be its own module, per the design review's correction."
+  - "Do not reuse or alias components/Model3D/Model3D.tsx's ModelDef type — GeoAnchoredModel is genuinely different."
+  - "Do not use @react-three/fiber/drei here — a MapLibre custom layer must use raw three.js, r3f assumes it owns the render loop."
+  - "Do not skip renderer.resetState() — required, not optional."

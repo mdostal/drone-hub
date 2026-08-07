@@ -1,0 +1,75 @@
+id: land-overlay-showcase-page
+epic: land-overlay
+title: Add a real, visible demo of a geo-anchored 3D model on the map
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [land-overlay-layerviewer-integration]
+
+description: |
+  Give the land-overlay feature a real page a human can look at, following
+  the component-framework docs-site pattern from the model3d epic.
+
+  Add a new public showcase page: `app/(showcase)/components/land-overlay/
+  page.tsx` (NOT modifying the existing `/components/layer-viewer` page —
+  that one demonstrates the base LayerViewer; this is a distinct capability
+  worth its own page, same reasoning as Model3D getting its own page rather
+  than being bolted onto an existing one). Add a new card to the showcase
+  index page (app/(showcase)/components/page.tsx) linking to it.
+
+  The demo: `<LayerViewer manifest="/layer-viewer-samples/2806-prado/
+  layers.json" models={[{id:"duck", url:"/model3d-samples/duck/model.glb",
+  title:"Duck (sample glTF)", lat:73.46748426410694,
+  lon:-56.808326092516914, altitudeMeters:0, scale:5}]} />` — placing the
+  sample duck at the sample parcel's centroid (computed during planning;
+  reuse public/model3d-samples/duck/model.glb, no new asset sourcing
+  needed). `scale` starting value is a guess — tune it during live
+  verification so the model is visibly present at the map's default zoom,
+  not a speck or something absurdly oversized; document whatever value you
+  land on and why.
+
+  This page is public/ungated, same as every other showcase page (reuses
+  public/layer-viewer-samples/2806-prado/'s already-confirmed-safe sample
+  data + the sample duck — no rights concern here, unlike the video-tour
+  showcase's near-miss in the model3d epic).
+
+acceptance_criteria:
+  - "Given /components/land-overlay visited with no passcode, when loaded, then it renders directly — no redirect to /enter-passcode"
+  - "Given the page, when loaded, then the duck model is visibly rendered on the map, roughly at the sample parcel boundary's location, at a plausible scale (not a sub-pixel speck, not covering the whole viewport)"
+  - "Given the map is panned/zoomed/rotated, when observed, then the duck model's screen position updates to track the map (proves the custom-layer camera sync actually works, not just a static overlay)"
+  - "Given the existing layer toggles (ortho/hillshade/boundary/thermal), when exercised on this page, then they still work correctly with the model layer also present (no regression, no visual corruption)"
+
+steps:
+  - id: implement
+    description: Build the new showcase page + index card, tune the model's scale/altitude via live observation.
+    agent: developer
+  - id: test
+    description: Live Playwright verification — screenshot at default view, then pan/zoom/rotate and screenshot again, confirming the model's screen position visibly changes appropriately. Toggle existing layers on/off and confirm no corruption.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the page is genuinely public (no gating), confirm the model is actually visible and plausibly scaled/positioned in the verification screenshots (not just "it didn't crash").
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/land-overlay.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/(showcase)/components/layer-viewer/page.tsx"
+      purpose: "Precedent for a LayerViewer showcase page's structure — this story's page is similar but adds the models prop."
+    - path: public/layer-viewer-samples/2806-prado/parcel.geojson
+      purpose: "Source of the lat/lon centroid used for model placement (computed during epic planning)."
+
+files_to_modify:
+  - file: "app/(showcase)/components/land-overlay/page.tsx"
+    change: "Create"
+  - file: "app/(showcase)/components/page.tsx"
+    change: "Add a card linking to the new page"
+
+do_not:
+  - "Do not modify app/(showcase)/components/layer-viewer/page.tsx — this is a separate, new page."
+  - "Do not source new 3D model or geospatial assets — reuse what already exists."

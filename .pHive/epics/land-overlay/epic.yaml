@@ -1,0 +1,78 @@
+name: land-overlay
+title: "3D-model-on-land overlay — geo-anchored <Model3D> composited into <LayerViewer>"
+description: >
+  Composites a real 3D model onto <LayerViewer>'s georeferenced map,
+  anchored at a real lat/lon via MapLibre GL JS's documented custom-layer
+  pattern (raw three.js sharing MapLibre's GL context, camera-matrix
+  synced per frame) -- correctly perspective-matched as the map pans/
+  zooms/tilts, not a flat icon. Second epic in the confirmed priority
+  order after <Model3D>. Foundation for the next epic (landscape-to-
+  Minecraft voxelizer), which reuses the same "3D content composited
+  into the map" technique.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from feat/model3d to build on the app shell, gating, showcase-
+    site pattern, and Model3D's sample glTF asset.
+
+planning_team:
+  matched_tags: [3d-rendering, maplibre-custom-layer, geospatial, high-risk]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  confidence: "medium-high -- the MapLibre custom-layer + three.js technique is well-documented and widely used, but this is the most technically demanding work in the project so far; a thorough grill pass caught 5 real implementation gaps (async-readiness, module boundary, verification rigor, cleanup specifics, GL-state pollution) before any code was written."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer, specifically briefed
+      on this epic's higher technical risk. Caught 5 real issues: (1) an
+      async-readiness gap between MapLibre's synchronous onAdd() and the
+      necessarily-async three.js/glTF loading, fixed with a ready-guard;
+      (2) the original draft inlined the custom-layer logic into
+      LayerViewer.tsx, breaking that file's pure-testable-logic property --
+      moved to its own lib/maplibre-model-layer.ts module; (3) verification
+      was qualitative ("looks right") where the epic's own stated difficulty
+      demanded numeric placement checks -- added a map.project() vs.
+      actual-rendered-position comparison with a pitch/bearing sweep as its
+      own story; (4) cleanup was asserted ("same discipline") without
+      specifics -- specified the cancelled-guard and disposal requirements
+      concretely; (5) GL state pollution from three.js's renderer was
+      entirely unaddressed -- added a required renderer.resetState() call
+      and a dedicated regression test.
+    sign_off: >
+      Operator explicitly requested continuous execution without blocking
+      gates; decisions documented for post-hoc review. Given this epic's
+      elevated technical risk, the grill pass was treated as load-bearing
+      (all 5 findings fixed before story-writing, not just noted) rather
+      than optional.
+
+stories:
+  - id: land-overlay-model-layer
+    title: Build the MapLibre custom-layer engine for geo-anchored 3D models
+    complexity: high
+    depends_on: []
+  - id: land-overlay-layerviewer-integration
+    title: Wire the model-layer engine into <LayerViewer> via a new models prop
+    complexity: medium
+    depends_on: [land-overlay-model-layer]
+  - id: land-overlay-showcase-page
+    title: Add a real, visible demo of a geo-anchored 3D model on the map
+    complexity: medium
+    depends_on: [land-overlay-layerviewer-integration]
+  - id: land-overlay-test-suite
+    title: Numeric placement verification + GL-state-pollution regression test
+    complexity: high
+    depends_on: [land-overlay-layerviewer-integration, land-overlay-showcase-page]
+  - id: land-overlay-docs-acceptance-closeout
+    title: Document the land-overlay capability, close acceptance criteria
+    complexity: low
+    depends_on: [land-overlay-test-suite]
+
+deferred:
+  - "Landscape-to-Minecraft voxelizer + gated content-engine page -- next epic, reuses this epic's 'composite 3D content into the map' technique."
+  - "Telemetry-driven scene-tracked video overlay -- queued after the Minecraft/content-engine epic."
+  - "CBA's original Phase 2 tools (Measure/Annotate/Compare/Align) -- queued behind all of the above."
+  - "Point-cloud overlay (as opposed to glTF mesh) -- explicitly out of scope, a later concern per CBA's own phasing."
