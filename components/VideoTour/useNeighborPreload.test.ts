@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-//
 // Tests for the neighbor-preload mechanism, written from
 // .pHive/epics/video-tour/stories/video-tour-neighbor-preload.yaml's
 // acceptance criteria BEFORE the implementation exists (TDD per
