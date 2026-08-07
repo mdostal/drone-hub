@@ -5,6 +5,7 @@ import type { Tour, TourEdge, VideoTourProps } from "@/lib/tour-types";
 import { TourStage, type TourTransition } from "./TourStage";
 import { DoorwayControls } from "./DoorwayControls";
 import { FloorPlanMap } from "./FloorPlanMap";
+import { useNeighborPreload } from "./useNeighborPreload";
 import { cx } from "./cx";
 
 // Arrive-after-transition delay, matching the prototype's go():
@@ -108,6 +109,13 @@ export function VideoTour({
   }, [cur]);
 
   const room = useMemo(() => tour?.rooms.find((r) => r.id === cur) ?? null, [tour, cur]);
+
+  // Preload the current room's direct neighbors' media (still now, spin/
+  // transition clip in P2) — a pure side effect keyed off `room`, wired
+  // through useNeighborPreload so navigation/busy-guard logic in go()
+  // below stays untouched. Rolls forward automatically since `room`
+  // changes on every arrival.
+  useNeighborPreload(tour, room);
 
   const go = useCallback((edge: TourEdge) => {
     if (busyRef.current) return; // busy-guard: ignore clicks mid-navigation
