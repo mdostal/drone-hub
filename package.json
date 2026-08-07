@@ -14,8 +14,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.670.0",
     "@geomatico/maplibre-cog-protocol": "^0.4.0",
-    "@react-three/drei": "^9.114.0",
-    "@react-three/fiber": "^8.17.0",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "@turf/turf": "^7.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -50,6 +50,7 @@
     "typescript": "^5.6.0",
     "vitest": "^4.1.10"
   },
+  "_model3d_component_note": "@react-three/fiber/@react-three/drei were bumped from the originally-scaffolded ^8.17.0/^9.114.0 to ^9.7.0/^10.7.8 (model3d-component story): v8 pairs with React 18 only — its bundled react-reconciler host config reads pre-React-19 internals (crashes with 'Cannot read properties of undefined (reading ReactCurrentOwner)' the instant <Canvas> mounts) and can't be bridged by a newer react-reconciler either (0.31+ needs a resolveUpdatePriority host-config hook v8's compiled renderer never implements — verified empirically, no react-reconciler version satisfies both React 19's internals AND v8's host config). v9 is pmndrs' from-scratch React-19 rewrite (own bundled reconciler, no external react-reconciler dep) and is what actually renders + accepts OrbitControls input under react ^19.0.0 — confirmed via live Playwright verification. three ^0.169.0 unchanged (still satisfies both packages' peer range).",
   "_deferred_phase3_3d": [
     "copc",
     "@pnext/three-loader (potree)",
