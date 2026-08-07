@@ -6,7 +6,12 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 // Deliberately NOT a value import: see loadMapLibreModules() below for why
 // the actual `maplibre-gl` / cog-protocol modules are loaded lazily inside
 // an effect instead of at module scope.
-import type { Map as MapLibreMap, RasterTileSource } from "maplibre-gl";
+import type {
+  LayerSpecification,
+  Map as MapLibreMap,
+  RasterTileSource,
+  SourceSpecification,
+} from "maplibre-gl";
 // Pure CSS, no JS evaluation — safe to import statically (unlike the JS
 // modules below, it never touches `Worker`/`window` and doesn't need to be
 // deferred to stay SSR-safe).
@@ -110,64 +115,100 @@ function loadMapLibreModules() {
   return mapLibreModulesPromise;
 }
 
-/** Adds a non-disabled LayerDef's MapLibre source + layer(s). Disabled
- *  entries never reach this function — see the caller's `if (layer.disabled)
- *  continue;` branch, which is the real "no source/layer added" behavior. */
-function addLayerToMap(map: MapLibreMap, layer: LayerDef) {
-  if (!layer.url) {
-    // Defensive: the type contract only *requires* `url: null` for
-    // `disabled: true` stubs (already filtered out before this call), but
-    // doesn't forbid a live entry with no url. There's nothing to add.
-    console.warn(`[LayerViewer] layer "${layer.id}" has no url and is not disabled — skipping.`);
-    return;
-  }
+/** One layer's computed MapLibre source + the layer(s) that source backs —
+ *  exactly the arguments `map.addSource`/`map.addLayer` would be called
+ *  with, without actually calling them. */
+export interface LayerMapConfig {
+  sourceId: string;
+  source: SourceSpecification;
+  mapLayers: LayerSpecification[];
+}
+
+/** Pure registry→MapLibre-config mapping: given a LayerDef, computes the
+ *  source + layer(s) config `addLayerToMap` below WOULD hand to
+ *  `map.addSource`/`map.addLayer` — with no MapLibre API calls at all, so
+ *  it's unit-testable without a real WebGL-backed Map instance (see
+ *  LayerViewer.test.tsx).
+ *
+ *  Returns `null` for `disabled: true` entries (no source/layer at all —
+ *  the real "killer feature preview" skip, not a cosmetic hide — see
+ *  docs/components/layer-viewer.md) and for live entries with no `url`
+ *  (the type contract only *requires* `url: null` for disabled stubs, but
+ *  doesn't forbid a live entry with no url; there's nothing to add). */
+export function buildLayerMapConfig(layer: LayerDef): LayerMapConfig | null {
+  if (layer.disabled) return null;
+  if (!layer.url) return null;
 
   const sourceId = mapSourceId(layer.id);
   const visibility = layer.toggle ? "visible" : "none";
 
   if (layer.type === "raster") {
     const format = layer.format ?? "cog";
-    if (format === "xyz") {
-      // Pre-tiled XYZ/PMTiles raster template. Not exercised by this
-      // epic's sample manifest (which is all format:'cog'), but a real
-      // branch per the registry's documented 'xyz' meaning, not a stub.
-      map.addSource(sourceId, {
-        type: "raster",
-        tiles: [layer.url],
-        tileSize: 256,
-      });
-    } else {
-      map.addSource(sourceId, {
-        type: "raster",
-        url: cogSourceUrl(layer.url),
-        tileSize: 256,
-      });
+    // Pre-tiled XYZ/PMTiles raster template vs. a single georeferenced
+    // COG/GeoTIFF (via the "cog://" protocol) — the registry's documented
+    // 'xyz'/'cog' distinction (lib/layer-types.ts's `format` field).
+    const source: SourceSpecification =
+      format === "xyz"
+        ? { type: "raster", tiles: [layer.url], tileSize: 256 }
+        : { type: "raster", url: cogSourceUrl(layer.url), tileSize: 256 };
+
+    return {
+      sourceId,
+      source,
+      mapLayers: [
+        {
+          id: mapRasterLayerId(layer.id),
+          type: "raster",
+          source: sourceId,
+          layout: { visibility },
+          paint: { "raster-opacity": layer.opacity },
+        },
+      ],
+    };
+  }
+
+  return {
+    sourceId,
+    source: { type: "geojson", data: layer.url },
+    mapLayers: [
+      // Fill + line pair so a polygon boundary reads as both a tinted
+      // area and a crisp outline — matches the spec's "fill/line layer"
+      // wording.
+      {
+        id: mapFillLayerId(layer.id),
+        type: "fill",
+        source: sourceId,
+        layout: { visibility },
+        paint: { "fill-color": "#22c55e", "fill-opacity": layer.opacity * 0.25 },
+      },
+      {
+        id: mapLineLayerId(layer.id),
+        type: "line",
+        source: sourceId,
+        layout: { visibility },
+        paint: { "line-color": "#22c55e", "line-width": 2, "line-opacity": layer.opacity },
+      },
+    ],
+  };
+}
+
+/** Adds a non-disabled LayerDef's MapLibre source + layer(s), by computing
+ *  the config via buildLayerMapConfig() above and handing it to the real
+ *  MapLibre API. Disabled entries never reach this function — see the
+ *  caller's `if (layer.disabled) continue;` branch, which is the real "no
+ *  source/layer added" behavior. */
+function addLayerToMap(map: MapLibreMap, layer: LayerDef) {
+  const config = buildLayerMapConfig(layer);
+  if (!config) {
+    if (!layer.disabled && !layer.url) {
+      console.warn(`[LayerViewer] layer "${layer.id}" has no url and is not disabled — skipping.`);
     }
-    map.addLayer({
-      id: mapRasterLayerId(layer.id),
-      type: "raster",
-      source: sourceId,
-      layout: { visibility },
-      paint: { "raster-opacity": layer.opacity },
-    });
-  } else {
-    map.addSource(sourceId, { type: "geojson", data: layer.url });
-    // Fill + line pair so a polygon boundary reads as both a tinted area
-    // and a crisp outline — matches the spec's "fill/line layer" wording.
-    map.addLayer({
-      id: mapFillLayerId(layer.id),
-      type: "fill",
-      source: sourceId,
-      layout: { visibility },
-      paint: { "fill-color": "#22c55e", "fill-opacity": layer.opacity * 0.25 },
-    });
-    map.addLayer({
-      id: mapLineLayerId(layer.id),
-      type: "line",
-      source: sourceId,
-      layout: { visibility },
-      paint: { "line-color": "#22c55e", "line-width": 2, "line-opacity": layer.opacity },
-    });
+    return;
+  }
+
+  map.addSource(config.sourceId, config.source);
+  for (const mapLayer of config.mapLayers) {
+    map.addLayer(mapLayer);
   }
 }
 
@@ -195,6 +236,22 @@ function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
       map.setPaintProperty(lineId, "line-opacity", layer.opacity);
     }
   }
+}
+
+/** Pure(ish) manifest resolution: given a `PropertyLayers | string` prop
+ *  value, returns the resolved `PropertyLayers` — fetching + parsing JSON
+ *  if given a URL string, or resolving immediately with the object as-is.
+ *  Extracted out of the manifest-resolution effect below so it's
+ *  unit-testable directly (mock `fetch`, no component render, no MapLibre
+ *  involved at all — see LayerViewer.test.tsx) instead of only reachable
+ *  by rendering the full component, which needs a real WebGL context. */
+export async function resolveManifest(manifest: PropertyLayers | string): Promise<PropertyLayers> {
+  if (typeof manifest === "string") {
+    const res = await fetch(manifest);
+    if (!res.ok) throw new Error(`Failed to load layer manifest (${res.status})`);
+    return (await res.json()) as PropertyLayers;
+  }
+  return manifest;
 }
 
 export interface LayerViewerHandle {
@@ -258,27 +315,19 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   useEffect(() => {
     let cancelled = false;
     setLoadError(null);
+    if (typeof manifest === "string") setPropertyLayers(null);
 
-    if (typeof manifest === "string") {
-      setPropertyLayers(null);
-      fetch(manifest)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Failed to load layer manifest (${res.status})`);
-          return res.json() as Promise<PropertyLayers>;
-        })
-        .then((data) => {
-          if (!cancelled) setPropertyLayers(data);
-        })
-        .catch((err: unknown) => {
-          if (!cancelled) {
-            const message = err instanceof Error ? err.message : String(err);
-            setLoadError(message);
-            onLoadErrorRef.current?.(message);
-          }
-        });
-    } else {
-      setPropertyLayers(manifest);
-    }
+    resolveManifest(manifest)
+      .then((data) => {
+        if (!cancelled) setPropertyLayers(data);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : String(err);
+          setLoadError(message);
+          onLoadErrorRef.current?.(message);
+        }
+      });
 
     return () => {
       cancelled = true;
