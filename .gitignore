@@ -8,3 +8,6 @@ public/property-samples/
 *.tif
 *.laz
 *.las
+
+# hive runtime state
+.pHive/
