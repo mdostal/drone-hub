@@ -65,6 +65,17 @@ function LoadingPlaceholder() {
   );
 }
 
+/** Normalizes whatever an error boundary catches (an `Error`, or anything
+ *  else JS lets you `throw`) into a display/report-able string. The one
+ *  bit of pure, WebGL-independent logic in this file — everything else
+ *  below is JSX composition of Canvas/useGLTF/Bounds/OrbitControls, which
+ *  genuinely needs a real WebGL context to exercise. Exported for
+ *  Model3D.test.tsx; not part of the component's public API (not
+ *  re-exported from index.ts). */
+export function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /** Catches glTF load/parse failures (bad url, 404, malformed file) that
  *  `useGLTF`'s Suspense-throw doesn't cover — Suspense only handles the
  *  pending-promise case, not the rejected one. Without this, a bad url
@@ -78,13 +89,11 @@ class ModelErrorBoundary extends Component<
   state = { message: null as string | null };
 
   static getDerivedStateFromError(error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { message };
+    return { message: toErrorMessage(error) };
   }
 
   componentDidCatch(error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    this.props.onError?.(message);
+    this.props.onError?.(toErrorMessage(error));
   }
 
   render() {
