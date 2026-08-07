@@ -1,7 +1,7 @@
 id: model3d-docs-acceptance-closeout
 epic: model3d
 title: Write the Model3D spec doc, reconcile all docs, close acceptance criteria
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [model3d-test-suite]

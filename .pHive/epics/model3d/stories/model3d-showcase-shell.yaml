@@ -1,7 +1,7 @@
 id: model3d-showcase-shell
 epic: model3d
 title: Build the public component-showcase route + <ComponentShowcase> layout
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

@@ -1,7 +1,7 @@
 id: model3d-test-suite
 epic: model3d
 title: Close out automated test coverage for Model3D + showcase pages
-status: pending
+status: complete
 complexity: medium
 methodology: tdd
 depends_on: [model3d-component, model3d-showcase-pages]

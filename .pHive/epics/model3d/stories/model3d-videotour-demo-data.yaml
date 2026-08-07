@@ -1,7 +1,7 @@
 id: model3d-videotour-demo-data
 epic: model3d
 title: Source a genuinely public-safe demo tour for the VideoTour showcase
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

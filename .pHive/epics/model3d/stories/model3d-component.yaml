@@ -1,7 +1,7 @@
 id: model3d-component
 epic: model3d
 title: Build <Model3D> (glTF mesh viewer) + source a sample glTF model
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: []

@@ -1,7 +1,7 @@
 id: model3d-showcase-pages
 epic: model3d
 title: Give VideoTour, LayerViewer, and Model3D each a real showcase page
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [model3d-showcase-shell, model3d-videotour-demo-data, model3d-component]
