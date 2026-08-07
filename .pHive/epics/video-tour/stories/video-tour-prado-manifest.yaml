@@ -1,7 +1,7 @@
 id: video-tour-prado-manifest
 epic: video-tour
 title: Extract Prado assets and write the tour.json manifest
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: [video-tour-app-shell-scaffold]

@@ -1,7 +1,7 @@
 id: video-tour-gated-route-integration
 epic: video-tour
 title: Mount <VideoTour> on a real gated route
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: [video-tour-core-components, video-tour-gating-middleware]

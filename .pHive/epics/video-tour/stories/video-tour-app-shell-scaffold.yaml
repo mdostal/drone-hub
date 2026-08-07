@@ -1,7 +1,7 @@
 id: video-tour-app-shell-scaffold
 epic: video-tour
 title: Scaffold the Next.js app shell
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: []

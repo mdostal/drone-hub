@@ -1,7 +1,7 @@
 id: video-tour-test-suite
 epic: video-tour
 title: Stand up Vitest + RTL and close out full spec test coverage
-status: pending
+status: complete
 complexity: medium
 methodology: tdd
 depends_on: [video-tour-core-components, video-tour-neighbor-preload]

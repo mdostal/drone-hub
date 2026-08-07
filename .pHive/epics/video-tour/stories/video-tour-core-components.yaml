@@ -1,7 +1,7 @@
 id: video-tour-core-components
 epic: video-tour
 title: Port the prototype's state machine into <VideoTour> + subcomponents
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: [video-tour-prado-manifest]

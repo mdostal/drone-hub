@@ -1,7 +1,7 @@
 id: video-tour-gating-middleware
 epic: video-tour
 title: Build passcode gating middleware
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [video-tour-app-shell-scaffold]

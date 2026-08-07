@@ -1,7 +1,7 @@
 id: video-tour-neighbor-preload
 epic: video-tour
 title: Preload current node's neighbor assets
-status: pending
+status: complete
 complexity: medium
 methodology: tdd
 depends_on: [video-tour-core-components]

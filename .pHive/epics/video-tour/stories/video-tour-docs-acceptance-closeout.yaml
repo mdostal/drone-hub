@@ -1,7 +1,7 @@
 id: video-tour-docs-acceptance-closeout
 epic: video-tour
 title: Reconcile docs and close out the acceptance criteria checklist
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [video-tour-gated-route-integration, video-tour-test-suite]
