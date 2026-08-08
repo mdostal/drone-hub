@@ -1,0 +1,287 @@
+# Project CONTEXT
+
+drone-hub ships reusable, plug-and-play React components for drone property
+intelligence (map/ortho/thermal layers, 3D models, video annotation/tours),
+plus a thin gated app that showcases them — the components are the deliverable.
+
+## Terminology
+
+- **Layer registry** — the typed `{id, type, url, opacity, toggle}` structure that
+  drives `<LayerViewer>`; every map/thermal/hillshade/boundary overlay is one entry.
+  See `docs/CBA.md`.
+- **Nadir grid pass** — a drone flight flown straight down (camera nadir) with
+  ~75/70% image overlap, required for photogrammetric alignment. Oblique shots
+  do NOT align — this is the Phase-0 blocker.
+- **AlignControl** — the manual affine nudge (translate/rotate/scale) used to snap
+  an ortho onto the satellite base/parcel boundary, mandatory because the Mini 5
+  Pro has no RTK (1-3m drift expected).
+- **Tour / room graph** — the `<VideoTour>` data model: a property is `nodes`
+  (rooms, each a looping spin clip or still fallback) + `edges` (doorways, each a
+  transition clip or cross-fade wipe fallback). See `lib/tour-types.ts`.
+- **Spin clip / transition clip** — a spin clip is a looping in-room rotation;
+  a transition clip is a directional "flying from room A to room B" clip. Both
+  fall back gracefully (still / timed wipe) so a tour is publishable before every
+  clip is cut.
+- **Folder-per-property manifest** — the convention that one property's assets +
+  manifest (e.g. `tour.json`) live together on R2, feeding multiple components
+  (VideoTour, Gallery, LayerViewer) from one source of truth.
+- **Visual property-intelligence (not survey-grade)** — the framing for all
+  geospatial output: useful and visually accurate, but not RTK/GCP-corrected
+  survey data. Must be stated wherever ortho/measurement output is presented.
+
+## Key paths
+
+- `middleware.ts` — passcode gate for `/tours/*` (page + any assets under
+  `public/tours/**`). No cookie/wrong cookie → 307 redirect to
+  `/enter-passcode?next=<original-path>`. See `lib/gate.ts` and the
+  Conventions entry below.
+- `lib/gate.ts` — shared gate logic (cookie name, passcode comparison,
+  `?next=` sanitization) used by both `middleware.ts` (edge runtime) and
+  `app/enter-passcode/actions.ts` (node runtime). Passcode lives in env var
+  `DRONE_HUB_PASSCODE` (see `.env.example`) — never hardcoded; gate fails
+  closed if unset.
+- `app/enter-passcode/` — minimal passcode-entry form (`page.tsx`) + the
+  server action that validates it and sets the gate cookie (`actions.ts`).
+- `CLAUDE.md` — the authoritative kickoff brief: vision, component family,
+  operator reality, Phase-0 blocker, finalized stack, build phases, rights rules.
+- `docs/CBA.md` — the cost-benefit analysis and finalized build/phase plan
+  (buy vs. build per capability).
+- `docs/components/<name>.md` — one spec per component (currently: `video-tour.md`,
+  `layer-viewer.md`, `model3d.md`).
+- `docs/components/reference/` — working prototypes that ARE the spec for a
+  component (e.g. `prado-tour.prototype.html` for `<VideoTour>`).
+- `app/(showcase)/components/` — the public, ungated component-showcase site. See
+  "Showcase-site pattern" below.
+- `lib/` — typed schemas shared across components (e.g. `tour-types.ts`).
+- `lib/geo-model-types.ts` — `GeoAnchoredModel`, the land-overlay epic's
+  geo-space model type (`{id, url, title, lat, lon, altitudeMeters?,
+  rotationDegrees?, scale?}`), deliberately unrelated to
+  `components/Model3D/Model3D.tsx`'s scene-space `ModelDef`. See
+  `docs/components/land-overlay.md`.
+- `lib/maplibre-model-layer.ts` — `createModelLayer()`, the MapLibre
+  `CustomLayerInterface` engine that renders a `GeoAnchoredModel`'s glTF into
+  MapLibre's own WebGL context/render loop (raw three.js, not r3f — a custom
+  layer must draw into MapLibre's existing loop, not own its own). Wired into
+  `<LayerViewer>` via its `models?: GeoAnchoredModel[]` prop. See
+  `docs/components/land-overlay.md` for how it works and how it was
+  numerically verified; see the Conventions entry below for the
+  custom-layer lifecycle pattern it established.
+- `lib/voxel-types.ts` — `VoxelGrid` (`{slug, title, size, heights: number[]}`, a flat
+  row-major grid of integer block heights, `heights.length === size*size`), the
+  minecraft-content-engine epic's data shape for `<VoxelTerrain>`. Data shape only, no
+  color/material — same discipline as `lib/layer-types.ts`'s `LayerDef`. See
+  `docs/components/voxel-terrain.md`.
+- `lib/flight-log-types.ts` — `FlightLogEntry` (`{timestampMs, lat, lon,
+  altitudeMeters}`), the content-engine page's flight-log-panel type. **Deliberately
+  minimal — see the Conventions entry below before adding fields to it.**
+- `lib/content-engine-resolution.ts` — `resolveContentEngineData()`/
+  `readContentEngineFiles()`, the per-slug real-vs-fallback resolution used by
+  `/properties/[slug]/engine` (extracted out of that page's Server Component so it's
+  unit-testable), plus `SAFE_SLUG_PATTERN` (the path-traversal guard on the
+  user-supplied `slug`) and `SAMPLE_SLUG` (`"sample-house"`, the fallback dataset name).
+  See `docs/components/content-engine.md` and the Conventions entry below.
+- `components/VoxelTerrain/` — `<VoxelTerrain>` + `<VoxelStructure>`, the instanced-mesh
+  blocky terrain renderer (reuses `<Model3D>`'s r3f/drei stack, not land-overlay's
+  MapLibre-custom-layer approach — this is a standalone 3D scene, no map to composite
+  into). See `docs/components/voxel-terrain.md`.
+- `components/` — component implementations: `LayerViewer/`, `Model3D/`, `VideoTour/`,
+  `VoxelTerrain/`, plus the shared `showcase/` layout. See each component's
+  `docs/components/<name>.md`.
+- `scripts/` — reserved for pipeline-adjacent tooling. Currently empty.
+- `/pipeline` (planned, not yet created) — WebODM/GDAL/PDAL/tippecanoe scripts +
+  docker; heavy geospatial processing that never ships in the Vercel bundle.
+
+## Conventions
+
+- Every heavy viewer component is wrapped in `next/dynamic({ ssr: false })`.
+- Heavy assets (ortho/point-cloud/video) live on Cloudflare R2, never routed
+  through Vercel bandwidth.
+- A component's reference prototype (when one exists) is the spec of record —
+  match its UX before optimizing implementation details.
+- Property footage/data stays gated (passcode) until Mathew explicitly flips a
+  given tour/dataset public; owner PII is never stored or shown.
+- Gating is real infrastructure, not a convention to assume: `middleware.ts`
+  enforces it server-side for `/tours/*` (both the app route and raw
+  `public/tours/**` assets) — do not rely on client-side hiding for any new
+  gated surface. Add new gated path prefixes to `middleware.ts`'s `matcher`
+  as they appear; the passcode compare + cookie logic in `lib/gate.ts` is
+  reusable as-is. `<VideoTour>` itself stays gate-agnostic (see
+  `gated?: boolean` on `Tour` in `lib/tour-types.ts`) — gating is applied at
+  the route/middleware layer, not inside components.
+- Methodology: mostly BDD for full component build-out, TDD for complex
+  backend/logic units (see `hive.config.yaml → execution.default_methodology`).
+- Testing: **Vitest + React Testing Library** is the project's test
+  framework (first framework decision for the whole repo, set by the
+  `video-tour-test-suite` story — not just for `<VideoTour>`). Config lives
+  in `vitest.config.mts` (jsdom environment by default, `@/*` alias matching
+  `tsconfig.json`, `@vitejs/plugin-react` for JSX since Vite's own
+  esbuild/oxc transform honors `tsconfig.json`'s `jsx: "preserve"`, needed by
+  Next.js, and won't parse JSX on its own) + `vitest.setup.ts` (registers
+  `@testing-library/jest-dom` matchers, auto-cleans up the DOM between
+  tests). Run via `npm test` (`vitest run`) or `npm run test:watch`
+  (`vitest`) — `npm test` is the pre-push check until CI exists. New spec
+  files no longer need a per-file `// @vitest-environment jsdom` pragma;
+  the shared config covers it.
+- `public/tours/<slug>/` (e.g. `public/tours/2806-prado/`) — a **P1-only local-asset
+  convention**: extracted stills + `tour.json` served straight from Next.js
+  `public/`. This is a convenience for the stills/wipes MVP, not the target
+  architecture — it stands in for the R2 folder-per-property convention
+  (see "Folder-per-property manifest" above and CLAUDE.md's data pipeline)
+  until real video clips arrive, at which point assets migrate to R2 (no later
+  than P2).
+- **MapLibre custom-layer lifecycle pattern** (standing convention,
+  established by `lib/maplibre-model-layer.ts`'s `createModelLayer()` in the
+  `land-overlay` epic — see `docs/components/land-overlay.md`'s "five
+  corrections" section for the full rationale): any MapLibre
+  `CustomLayerInterface` implementation in this codebase (the next one
+  expected: the Minecraft voxelizer/content-engine epic, queued after
+  land-overlay, per CLAUDE.md's 2026-08-07 priority order) should follow the
+  same four rules, not reinvent them from MapLibre's own bare-happy-path
+  example:
+  - **Ready-guard:** a `ready` flag, false until whatever the layer draws has
+    actually finished loading; `render()` checks it FIRST, before touching
+    anything else — `onAdd` is synchronous but real asset loading (glTF
+    fetch/parse, etc.) is async, and MapLibre WILL call `render()` before
+    that finishes on a real map.
+  - **Cancelled-guard:** a `cancelled` flag flipped the instant `onRemove()`
+    fires, checked both before any in-flight lazy-module-load resolves and
+    before any in-flight asset-load callback would otherwise mutate the
+    scene — prevents a load that resolves after unmount from adding to (and
+    leaking) a scene nobody will ever render or dispose again. Mirrors
+    `LayerViewer.tsx`'s own manifest-resolution effect's `cancelled` flag.
+  - **`renderer.resetState()` after every `render()` call, before returning
+    control to MapLibre:** three.js's `WebGLRenderer` (or any raw-GL
+    renderer sharing MapLibre's context) mutates GL state
+    (depth/blend/cull/viewport) as a side effect of drawing — skip this and
+    MapLibre's own subsequent layer draws can render corrupted immediately
+    after your custom layer's frame. Has its own dedicated regression test
+    in `lib/maplibre-model-layer.placement.test.ts` (toggle an unrelated
+    MapLibre layer off/on after the custom layer has drawn a frame, confirm
+    pixel-identical output vs. a page that never added the custom layer).
+  - **Full disposal on `onRemove()`:** explicitly `.dispose()` every
+    GPU-resource-holding object (geometry/material/texture) the layer
+    created — raw three.js/WebGL objects don't get garbage-collected just
+    because a JS reference is dropped.
+- **Showcase-site pattern** (standing convention, established by the `model3d` epic —
+  see `.pHive/epics/model3d/docs/design-discussion.md`): every plug-and-play component
+  gets a public, ungated demo page under `app/(showcase)/components/<name>/page.tsx`,
+  listed on the index at `app/(showcase)/components/page.tsx`. This is a shadcn-style
+  component-framework docs site, not a gated app surface:
+  - The route group `app/(showcase)/components/` is deliberately **outside**
+    `lib/gate.ts`'s `GATED_PATH_PREFIXES` and `middleware.ts`'s `config.matcher` — no
+    passcode required. It shares no layout with the gated `/tours`, `/properties` route
+    trees.
+  - Every page wraps its live demo in the shared `<ComponentShowcase>` layout
+    (`components/showcase/ComponentShowcase.tsx`) — title, description, demo slot, usage
+    code-snippet slot. `<ComponentShowcase>` is purely presentational and has no opinion
+    about gating; the *route* decides public vs. gated (which layout wraps the page), not
+    the component. This is deliberate, so the same layout can be reused later inside a
+    gated surface (e.g. a future content-engine page) without a rebuild.
+  - Heavy viewers are still mounted via `next/dynamic({ ssr: false })` inside the
+    showcase page, same convention as the gated routes.
+  - Precedent pages: `/components/video-tour`, `/components/layer-viewer`,
+    `/components/model3d` — two retrofitted onto already-shipped components, one (`model3d`)
+    proven fresh on day one, confirming the pattern isn't a one-off.
+  - **The single most important rule this pattern established: a showcase page's demo
+    data must independently qualify as public-safe — it is NEVER assumed-safe by
+    association with another component's sample data, even data about the "same"
+    property.** Each component's sample/demo dataset gets its own rights check before it
+    can be referenced from an ungated page. This was learned the hard way during planning:
+    an early draft of the `model3d` epic's design discussion assumed `<VideoTour>`'s
+    showcase could reuse `public/tours/2806-prado/tour.json` on the strength of
+    `<LayerViewer>`'s showcase safely reusing `public/layer-viewer-samples/2806-prado/
+    layers.json` — but those two datasets, despite sharing the "2806-prado" name, are not
+    equivalent: the LayerViewer one is synthetic/public-source sample data built for
+    exactly this purpose, while the VideoTour one is **real, currently-gated photography
+    of Mathew's actual listed address** (`GATED_PATH_PREFIXES` covers `/tours/*` for
+    precisely this reason). Grill caught the mistake before it shipped. The fix: VideoTour's
+    showcase page sources its own separate, genuinely public-safe demo tour
+    (`public/showcase-samples/demo-house/tour.json` — generic placeholder room images, no
+    real address, no real people), and a regression-guard test
+    (`app/(showcase)/components/video-tour/page.test.tsx`) asserts the page's source code
+    never contains `2806-prado` or references the `/tours/` route family. Apply the same
+    discipline to every future component: before wiring a showcase demo to any existing
+    sample/manifest file, verify — don't assume — that file was built (or is otherwise
+    confirmed) to be safe for an ungated, public page, independent of any other
+    component's sample data that happens to share a name, slug, or property.
+- **Real-per-slug-data-with-an-explicit-fallback-banner pattern** (standing convention,
+  established by `lib/content-engine-resolution.ts` in the `minecraft-content-engine`
+  epic — see `docs/components/content-engine.md` for the full explanation, this is the
+  short reusable version): for any gated page that shows per-entity content which may or
+  may not exist yet for a given slug (property, tour, etc.), do not hardcode a single
+  sample dataset shown regardless of slug, and do not silently 404. Instead: (1) look for
+  real data at a per-slug path first; (2) if absent, fall back to one shared, clearly-
+  labeled sample dataset; (3) compute an explicit `isFallback` boolean from step 1's
+  actual result (never a guess, never inferred from the slug string) and use it to render
+  a genuinely visible (not a footnote) banner telling the viewer they're looking at sample
+  data, not this entity's real records. This exists because a gated page silently showing
+  generic demo content indistinguishable from real data misleadingly implies exclusivity
+  — the exact gap a grill review caught in this epic's original design. Precedent
+  functions: `resolveContentEngineData()`/`readContentEngineFiles()` in
+  `lib/content-engine-resolution.ts`; precedent banner: `EnginePageClient.tsx`'s
+  `role="alert"` fallback banner. Any future gated page needing "real data if it exists,
+  clearly-labeled sample data if it doesn't" should follow this shape rather than
+  reinventing it.
+- **`FlightLogEntry` minimal-scope precedent** (`lib/flight-log-types.ts`, established by
+  the `minecraft-content-engine` epic): this type is scoped to exactly what the
+  content-engine page's flight-log panel displays — `{timestampMs, lat, lon,
+  altitudeMeters}`. An earlier draft of this epic designed it with gimbal
+  pitch/yaw/roll fields anticipated for the *future* telemetry-driven-video-overlay
+  epic's camera-pose computation; grill flagged that as speculative design inconsistent
+  with this project's own established practice (`GeoAnchoredModel` was deliberately kept
+  separate from `<Model3D>`'s `ModelDef` rather than pre-unified for land-overlay's
+  then-future needs — the same precedent this correction follows). **Before extending
+  `FlightLogEntry` in a future session** (e.g. once the telemetry-video-overlay epic is
+  actually being planned), re-read `docs/components/content-engine.md`'s `FlightLogEntry`
+  section and `lib/flight-log-types.ts`'s own header comment first — the intended fix, if
+  that epic needs gimbal/orientation/camera-pose data, is for it to define its **own**
+  richer type against its own real requirements, not to grow this one.
+
+## Known issues
+
+- **`sanitizeNextPath`/`GATED_PATH_PREFIXES` use unanchored string-prefix matching, not
+  path-boundary-aware matching.** `lib/gate.ts`'s `GATED_PATH_PREFIXES` array (currently
+  `["/tours", "/properties"]`) is checked via plain `next.startsWith(prefix)` in
+  `sanitizeNextPath`, and `middleware.ts`'s matcher is derived from the same prefixes via
+  `${prefix}/:path*`. Neither is path-segment-boundary-aware — e.g. a hypothetical future
+  route like `/propertiesfoo` would `startsWith("/properties")` even though it isn't
+  actually nested under `/properties/*`. This pre-dates the `minecraft-content-engine`
+  epic (the prefix-list mechanism itself was built in the `layer-viewer-gating-extension`
+  story) and was verified against the real code, not assumed, during this epic's grill
+  review while confirming `/properties/[slug]/engine` needed no new gating changes — it
+  is flagged here as a known, pre-existing hardening opportunity, not a bug introduced by
+  this epic, and not yet fixed by any story. A future fix should assert on a real
+  path-boundary check (e.g. exact match or followed by `/`) rather than raw
+  `startsWith`.
+
+- **`@geomatico/maplibre-cog-protocol` misreports WGS84 bounds for non-EPSG:3857
+  COGs.** `public/layer-viewer-samples/2806-prado/ortho.tif` is a real COG in
+  EPSG:32621 (true WGS84 extent ~73.47°N/~56.8°W, verified with `rasterio`),
+  but `RasterTileSource.bounds` for it comes back as lon 3.35–5.74 / lat
+  58.25–59.49 (off Norway) — both the reported bounds AND the actual tile
+  fetches share the bug, so `<LayerViewer>`'s default auto-fit lands in the
+  wrong place on both `/components/layer-viewer` and `/components/land-overlay`.
+  Open, unfixed, not in scope for any story so far. Full verification detail,
+  where it was checked, and a starting point for the fix:
+  `docs/components/land-overlay.md`'s "Known open issue" section.
+
+## Canonical references
+
+- `CLAUDE.md` — full kickoff brief (source of truth for scope/rules).
+- `docs/CBA.md` — build phases, buy/build decisions, risks.
+- `docs/components/video-tour.md` + `docs/components/reference/prado-tour.prototype.html`
+  — the `<VideoTour>` spec and its reference implementation.
+- `docs/components/layer-viewer.md` — the `<LayerViewer>` spec.
+- `docs/components/model3d.md` — the `<Model3D>` spec and the showcase-site pattern's
+  origin story.
+- `docs/components/land-overlay.md` — the `<LayerViewer>` `models` prop
+  (`GeoAnchoredModel` + `createModelLayer`) spec: how the custom-layer engine
+  works, the numeric verification approach, and the open cog-protocol bounds
+  bug.
+- `docs/components/voxel-terrain.md` — the `<VoxelTerrain>`/`<VoxelStructure>` spec:
+  `VoxelGrid`, the offline heightmap data-prep approach, and the live-verified
+  instancing performance requirement.
+- `docs/components/content-engine.md` — the gated `/properties/[slug]/engine` page
+  spec: the per-slug real-vs-fallback resolution mechanism, the fallback banner,
+  `FlightLogEntry`'s minimal scope, and the `SAFE_SLUG_PATTERN` path-traversal guard.
+- `.pHive/project-profile.yaml` — full discovered project profile + north star.
