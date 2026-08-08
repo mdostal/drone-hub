@@ -28,3 +28,5 @@ public/property-samples/
 !.pHive/epics/model3d/**
 !.pHive/epics/land-overlay/
 !.pHive/epics/land-overlay/**
+!.pHive/epics/minecraft-content-engine/
+!.pHive/epics/minecraft-content-engine/**
