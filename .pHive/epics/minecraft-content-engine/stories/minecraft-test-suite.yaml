@@ -1,0 +1,71 @@
+id: minecraft-test-suite
+epic: minecraft-content-engine
+title: Close out test coverage for VoxelTerrain + both consuming pages
+status: pending
+complexity: medium
+methodology: tdd
+depends_on: [minecraft-showcase-page, minecraft-content-engine-page]
+
+description: |
+  Same WebGL-vs-jsdom constraint as every prior 3D component's test-suite
+  story (LayerViewer, Model3D, land-overlay) — reuse existing Vitest+RTL,
+  no new infra (Playwright is already available from the land-overlay
+  epic's playwright.config.ts if genuinely needed for live rendering
+  checks, but prefer unit tests for anything that doesn't need real WebGL).
+
+  Cover:
+  - Any pure logic in VoxelTerrain/VoxelStructure that doesn't need real
+    WebGL (e.g. the height-band-to-color mapping function, grid-index math
+    for VoxelStructure's placement) — extract and unit-test if cleanly
+    separable, same honesty standard as every prior story: say so if it
+    isn't.
+  - The content-engine page's fallback-resolution logic — THIS IS THE
+    IMPORTANT ONE, same weight as the video-tour rights-regression-guard
+    test from the model3d epic: a test proving that when real per-slug
+    content-engine data is absent, the fallback banner actually renders and
+    the sample-house content is shown; and (if practical to construct) a
+    test proving that when real per-slug data IS present, it's used
+    instead and the banner does NOT render. This is the regression guard
+    for the exact gap design review caught during planning.
+  - Basic smoke coverage for the showcase page.
+
+acceptance_criteria:
+  - "Given a slug with no content-engine data, when the page's resolution logic runs, then it selects the sample-house fallback and signals the banner should render"
+  - "Given a slug WITH content-engine data (constructed for the test), when the page's resolution logic runs, then it selects the real data and does NOT signal the fallback banner"
+  - "Given `npm test`, when run, then all new specs pass alongside every pre-existing test (should stay at 100% pass, ~152+ tests from prior epics)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Read components/VoxelTerrain/*.tsx and app/properties/[slug]/engine/page.tsx to find what's genuinely testable without WebGL, and identify the exact fallback-resolution function/logic to test.
+    agent: researcher
+  - id: test-spec
+    description: Write the fallback-resolution regression tests first (the important ones) plus any extractable pure-logic tests.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Refactor only if a clean, behavior-preserving extraction is possible (same bar as prior epics); make tests pass.
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm the fallback-resolution test is real (would actually fail if someone hardcoded the sample content regardless of slug) — this is the story's most important check.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/(showcase)/components/video-tour/page.test.tsx"
+      purpose: "Precedent for a real, non-tautological regression-guard test pattern from the model3d epic — mirror this rigor for the fallback-resolution logic."
+
+files_to_modify:
+  - file: "app/properties/[slug]/engine/page.test.tsx"
+    change: "Create — the fallback-resolution regression guard"
+
+do_not:
+  - "Do not add a new test framework or config."
+  - "Do not skip or weaken the fallback-resolution regression test even if it's awkward to construct."

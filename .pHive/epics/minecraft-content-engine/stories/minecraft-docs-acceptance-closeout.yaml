@@ -1,0 +1,68 @@
+id: minecraft-docs-acceptance-closeout
+epic: minecraft-content-engine
+title: Document VoxelTerrain + the content engine, close acceptance criteria
+status: pending
+complexity: low
+methodology: classic
+depends_on: [minecraft-test-suite]
+
+description: |
+  Write docs/components/voxel-terrain.md (following the established shape)
+  covering <VoxelTerrain>/<VoxelStructure>, the heightmap data-prep
+  approach, and the instancing performance requirement. Write
+  docs/components/content-engine.md documenting the gated
+  /properties/[slug]/engine page, the per-slug real-vs-fallback resolution
+  mechanism (the actual design-review-driven fix, explain it clearly since
+  it's the least obvious part of this epic), and the FlightLogEntry type's
+  deliberately minimal scope (with a note that a future telemetry-video-
+  overlay epic will define its own richer type rather than extending this
+  one).
+
+  Update .pHive/CONTEXT.md: add the new lib/ and components/ paths; add a
+  convention entry for the per-slug real-data-with-fallback pattern
+  (useful precedent for any future gated page that needs the same "real
+  data if it exists, clearly-labeled sample data if it doesn't" shape);
+  note the sanitizeNextPath/GATED_PATH_PREFIXES unanchored-prefix-matching
+  characteristic flagged during this epic's grill review as a known,
+  pre-existing hardening opportunity (not introduced by this epic).
+
+  Verify every acceptance criterion against real shipped code and the
+  actual test files. Run npm run build and npm test as final verification.
+
+acceptance_criteria:
+  - "Given docs/components/voxel-terrain.md and content-engine.md, when written, then they accurately describe the shipped components/pages"
+  - "Given .pHive/CONTEXT.md, when checked, then the fallback-with-banner convention and the gating-prefix-matching note are both documented"
+  - "Given npm run build and npm test, when run, then both pass with no regressions"
+
+steps:
+  - id: implement
+    description: Write both docs, update .pHive/CONTEXT.md.
+    agent: technical-writer
+  - id: test
+    description: Full build + test verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent check that the docs' description of the fallback mechanism matches what the actual page code does.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/land-overlay.md
+      purpose: "Precedent doc shape, including how it documented a known-open-issue section."
+
+files_to_modify:
+  - file: docs/components/voxel-terrain.md
+    change: "Create"
+  - file: docs/components/content-engine.md
+    change: "Create"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic."

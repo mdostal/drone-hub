@@ -1,0 +1,90 @@
+id: minecraft-content-engine-page
+epic: minecraft-content-engine
+title: Build the gated content-engine page (/properties/[slug]/engine)
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [minecraft-voxel-terrain-component, minecraft-content-engine-data]
+
+description: |
+  The operator's actual request: "the content engine where I let people see
+  the engineering, the minecraft of it, the flight docs." Read this epic's
+  design discussion point 5 in full — it specifies a per-slug real-vs-
+  fallback resolution mechanism, not a hardcoded sample panel.
+
+  Build `app/properties/[slug]/engine/page.tsx` — nested under the EXISTING
+  `/properties/:path*` gate prefix (already in middleware.ts's matcher; do
+  NOT modify middleware.ts, this path is already covered). The page:
+
+  1. For the given `slug`, tries to load
+     `/content-engine/${slug}/engineering.md` and
+     `/content-engine/${slug}/flight-log.json`. If either is missing (404),
+     falls back to `/content-engine/sample-house/engineering.md` and
+     `/content-engine/sample-house/flight-log.json` (built by
+     minecraft-content-engine-data).
+  2. Renders an explicit, visible banner when using the fallback data:
+     "Showing sample data — no real records exist yet for this property."
+     (exact wording your call, but it must be clearly visible, not a small
+     footnote) — this is not optional, it's the fix for a real rights/
+     trust concern raised during design review (a gated page silently
+     showing generic public demo content would misleadingly imply
+     exclusivity).
+  3. Composes three sections: <VoxelTerrain> + <VoxelStructure> (using
+     public/minecraft-samples/2806-prado/heightmap.json as the terrain —
+     the sample terrain is shared between the showcase and this page
+     regardless of slug, since real per-property terrain data doesn't
+     exist yet either; this is a SEPARATE concern from the engineering/
+     flight-log fallback and doesn't need its own fallback banner logic,
+     but note in a comment that real per-property terrain will need the
+     same resolution pattern once WebODM output exists), an "Engineering"
+     panel rendering the markdown content, and a "Flight Log" panel
+     rendering the FlightLogEntry[] as a simple table.
+  4. next/dynamic({ssr:false}) for the VoxelTerrain viewer, per CLAUDE.md's
+     heavy-viewer convention.
+
+acceptance_criteria:
+  - "Given no passcode, when /properties/2806-prado/engine is requested, then it redirects to /enter-passcode?next=/properties/2806-prado/engine"
+  - "Given a valid passcode and slug '2806-prado' (no real content-engine data exists for this slug), when the page loads, then it shows the fallback banner and the sample-house engineering/flight-log content"
+  - "Given the page, when loaded, then <VoxelTerrain>+<VoxelStructure> render correctly alongside the engineering and flight-log panels"
+  - "Given the flight-log panel, when rendered, then it displays the FlightLogEntry rows as a readable table (time/position/altitude)"
+
+steps:
+  - id: research
+    description: Confirm the exact fetch/fallback mechanism (server component data fetching vs. client-side fetch with a 404 check) that fits this repo's existing app/properties/[slug]/page.tsx pattern.
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs for the acceptance criteria above, including the fallback-banner logic explicitly.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the page per the description above.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Live-verify gated access, the fallback banner actually appears for a slug with no real data, and all three sections render.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the fallback banner is genuinely visible (not buried), confirm middleware.ts was NOT touched, confirm real-vs-sample resolution actually checks for real files rather than always falling back.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/properties/[slug]/page.tsx"
+      purpose: "Precedent gated-route pattern to mirror (next/dynamic, no gating logic in the page itself)."
+    - path: .pHive/epics/minecraft-content-engine/docs/design-discussion.md
+      purpose: "Point 5's grill-corrected per-slug fallback mechanism — read in full."
+
+files_to_modify:
+  - file: "app/properties/[slug]/engine/page.tsx"
+    change: "Create"
+
+do_not:
+  - "Do not modify middleware.ts — /properties/[slug]/engine is already covered by the existing /properties/:path* matcher."
+  - "Do not hardcode sample content regardless of slug without the fallback-detection + banner logic — that was the exact gap grill caught."

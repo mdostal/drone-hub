@@ -1,0 +1,92 @@
+id: minecraft-voxel-terrain-component
+epic: minecraft-content-engine
+title: Build <VoxelTerrain> + <VoxelStructure> (instanced-mesh voxel renderer)
+status: pending
+complexity: high
+methodology: bdd
+depends_on: [minecraft-types-and-heightmap]
+
+description: |
+  Reuses <Model3D>'s r3f/drei stack (NOT the land-overlay epic's raw-three-
+  in-MapLibre custom-layer approach — this is a standalone 3D scene, no map
+  to composite into).
+
+  1. `components/VoxelTerrain/VoxelTerrain.tsx` — 'use client', r3f
+     `<Canvas>` + `<OrbitControls>` (mirror components/Model3D/Model3D.tsx's
+     Canvas/camera-framing setup where it fits). Renders a `VoxelGrid`
+     (lib/voxel-types.ts) as a Minecraft-style blocky terrain using
+     `THREE.InstancedMesh` (or drei's `<Instances>`/`<Instance>` wrapper) —
+     NOT one mesh per cube; a 32x32+ grid with height-stacking is
+     potentially thousands of cubes, and instancing is a real performance
+     requirement here, not a style choice. Color/shade cubes by height band
+     using a small, fixed palette (e.g. low = grass-green, mid = dirt-brown,
+     high = stone-grey) — an original blocky aesthetic, no Minecraft
+     assets/textures used or needed.
+  2. `components/VoxelTerrain/VoxelStructure.tsx` — places a procedurally-
+     defined cluster of colored cubes (walls + a peaked roof — a simple
+     house silhouette) at a given grid position on top of the terrain,
+     reusing the SAME cube-instancing primitive VoxelTerrain uses (not a
+     separate rendering technique). Props: something like `{gridX: number,
+     gridZ: number, width?: number, depth?: number}` — your call on the
+     exact shape, document it.
+  3. `components/VoxelTerrain/index.ts` — public export surface.
+
+  Verify live with Playwright: confirm the terrain actually renders as
+  recognizable blocky terrain (varying heights visible), confirm the
+  structure appears on top of it at the right position, confirm orbit
+  controls work, and — this matters — confirm there's no visible frame-rate
+  stutter/jank with the full grid rendered (a rough proxy: the page stays
+  responsive to interaction, no multi-second freeze on mount).
+
+acceptance_criteria:
+  - "Given a VoxelGrid, when <VoxelTerrain grid={grid} /> mounts, then it renders a blocky terrain mesh with visibly varying heights matching the grid's data"
+  - "Given the terrain renders, when inspected (e.g. via renderer.info.render.calls or similar), then it uses instanced rendering, not one draw call per cube"
+  - "Given <VoxelStructure gridX gridZ />, when rendered alongside <VoxelTerrain>, then the house silhouette appears positioned on top of the terrain at that grid location, not floating or embedded"
+  - "Given mouse drag/scroll, when performed, then OrbitControls actually rotates/zooms the view (verify live)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Confirm the exact InstancedMesh or drei <Instances>/<Instance> API for the installed three/drei versions (already bumped to v0.169/drei v10 in the model3d epic for React 19 compat).
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs from the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build <VoxelTerrain> and <VoxelStructure>.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Live-verify via Playwright — terrain renders with real height variation, structure positioned correctly, orbit controls work, no visible jank.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm instancing is genuinely used (not silently falling back to per-cube meshes) and the component stays gate-agnostic and cleanly importable, same precedent as every prior component.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/Model3D/Model3D.tsx
+      purpose: "The r3f/drei Canvas + OrbitControls + auto-framing pattern to mirror (not the land-overlay epic's raw-three approach)."
+    - path: public/minecraft-samples/2806-prado/heightmap.json
+      purpose: "The real sample VoxelGrid to develop and verify against."
+
+files_to_modify:
+  - file: components/VoxelTerrain/VoxelTerrain.tsx
+    change: "Create"
+  - file: components/VoxelTerrain/VoxelStructure.tsx
+    change: "Create"
+  - file: components/VoxelTerrain/index.ts
+    change: "Create"
+
+do_not:
+  - "Do not render one mesh per cube — instancing is required for performance at this grid scale."
+  - "Do not import a glTF/external asset for the structure — procedural cubes only, per the design discussion."
+  - "Do not add gating logic to the component."

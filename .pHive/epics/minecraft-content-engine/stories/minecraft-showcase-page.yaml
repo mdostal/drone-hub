@@ -1,0 +1,53 @@
+id: minecraft-showcase-page
+epic: minecraft-content-engine
+title: Add a public showcase page for <VoxelTerrain>
+status: pending
+complexity: low
+methodology: bdd
+depends_on: [minecraft-voxel-terrain-component]
+
+description: |
+  Same framework pattern every other component gets (model3d epic
+  established this): a public, ungated page at
+  `app/(showcase)/components/voxel-terrain/page.tsx`, wrapped in
+  <ComponentShowcase>, demoing <VoxelTerrain> + <VoxelStructure> against the
+  real sample heightmap (public/minecraft-samples/2806-prado/heightmap.json
+  — already-confirmed public-safe, derived from data already established as
+  safe in the layer-viewer epic). Add a card to the showcase index page.
+
+acceptance_criteria:
+  - "Given /components/voxel-terrain visited with no passcode, when loaded, then it renders directly — no redirect to /enter-passcode"
+  - "Given the page, when loaded, then the voxel terrain + sample structure render correctly, orbit-controllable"
+  - "Given the showcase index page, when visited, then a new card links to /components/voxel-terrain"
+
+steps:
+  - id: implement
+    description: Build the showcase page + index card, following app/(showcase)/components/model3d/page.tsx's precedent shape.
+    agent: developer
+  - id: test
+    description: Live Playwright verification — no-passcode load, terrain + structure visible, orbit controls work.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the page is genuinely public and uses only the already-confirmed-safe sample heightmap.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/(showcase)/components/model3d/page.tsx"
+      purpose: "Precedent showcase-page structure to mirror."
+
+files_to_modify:
+  - file: "app/(showcase)/components/voxel-terrain/page.tsx"
+    change: "Create"
+  - file: "app/(showcase)/components/page.tsx"
+    change: "Add a card linking to the new page"
+
+do_not:
+  - "Do not add this path to middleware.ts's matcher — it must stay public."

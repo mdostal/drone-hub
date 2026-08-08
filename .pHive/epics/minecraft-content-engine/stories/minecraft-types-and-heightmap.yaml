@@ -1,0 +1,75 @@
+id: minecraft-types-and-heightmap
+epic: minecraft-content-engine
+title: Define voxel types + derive a sample heightmap grid from the hillshade COG
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Foundation for the voxel terrain: a typed grid shape + a real sample
+  heightmap derived from data already in this repo.
+
+  1. `lib/voxel-types.ts` — `VoxelGrid {slug: string, title: string, size:
+     number, heights: number[]}` (a flat row-major array of length
+     size*size, each value a small integer block-height — e.g. 1-8). Keep
+     this minimal; do not add color/material fields here (that's a
+     rendering concern for the component story, not the data shape).
+  2. An offline script (Python + rasterio, matching the pattern the
+     layer-viewer epic's synthetic-hillshade generator already used in this
+     repo — throwaway, not committed, only its output is) that:
+     - Reads public/layer-viewer-samples/2806-prado/hillshade.tif (512x512
+       uint8, values 78-216 — confirmed during epic planning).
+     - Downsamples to a grid size you choose by observation (start around
+       32x32 — tune by generating and visually/numerically checking it
+       still reads as recognizable terrain, not mush; document whatever
+       size you land on and why, same "live-tune and document" precedent
+       as land-overlay's model-scale decision).
+     - Quantizes each cell's averaged pixel value into a small integer
+       height band (e.g. map [78,216] -> [1,8]).
+     - Writes public/minecraft-samples/2806-prado/heightmap.json conforming
+       to VoxelGrid, slug:"2806-prado", title reflecting it's derived
+       sample terrain.
+
+acceptance_criteria:
+  - "Given VoxelGrid, when type-checked, then it has {slug, title, size, heights: number[]} with heights.length === size*size"
+  - "Given the generated heightmap.json, when validated against VoxelGrid, then it type-checks with no errors"
+  - "Given the heightmap's height values, when inspected, then they show real variation (not all-identical, not random noise) reflecting the underlying hillshade's actual pixel gradient"
+  - "Given the chosen grid size, when documented, then the story explains why it was chosen over a smaller/larger alternative"
+
+steps:
+  - id: implement
+    description: Write lib/voxel-types.ts, write and run the offline downsampling script, commit only its JSON output.
+    agent: developer
+  - id: test
+    description: Write a verification test asserting heightmap.json type-checks against VoxelGrid and its values show real variation correlated with the source hillshade (not just any variation).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the grid-size choice is genuinely justified by observation, not arbitrary, and that the script itself wasn't committed (only its output).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: public/layer-viewer-samples/2806-prado/hillshade.tif
+      purpose: "The real source data: 512x512 uint8 COG, EPSG:32621, values 78-216 (confirmed during epic planning)."
+    - path: lib/layer-types.ts
+      purpose: "Precedent for this repo's minimal-typed-data-shape style to mirror."
+
+files_to_modify:
+  - file: lib/voxel-types.ts
+    change: "Create"
+  - file: public/minecraft-samples/2806-prado/heightmap.json
+    change: "Create"
+
+do_not:
+  - "Do not commit the downsampling script itself — only its JSON output, matching this repo's established throwaway-script convention."
+  - "Do not add color/material/rendering fields to VoxelGrid — data shape only."

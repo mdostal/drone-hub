@@ -1,0 +1,78 @@
+id: minecraft-content-engine-data
+epic: minecraft-content-engine
+title: Define a minimal FlightLogEntry type + sample-house fallback content
+status: pending
+complexity: low
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  IMPORTANT scoping note from this epic's design discussion (a grill
+  correction — read .pHive/epics/minecraft-content-engine/docs/
+  design-discussion.md's point 6 in full before starting): design
+  FlightLogEntry for what THIS epic's flight-log panel actually needs to
+  display — do NOT speculatively add fields for the future telemetry-video-
+  overlay epic's camera-pose computation. That epic will define its own
+  type against its own real requirements when it's actually planned, same
+  as every prior epic's types were designed against real, current needs
+  (see GeoAnchoredModel vs. Model3D's ModelDef as the established
+  precedent this story must follow, not deviate from).
+
+  1. `lib/flight-log-types.ts` — `FlightLogEntry {timestampMs: number, lat:
+     number, lon: number, altitudeMeters: number}` — enough to render a
+     simple table/panel (time, position, altitude). Do not add gimbal
+     pitch/yaw/roll or any other field not needed for a display panel.
+  2. Sample content for the content-engine page's fallback state (used when
+     no real per-property data exists, per the design discussion's per-slug
+     resolution mechanism):
+     - `public/content-engine/sample-house/engineering.md` — a short,
+       clearly-fictional engineering-notes document (framing type, rough
+       square footage, materials — invented, generic, obviously not tied to
+       any real property).
+     - `public/content-engine/sample-house/flight-log.json` — an array of
+       ~10-20 FlightLogEntry rows forming a plausible short flight path
+       (smoothly varying lat/lon/altitude, not random jumps — should read
+       as a real short flight when plotted/tabulated).
+
+acceptance_criteria:
+  - "Given FlightLogEntry, when type-checked, then it has exactly {timestampMs, lat, lon, altitudeMeters} — no gimbal/orientation fields"
+  - "Given flight-log.json, when validated against FlightLogEntry[], then it type-checks with no errors"
+  - "Given the flight-log sample's lat/lon/altitude sequence, when inspected, then it varies smoothly (plausible flight path), not randomly"
+  - "Given engineering.md, when read, then it's clearly generic/fictional content, not derived from or resembling any real property's actual records"
+
+steps:
+  - id: implement
+    description: Write lib/flight-log-types.ts (minimal, per the scoping note above) and the sample-house fallback content.
+    agent: developer
+  - id: test
+    description: Write a verification test asserting flight-log.json type-checks and shows smooth variation.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm FlightLogEntry has NOT grown speculative fields beyond what a simple display panel needs — this is the one thing this story must get right per the design discussion's grill correction.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-content-engine.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/epics/minecraft-content-engine/docs/design-discussion.md
+      purpose: "Point 6's grill correction on type scoping — read in full."
+
+files_to_modify:
+  - file: lib/flight-log-types.ts
+    change: "Create"
+  - file: public/content-engine/sample-house/engineering.md
+    change: "Create"
+  - file: public/content-engine/sample-house/flight-log.json
+    change: "Create"
+
+do_not:
+  - "Do not add gimbal pitch/yaw/roll or any field beyond {timestampMs, lat, lon, altitudeMeters} to FlightLogEntry — explicitly out of scope for this epic."
+  - "Do not derive engineering.md's content from any real property's actual records."
