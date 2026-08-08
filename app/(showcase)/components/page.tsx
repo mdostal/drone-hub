@@ -35,6 +35,11 @@ const COMPONENTS: ComponentEntry[] = [
     description: "Orbit-and-measure 3D mesh / point-cloud viewer for a property's photogrammetry output.",
     href: "/components/model3d",
   },
+  {
+    name: "LandOverlay",
+    description: "A geo-anchored 3D model draped onto the georeferenced satellite map at a real lat/lon, alongside the ortho/hillshade/boundary layers.",
+    href: "/components/land-overlay",
+  },
 ];
 
 export default function ComponentsIndexPage() {
