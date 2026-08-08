@@ -309,7 +309,30 @@ vi.mock("three", () => {
       mocks.renderers.push(this);
     }
   }
-  return { Scene: FakeScene, Camera: FakeCamera, WebGLRenderer: FakeWebGLRenderer, Matrix4: FakeMatrix4 };
+  // Fakes for the scene's lighting rig (added after this epic's showcase-
+  // page story found the sample duck rendering solid black with zero
+  // lights) — createModelLayer's onAdd calls `scene.add(new
+  // AmbientLight(...))`/`new DirectionalLight(...)` unconditionally, so the
+  // mock needs constructible stand-ins or that whole onAdd().then() chain
+  // throws and silently never reaches the GLTFLoader.load() call these
+  // tests assert on.
+  class FakeLight extends FakeObject3D {
+    constructor(
+      public color?: unknown,
+      public intensity?: number,
+    ) {
+      super();
+    }
+    position = { set: vi.fn() };
+  }
+  return {
+    Scene: FakeScene,
+    Camera: FakeCamera,
+    WebGLRenderer: FakeWebGLRenderer,
+    Matrix4: FakeMatrix4,
+    AmbientLight: FakeLight,
+    DirectionalLight: FakeLight,
+  };
 });
 
 vi.mock("three/examples/jsm/loaders/GLTFLoader.js", () => {

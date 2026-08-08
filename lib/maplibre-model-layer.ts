@@ -392,6 +392,18 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
         if (cancelled) return;
 
         scene = new THREE.Scene();
+        // glTF PBR materials (MeshStandardMaterial/MeshPhysicalMaterial,
+        // what most exported models use, including the sample duck) render
+        // solid black with zero lights in the scene — found during this
+        // epic's showcase-page live verification (the duck rendered as a
+        // black silhouette; positioning/scale were correct, only lighting
+        // was missing). A basic two-light rig (ambient so nothing is ever
+        // fully unlit + one directional for actual shading/depth cues) is
+        // enough for a model viewed from a map's typical oblique angle.
+        scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+        const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+        sun.position.set(0, -70, 100); // roughly overhead, matching a map's default top-down-ish view
+        scene.add(sun);
         // Constructor params barely matter: `projectionMatrix` gets fully
         // overwritten every frame in render() below from MapLibre's own
         // camera matrix, so this never uses its own default projection.
