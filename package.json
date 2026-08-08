@@ -1,5 +1,5 @@
 {
-  "name": "drone-hub",
+  "name": "@dostal/framework",
   "version": "0.1.0",
   "private": true,
   "description": "Property-intelligence drone platform — owned, plug-and-play React components (MapLibre layer viewer + 3D + video annotation). Build the viewer, buy only compute.",
