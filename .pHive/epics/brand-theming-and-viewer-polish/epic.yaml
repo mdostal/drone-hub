@@ -1,0 +1,69 @@
+name: brand-theming-and-viewer-polish
+title: "Brand theming + LayerViewer/Model3D viewer polish (measure tool, thermal, contours)"
+description: >
+  Three operator-requested deliverables: (1) a real design system tying
+  drone-hub visually to the mdostal.com family without copying any one
+  site, applied across every page; (2) fix LayerViewer/LandOverlay's
+  actually-broken sample ortho (renders as a near-solid-black shape) with
+  a full, internally-coherent sample-dataset regenerate (real visual
+  ortho + matching-scale hillshade + thermal + contours + boundary + the
+  LandOverlay duck's anchor, all at one new real small-scale location);
+  (3) a real measure tool for <Model3D> (docs/copy already claim
+  "orbit-and-measure" but only orbit exists) plus an on-canvas controls
+  legend.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from master (post gating-removal epic; repo is public again).
+
+planning_team:
+  matched_tags: [design-system, geospatial-data, 3d-interaction, medium-risk]
+  roster: [technical-writer, developer, reviewer]
+  confidence: "medium-high — grill caught 2 major findings that reshaped the plan before any code was written: (1) the existing hillshade.tif is continental-scale (~1823 m/pixel over ~1000km extent) while the parcel is ~120m, so the original 'derive thermal/contours from the existing hillshade' plan would have produced geometrically nonsensical output; (2) replacing just the ortho would silently break the parcel/duck alignment since real sourced imagery won't be at the old sample's Arctic coordinates. Both fixed by revising to a single atomic 'regenerate one coherent sample dataset at a new real location' story rather than patching pieces. Also caught: 2 hardcoded test assertions that would break unannounced, a <Bounds>/measure-geometry re-frame conflict, and a hue-only (vs S/L) color-distinctness justification."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer, briefed on the
+      geospatial-scale and 3D-interaction risk areas specifically. Verified
+      claims directly against the running code and real file properties
+      (rasterio inspection of hillshade.tif) rather than trusting the
+      design doc's assumptions. 6 findings, all fixed in the design doc
+      before story-writing: (1) two hardcoded manifest test assertions
+      that the thermal/contours plan would break silently; (2) ortho
+      replacement breaking parcel/duck geo-alignment; (3) hillshade.tif's
+      real continental scale making the original thermal/contours
+      derivation plan geometrically incoherent; (4) thermal+contours
+      sharing one data source would visibly trace identical terrain; (5)
+      Model3D's <Bounds observe> would re-frame the camera if measure
+      geometry render inside it; (6) the accent color's distinctness
+      claim credited hue when the real mechanism is saturation/lightness.
+    sign_off: >
+      Operator's standing instruction: continuous execution, self-review,
+      commit as work completes, no per-story gate.
+
+stories:
+  - id: brand-theming-design-tokens
+    title: Real design tokens (app/globals.css) — mdostal-family-adjacent, dark-first
+    complexity: medium
+    depends_on: []
+  - id: brand-theming-apply-across-pages
+    title: Apply design tokens across the landing page, showcase wrapper, LayerControl, doc pages
+    complexity: medium
+    depends_on: [brand-theming-design-tokens]
+  - id: layerviewer-sample-dataset-overhaul
+    title: Regenerate one coherent sample dataset (real ortho + matched-scale hillshade/thermal/contours + realigned boundary/duck)
+    complexity: high
+    depends_on: []
+  - id: model3d-measure-tool-and-legend
+    title: Real measure tool for <Model3D> + on-canvas controls legend
+    complexity: high
+    depends_on: [brand-theming-design-tokens]
+  - id: brand-theming-viewer-polish-closeout
+    title: Full-suite verification, live spot-check, tools-hub screenshot refresh, docs closeout
+    complexity: low
+    depends_on: [brand-theming-apply-across-pages, layerviewer-sample-dataset-overhaul, model3d-measure-tool-and-legend]

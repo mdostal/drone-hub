@@ -53,6 +53,9 @@ plus a thin gated app that showcases them — the components are the deliverable
 - `app/(showcase)/components/` — the public, ungated component-showcase site. See
   "Showcase-site pattern" below.
 - `lib/` — typed schemas shared across components (e.g. `tour-types.ts`).
+- `app/globals.css` — the design-token system (added 2026-08-08 by the
+  `brand-theming-and-viewer-polish` epic). See the Conventions entry below for the
+  mechanism and the accent-color reasoning.
 - `lib/geo-model-types.ts` — `GeoAnchoredModel`, the land-overlay epic's
   geo-space model type (`{id, url, title, lat, lon, altitudeMeters?,
   rotationDegrees?, scale?}`), deliberately unrelated to
@@ -401,6 +404,88 @@ plus a thin gated app that showcases them — the components are the deliverable
   now removed from the working tree; **git history has NOT yet been purged**
   as of this note — do that (git-filter-repo + force-push + re-pin
   personal-drone's submodule) before ever making this repo public again.
+
+- **Design-token system** (`app/globals.css`, added 2026-08-08 by the
+  `brand-theming-and-viewer-polish` epic — see that epic's
+  `docs/design-discussion.md §3a` for the full color-science derivation, grill-verified,
+  reproduced here in summary form). Tokens live in `app/globals.css`'s `@theme {}`
+  block (Tailwind v4's build-time token-registration directive — this both declares the
+  tokens so utilities like `bg-background`/`text-accent` exist AND emits their dark
+  values as real `:root` CSS custom properties). **Dark is the default, defined directly
+  inside `@theme {}`**; the light variant lives in a plain `@media (prefers-color-scheme:
+  light) { :root { ... } }` override below it (NOT a nested `@theme`, which only
+  registers tokens at build time rather than flipping them at runtime) — this exactly
+  mirrors `tools.mdostal.com`'s own mechanism: OS-driven only, no manual toggle, no
+  client JS, no stored preference. The five surface tokens (`--color-background`,
+  `--color-surface`, `--color-border`, `--color-foreground`, `--color-muted`) get
+  overridden per-mode; `--color-accent`/`--color-accent-dark` do not change between
+  modes. Font is Inter (`next/font/google`, self-hosted, wired via the `--font-inter`
+  CSS variable `app/layout.tsx` sets on `<html>`); radius is `--radius-xl: 0.75rem`
+  (12px), the one cross-family constant (`rounded-xl` cards, `rounded-full` pills/status
+  dots).
+  **Accent color — `#e8590c`, HSL(21°, 90%, 48%) — and WHY it's deliberately distinct
+  from sibling mdostal sites, preserved in full because this repo has real precedent for
+  recording color-science reasoning (don't let this get flattened to "picked an
+  orange" on a future edit):** every mdostal-family site uses a warm-orange accent in
+  roughly the same ~20–30° hue band (`mdostal.com` dark `#ff6600`, `tools.mdostal.com`
+  dark `#ff6b00`), but those two sibling values sit only ~5 RGB-Euclidean-distance units
+  apart from each other — genuinely close. Picking a third value by hue alone (nudging
+  the hue angle a few degrees) would have landed drone-hub's accent closer to "the same
+  orange as the siblings" than the siblings are to each other, reading as a copy rather
+  than a related-but-distinct family member. The fix was to hold the hue roughly
+  constant (still reads as "the same warm-orange family") and instead differentiate on
+  **saturation/lightness** — `#e8590c` is a darker, more muted "burnt orange" (90%
+  sat/48% light) against the siblings' fully-saturated, lighter, vivid orange (100%
+  sat/50% light). Measured result: RGB-Euclidean distance ~29–31 from either sibling —
+  more distinct from either one than the siblings are from each other (~5). **If this
+  value ever needs to change, match a replacement on S/L contrast against the current
+  siblings' values, not on hue alone** — hue-only differentiation was the exact trap this
+  derivation avoided.
+- **"Regenerate sample data as one atomic dataset, not piecemeal patches" —
+  a real near-miss caught by grill before any code was written** (the
+  `brand-theming-and-viewer-polish` epic's `layerviewer-sample-dataset-overhaul` story;
+  full narrative in `docs/components/layer-viewer.md`'s "Sample data provenance"
+  section). The original plan was narrower: replace only the broken `ortho.tif` (it
+  turned out to be a single-band-uint16 rio-tiler test fixture rendering near-black, not
+  real RGB imagery) and derive new `thermal`/`contours` layers from the *existing*
+  `hillshade.tif`. Grill's direct `rasterio` inspection of that existing file, done
+  before any implementation started, found it was genuinely **continental-scale**
+  (~522×549px over a ~1,000km×950km extent, ~1823 m/pixel) while `parcel.geojson`'s
+  rectangle was ~120m×100m — about **1/15th of a single hillshade pixel**. Deriving new
+  parcel-scale layers from that array would have produced geometry at the wrong scale
+  entirely (invisible or absurd once zoomed to the parcel), and swapping only the ortho
+  while leaving the boundary/duck anchored to the old location would have silently broken
+  `CLAUDE.md`'s own "#1 registration gate" (boundary + ortho + model must all register to
+  one grid). **The general lesson, not specific to this one dataset:** when a piece of
+  sample/demo data is wrong or being replaced, check whether OTHER sample files
+  co-depend on its scale, extent, or identity before patching just the one that's
+  visibly broken — a fix that's locally correct but leaves siblings pointing at a
+  different location/scale than the file you just changed is often worse than not fixing
+  it yet, because it looks internally consistent (all files present, tests passing) while
+  actually being silently incoherent. The eventual fix regenerated all five files
+  (`ortho.tif`, `hillshade.tif`, `thermal.tif`, `contours.geojson`, `parcel.geojson`) plus
+  the `<LandOverlay>` duck's lat/lon anchor together, at one new real location, as a
+  single atomic story — not independently choosable sub-tasks. Apply the same check
+  before any future sample-data edit in this repo: is this file's replacement internally
+  consistent with every other sample file that shares its coordinate space, scale, or
+  identity, or does it need to move together with them?
+- **`LayerDef.style` — an optional, purely-additive geojson visual-style override**
+  (`lib/layer-types.ts`, added by `layerviewer-sample-dataset-overhaul`). Shape:
+  `{fillColor?: string; lineColor?: string; lineOnly?: boolean}`, consumed only by
+  `buildLayerMapConfig` (`components/LayerViewer/LayerViewer.tsx`) for `type: "geojson"`
+  layers — ignored for `type: "raster"`. Before this field existed, every geojson layer
+  hardcoded the same green `#22c55e` fill+line treatment; `style` lets a layer like
+  `contours` render as thin accent-colored lines with `lineOnly: true` (no fill at all —
+  reads as elevation-contour lines, not a filled area like the parcel boundary), while
+  every `LayerDef` written before this field existed (all 5 showcase pages,
+  `lib/layer-types.test.ts`, `LayerViewer.test.tsx`'s fixtures) falls through to the
+  exact same hardcoded green default, unchanged — confirmed by re-running those existing
+  suites unmodified after the field landed, not just assumed from "optional fields are
+  additive" in the abstract. This is the established pattern for adding a new per-layer
+  visual hook to `LayerDef` going forward: add it as an optional field with a default
+  that exactly reproduces today's hardcoded behavior when omitted, and prove the
+  existing suites still pass unmodified rather than just asserting the type change looks
+  additive on paper.
 
 ## Known issues
 

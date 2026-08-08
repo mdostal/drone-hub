@@ -36,3 +36,5 @@ public/property-samples/
 !.pHive/epics/minecraft-export/**
 !.pHive/epics/framework-docs-site/
 !.pHive/epics/framework-docs-site/**
+!.pHive/epics/brand-theming-and-viewer-polish/
+!.pHive/epics/brand-theming-and-viewer-polish/**
