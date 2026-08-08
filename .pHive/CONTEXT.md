@@ -84,6 +84,39 @@ plus a thin gated app that showcases them — the components are the deliverable
   blocky terrain renderer (reuses `<Model3D>`'s r3f/drei stack, not land-overlay's
   MapLibre-custom-layer approach — this is a standalone 3D scene, no map to composite
   into). See `docs/components/voxel-terrain.md`.
+- `components/VoxelTerrain/voxel-geometry.ts` — besides the renderer's own
+  centered/fractional world-space math (`gridToWorldX`/`Z`, `buildTerrainBlocks`/
+  `buildHouseBlocks`), also exports `terrainCells()`/`houseCells()`: the SAME
+  height-band/structure-part classification (`classifyHeightBand`, `TerrainBand`,
+  `StructurePart`) as raw, zero-origin, non-negative INTEGER grid cells (`col`,
+  `row`, `stackLevel`) with no centering/fractional offset — added by the
+  `minecraft-export` epic specifically so the schematic writer below never has to
+  floor/rebase a fractional three.js position back onto an integer grid (a real
+  block-collision risk a grill review caught). See
+  `docs/components/minecraft-export.md`.
+- `lib/minecraft-block-palette.ts` — maps `TerrainBand`/`StructurePart` to real,
+  core, version-stable Minecraft block-state strings (`minecraft:grass_block`,
+  `minecraft:dirt`, `minecraft:stone`, `minecraft:oak_planks`, `minecraft:red_wool`,
+  `minecraft:air`), for `lib/minecraft-schematic.ts`. Pure mapping table, no
+  NBT/binary concerns of its own. See `docs/components/minecraft-export.md`.
+- `lib/minecraft-schematic.ts` — `buildSchematic(grid, structure?): Buffer`, the
+  real Sponge Schematic v2 (`.schem`) writer: gzip-compressed, NBT-encoded, loadable
+  by an actual Minecraft Java Edition client via WorldEdit/Litematica — not a
+  "looks like Minecraft" export. Uses `prismarine-nbt` (a real, intentional
+  dependency — see the Conventions entry below) to build/serialize the NBT tree;
+  this file does not hand-roll any NBT binary encoding. `DATA_VERSION = 3465`
+  (Minecraft Java Edition 1.20.1, confirmed against two independent sources — see
+  `docs/components/minecraft-export.md`). See that doc for the writer's three real
+  steps (classification reuse, integer coordinate mapping, Palette/VarInt
+  `BlockData` encoding) and the golden-fixture-vs-round-trip convention entry below.
+- `app/api/minecraft-export/route.ts` — `GET /api/minecraft-export?slug=<slug>`,
+  a Next.js Route Handler that builds a `.schem` file server-side (via
+  `lib/minecraft-schematic.ts`) and streams it back with `Content-Disposition:
+  attachment`. Deliberately **not** behind `middleware.ts`'s gate — it only ever
+  serves already-public `public/minecraft-samples/**` data, the same public-safe
+  reasoning the `model3d` epic established. Slug validated with the existing
+  `SAFE_SLUG_PATTERN` precedent (`lib/content-engine-resolution.ts`), not new
+  validation logic. See `docs/components/minecraft-export.md`.
 - `components/` — component implementations: `LayerViewer/`, `Model3D/`, `VideoTour/`,
   `VoxelTerrain/`, plus the shared `showcase/` layout. See each component's
   `docs/components/<name>.md`.
@@ -237,6 +270,33 @@ plus a thin gated app that showcases them — the components are the deliverable
   that epic needs gimbal/orientation/camera-pose data, is for it to define its **own**
   richer type against its own real requirements, not to grow this one.
 
+- **Golden-fixture-vs-round-trip convention** (standing convention, established by
+  the `minecraft-export` epic's `minecraft-export-test-suite` story — see
+  `docs/components/minecraft-export.md`'s "Verification" section for the full
+  worked example): **same-library round-trip tests are not sufficient
+  spec-conformance verification for binary/interop file formats.** Writing with a
+  library and reading back with the same library only proves the library is a
+  fixed point of its own serialization — it passes identically whether the target
+  spec was understood correctly or consistently-but-wrongly (e.g. the wrong
+  byte-iteration order), because both the write and read side apply the same
+  (possibly wrong) logic and agree with each other. This isn't specific to
+  Minecraft's Sponge Schematic format — it applies to any future format-export
+  work in this codebase (a real Anvil world export, a future point-cloud/LAZ
+  writer, a COG/GeoTIFF writer, etc.): **hand-verified golden fixtures — expected
+  values derived independently of the code under test, by tracing the documented
+  spec by hand before ever running the writer, then compared against the writer's
+  real output — are required** alongside (not replaced by) an ordinary
+  same-library round-trip sanity check. Precedent implementation:
+  `lib/minecraft-schematic.golden-fixture.test.ts`'s two hand-derived fixtures,
+  kept in a file separate from the round-trip specs specifically so the
+  distinction stays visible rather than getting blended together.
+- **`prismarine-nbt` is a real, intentional dependency**, not an accidental
+  transitive addition — added by the `minecraft-export` epic to build/serialize
+  NBT compound tag trees for `lib/minecraft-schematic.ts` (part of the maintained
+  PrismarineJS ecosystem, used across many Minecraft bot/tooling projects). This
+  codebase does not hand-roll NBT binary encoding; if a future epic needs NBT
+  again, reuse this dependency rather than adding a second one.
+
 ## Known issues
 
 - **`sanitizeNextPath`/`GATED_PATH_PREFIXES` use unanchored string-prefix matching, not
@@ -284,4 +344,9 @@ plus a thin gated app that showcases them — the components are the deliverable
 - `docs/components/content-engine.md` — the gated `/properties/[slug]/engine` page
   spec: the per-slug real-vs-fallback resolution mechanism, the fallback banner,
   `FlightLogEntry`'s minimal scope, and the `SAFE_SLUG_PATTERN` path-traversal guard.
+- `docs/components/minecraft-export.md` — the real Sponge Schematic (`.schem`)
+  download feature: format choice, the writer's three steps, the `DataVersion`
+  sourcing, the API route, the UI entry points, and the golden-fixture
+  verification approach (including what could and couldn't be verified without a
+  real Minecraft client in this environment).
 - `.pHive/project-profile.yaml` — full discovered project profile + north star.
