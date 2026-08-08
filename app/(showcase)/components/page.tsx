@@ -40,6 +40,11 @@ const COMPONENTS: ComponentEntry[] = [
     description: "A geo-anchored 3D model draped onto the georeferenced satellite map at a real lat/lon, alongside the ortho/hillshade/boundary layers.",
     href: "/components/land-overlay",
   },
+  {
+    name: "VoxelTerrain",
+    description: "Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes with a sample structure on top, orbit-controllable.",
+    href: "/components/voxel-terrain",
+  },
 ];
 
 export default function ComponentsIndexPage() {
