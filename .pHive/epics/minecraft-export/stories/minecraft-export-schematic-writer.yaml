@@ -1,7 +1,7 @@
 id: minecraft-export-schematic-writer
 epic: minecraft-export
 title: Build the real Sponge Schematic (.schem) writer
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: []

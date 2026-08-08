@@ -1,7 +1,7 @@
 id: minecraft-export-test-suite
 epic: minecraft-export
 title: Hand-verified golden-fixture spec conformance + DataVersion cross-check
-status: pending
+status: complete
 complexity: high
 methodology: tdd
 depends_on: [minecraft-export-schematic-writer]

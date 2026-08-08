@@ -1,7 +1,7 @@
 id: minecraft-export-api-route
 epic: minecraft-export
 title: Serve the schematic as a real downloadable file
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [minecraft-export-schematic-writer]

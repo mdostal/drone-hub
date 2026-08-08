@@ -1,7 +1,7 @@
 id: minecraft-export-docs-acceptance-closeout
 epic: minecraft-export
 title: Document the export tool, close acceptance criteria
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [minecraft-export-ui, minecraft-export-test-suite]
