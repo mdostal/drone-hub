@@ -146,7 +146,7 @@ export default function LandOverlayShowcasePage() {
         title="LandOverlay"
         description="A geo-anchored 3D model draped onto <LayerViewer>'s map, positioned by real lat/lon alongside the ortho/hillshade/boundary layers."
         demo={
-          <div className="relative h-[480px] w-full overflow-hidden rounded-md bg-black">
+          <div className="relative h-[480px] w-full overflow-hidden rounded-xl bg-background">
             <LayerViewer
               ref={viewerRef}
               manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}

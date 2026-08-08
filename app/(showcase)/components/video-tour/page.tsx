@@ -30,7 +30,7 @@ export default function VideoTourShowcasePage() {
         title="VideoTour"
         description="Scrollytelling walkthrough that steps a floor plan through doorway-linked video clips."
         demo={
-          <div className="h-[480px] w-full overflow-hidden rounded-md bg-black">
+          <div className="h-[480px] w-full overflow-hidden rounded-xl bg-background">
             <VideoTour manifest={withBasePath("/showcase-samples/demo-house/tour.json")} />
           </div>
         }

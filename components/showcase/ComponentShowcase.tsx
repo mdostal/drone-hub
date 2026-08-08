@@ -33,17 +33,17 @@ export function ComponentShowcase({ title, description, demo, code, className }:
   return (
     <article className={cx("flex flex-col gap-6", className)}>
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        <p className="text-base text-neutral-600">{description}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+        <p className="text-base text-muted">{description}</p>
       </header>
 
-      <section aria-label={`${title} demo`} className="rounded-lg border p-4">
+      <section aria-label={`${title} demo`} className="rounded-xl border border-border bg-surface p-4">
         {demo}
       </section>
 
       <section aria-label={`${title} usage`} className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-neutral-600">Usage</h2>
-        <pre className="overflow-x-auto rounded-lg bg-neutral-900 p-4 text-sm text-neutral-100">
+        <h2 className="text-sm font-medium text-muted">Usage</h2>
+        <pre className="overflow-x-auto rounded-xl border border-border bg-surface p-4 text-sm text-foreground">
           <code>{code}</code>
         </pre>
       </section>

@@ -64,7 +64,7 @@ export default function LayerViewerShowcasePage() {
         title="LayerViewer"
         description="Toggleable, opacity-controlled georeferenced overlays draped on a satellite base map."
         demo={
-          <div className="relative h-[480px] w-full overflow-hidden rounded-md bg-black">
+          <div className="relative h-[480px] w-full overflow-hidden rounded-xl bg-background">
             <LayerViewer
               ref={viewerRef}
               manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}

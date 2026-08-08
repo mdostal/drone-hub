@@ -104,7 +104,11 @@ export default function Home() {
 
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
               {entry.demoHref && (
-                <Link href={entry.demoHref} className="font-medium text-accent underline hover:text-accent-dark">
+                <Link
+                  href={entry.demoHref}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent transition-colors hover:border-accent/70 hover:bg-accent/20"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
                   {entry.demoLabel}
                 </Link>
               )}
