@@ -74,6 +74,20 @@ export function EnginePageClient({
         <div className="h-[420px] w-full overflow-hidden rounded-md bg-neutral-900">
           <VoxelScene grid={grid} />
         </div>
+        {/* Uses this page's own real `slug` prop, not a hardcoded sample —
+            app/api/minecraft-export/route.ts falls back to its
+            DEFAULT_SLUG ("2806-prado") today because that's the only slug
+            with sample data on disk, but this link always requests the
+            slug this page is actually showing so a future real
+            public/minecraft-samples/<slug>/heightmap.json is picked up
+            automatically, no code change needed here. */}
+        <a
+          href={`/api/minecraft-export?slug=${encodeURIComponent(slug)}`}
+          download
+          className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
+        >
+          Download for Minecraft
+        </a>
       </section>
 
       <section aria-labelledby="engine-engineering-heading" className="flex flex-col gap-2">
