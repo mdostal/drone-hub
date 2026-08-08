@@ -86,8 +86,8 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Drone Hub</h1>
-        <p className="text-neutral-600">
+        <h1 className="text-2xl font-semibold text-foreground">Drone Hub</h1>
+        <p className="text-muted">
           Plug-and-play React components for drone property intelligence. Each ships with a live demo and full
           docs.
         </p>
@@ -95,25 +95,28 @@ export default function Home() {
 
       <ul className="grid gap-4 sm:grid-cols-2">
         {TOC.map((entry) => (
-          <li key={entry.name} className="flex h-full flex-col gap-2 rounded-lg border p-4">
-            <span className="text-lg font-medium">{entry.name}</span>
-            <span className="text-sm text-neutral-600">{entry.description}</span>
+          <li
+            key={entry.name}
+            className="flex h-full flex-col gap-2 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent/50"
+          >
+            <span className="text-lg font-medium text-foreground">{entry.name}</span>
+            <span className="text-sm text-muted">{entry.description}</span>
 
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
               {entry.demoHref && (
-                <Link href={entry.demoHref} className="font-medium underline hover:text-neutral-600">
+                <Link href={entry.demoHref} className="font-medium text-accent underline hover:text-accent-dark">
                   {entry.demoLabel}
                 </Link>
               )}
-              <Link href={entry.docHref} className="font-medium underline hover:text-neutral-600">
+              <Link href={entry.docHref} className="font-medium text-accent underline hover:text-accent-dark">
                 Docs
               </Link>
             </div>
 
             {entry.note && (
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="mt-1 text-xs text-muted">
                 {entry.note.text}{" "}
-                <Link href={entry.note.href} className="underline hover:text-neutral-700">
+                <Link href={entry.note.href} className="underline hover:text-accent">
                   {entry.note.label}
                 </Link>
                 .
