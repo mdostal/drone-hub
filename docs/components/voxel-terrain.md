@@ -52,9 +52,15 @@ literal-type narrowing to check the actual committed values against.
 ## Heightmap data prep — offline script, real terrain, tuned by observation
 
 `public/minecraft-samples/2806-prado/heightmap.json` is derived from real data already in
-this repo: `public/layer-viewer-samples/2806-prado/hillshade.tif`, the 512×512 uint8
-synthetic-elevation COG `<LayerViewer>`'s sample data already established as public-safe
-(EPSG:32621, pixel values 78–216). This is deliberately **not** a client-side
+this repo: `public/layer-viewer-samples/2806-prado/hillshade.tif`, the uint8
+synthetic-elevation COG `<LayerViewer>`'s sample data already established as public-safe.
+**Updated 2026-08-08:** `hillshade.tif` was reprojected from EPSG:32621 to EPSG:3857 to
+fix a `@geomatico/maplibre-cog-protocol` bounds bug (see
+`docs/components/land-overlay.md`'s "Fixed" section) — its pixel dimensions shifted from
+512×512 to 549×522 and its value range from 78–216 to 0–213 as a result of bilinear
+resampling. `heightmap.json` was regenerated from the reprojected file using the same
+derivation described below, so it stays self-consistent with the committed `hillshade.tif`.
+This is deliberately **not** a client-side
 GeoTIFF-decoding dependency — a one-time offline Python/rasterio script (matching the
 pattern already used to generate the hillshade COG itself) does the conversion; only its
 JSON output is committed, per this repo's established throwaway-script convention (the

@@ -330,81 +330,74 @@ from `/components/layer-viewer`, not a modification of it, since this is a
 distinct capability worth its own demo (the same reasoning `<Model3D>` got
 its own page rather than being bolted onto `<LayerViewer>`'s).
 
-## Known open issue — `@geomatico/maplibre-cog-protocol` misreports WGS84 bounds for non-EPSG:3857 COGs
+## Fixed — `@geomatico/maplibre-cog-protocol` misreported WGS84 bounds for non-EPSG:3857 COGs
 
-**Status: open, not fixed by this epic. Flagging clearly for whoever picks it
-up next, with enough detail to not have to rediscover it.**
+**Status: fixed (2026-08-08), by reprojecting the sample COGs.** This
+section previously documented an open bug; kept here (renamed from "Known
+open issue") since the root-cause writeup below is still the reference for
+why any future non-3857 sample/real COG would hit the same failure mode.
 
-This bug is **not new to land-overlay** — it lives in `<LayerViewer>`'s own
-COG-loading path (`@geomatico/maplibre-cog-protocol`, wired in by the
-layer-viewer epic) and affects `/components/layer-viewer` too. It's
-documented here, in the land-overlay doc, because this epic's ground-truth
-placement work is what surfaced and pinned it down precisely: verifying the
-sample duck's real-world anchor against `map.project()` required knowing the
-sample ortho's *actual* geography, which is when the mismatch became
-impossible to miss.
+This bug was **not specific to land-overlay** — it lived in
+`<LayerViewer>`'s own COG-loading path (`@geomatico/maplibre-cog-protocol`,
+wired in by the layer-viewer epic) and affected `/components/layer-viewer`
+too. It was pinned down precisely during this epic's ground-truth placement
+work: verifying the sample duck's real-world anchor against `map.project()`
+required knowing the sample ortho's *actual* geography, which is when the
+mismatch became impossible to miss.
 
-**What's wrong:** `public/layer-viewer-samples/2806-prado/ortho.tif` is a
-real, valid COG in **EPSG:32621** (UTM zone 21N) — verified directly with
-`rasterio`, its true WGS84 extent is approximately **73.47°N, 56.8°W** (high
-Arctic — matches the sample duck/parcel coordinates used throughout this
-epic and the layer-viewer epic's own sample-data provenance notes).
-`@geomatico/maplibre-cog-protocol`'s `RasterTileSource.bounds` for this exact
-file, however, live-verified via `map.getSource("layer-ortho").bounds`,
-comes back as **lon 3.35–5.74 / lat 58.25–59.49** — off the coast of
-**Norway**. The reported numbers match the Web Mercator (EPSG:3857) inverse
-projection of the COG's raw UTM *meter* coordinates — i.e. the library
-appears to treat this non-3857 COG's already-projected coordinate values as
-if they were EPSG:3857 coordinates, skipping (or mis-executing) the
-UTM→WGS84 reprojection step. This isn't just a metadata/label mismatch: the
-actual tile fetches share the same bug, so the ortho imagery itself paints
-near Norway, not at the real parcel location — both the reported bounds and
-the rendered content are wrong in the same way.
+**Root cause:** `@geomatico/maplibre-cog-protocol` v0.4.0 hardcodes a Web
+Mercator assumption for every COG it loads — its minified bundle constructs
+`new SphericalMercator({size:256, antimeridian:true})` and derives tile
+bounds via `bbox(x,y,z,false,"900913")` (the "900913" EPSG:3857 alias),
+unconditionally, regardless of the COG's actual embedded CRS. It never reads
+the file's real coordinate-reference-system metadata. So a COG whose pixel
+grid isn't already in EPSG:3857 has its raw projected-meter values
+misinterpreted as if they *were* Web Mercator meters.
 
-**Where this was verified, concretely:**
+`public/layer-viewer-samples/2806-prado/ortho.tif` was a real, valid COG in
+**EPSG:32621** (UTM zone 21N) — verified directly with `rasterio`, its true
+WGS84 extent is ~**73.47°N, 56.8°W** (high Arctic — matches the sample
+duck/parcel coordinates used throughout this epic). Before the fix, the
+library's `RasterTileSource.bounds` for this file, live-verified via
+`map.getSource("layer-ortho").bounds`, came back as **lon 3.35–5.74 / lat
+58.25–59.49** — off the coast of **Norway** — matching the Web Mercator
+inverse projection of the COG's raw UTM meter values. The actual tile
+fetches shared the same bug, so the ortho imagery itself painted near
+Norway, not at the real parcel location.
 
-- `rasterio` inspection of `ortho.tif` directly: CRS `EPSG:32621`, extent
-  reprojects to ~73.47°N/~56.8°W in WGS84.
-- Live `map.getSource("layer-ortho").bounds` read via `page.evaluate` against
-  the real running app (both `/components/layer-viewer` and
-  `/components/land-overlay`): `[3.35, 58.25, 5.74, 59.49]`.
-- `app/(showcase)/components/land-overlay/page.tsx`'s own "KNOWN LIMITATION"
-  header comment on `SAMPLE_MODELS`, written during this epic when the
-  auto-fit behavior was observed live not landing anywhere near the
-  duck/parcel.
+**The fix:** reprojected both `ortho.tif` and `hillshade.tif` from
+EPSG:32621 to EPSG:3857 ahead of time (`rio warp --dst-crs EPSG:3857
+--resampling bilinear`, then re-cogged with `rio cogeo create` and validated
+with `rio cogeo validate`), rather than patching the library. This sidesteps
+the library's hardcoded assumption entirely and matches CLAUDE.md's own
+target pipeline, which already tiles/reprojects WebODM output before it
+reaches `<LayerViewer>` (target format is PMTiles/COG in a web-safe
+projection already). Post-fix, `ortho.tif`'s computed WGS84 bounds are
+`[-61.288, 72.230, -52.302, 74.663]` — correctly containing the known
+duck/parcel coordinates (lon -56.808, lat 73.467). Both showcase pages
+(`/components/layer-viewer`, `/components/land-overlay`) now land on the
+correct real-world location by default, with no manual pan/zoom or
+`map.jumpTo()` workaround needed.
 
-**Impact:** `<LayerViewer>`'s default auto-fit-to-first-raster-layer
-behavior (see `docs/components/layer-viewer.md`'s "Behavior" §2 /
-`LayerViewer.tsx`'s `sourcedata` listener) fits the camera to these
-*wrong* bounds on **both** the `/components/layer-viewer` and
-`/components/land-overlay` showcase pages — on load, the view lands near
-Norway, not at the sample parcel. `<LayerViewer>` exposes no camera-control
-prop a consumer page can use to work around this, so both showcase pages
-require a manual pan/zoom (or, as this epic's Playwright tests do, a direct
-`map.jumpTo()`/`map.fitBounds()` call against the *real* known-correct
-coordinates) to see the ortho/parcel/model together.
+**Side effect:** `hillshade.tif`'s pixel dimensions shifted from 512×512 to
+549×522 and its value range from [78,216] to [0,213] due to bilinear
+resampling during reprojection. `public/minecraft-samples/2806-prado/heightmap.json`
+(minecraft-content-engine epic) derives from this file, so it was
+regenerated in lockstep using the same 32×32 average-pool +
+linear-quantize-to-[1,8] approach as originally used — see
+`docs/components/voxel-terrain.md` for that derivation's own notes. Both
+`public/layer-viewer-samples/2806-prado/manifest.test.ts` and
+`public/minecraft-samples/2806-prado/heightmap.test.ts` re-derive/validate
+against the actual committed files at test time (not hardcoded CRS/bounds
+values), so both continued passing with zero test-file edits.
 
-**Why this wasn't fixed here:** this epic's scope (per
-`land-overlay-showcase-page.yaml`'s explicit `do_not`) excludes sourcing new
-sample assets or touching the shared cog-protocol integration — the fix
-belongs to whichever future story owns the sample-data/cog-protocol pipeline,
-not the model-placement work. Real WebODM pipeline output (CLAUDE.md's target
-pipeline) gets tiled/reprojected before it ever reaches `<LayerViewer>`
-(target format is PMTiles/COG already in a web-safe projection), so this is
-currently a **sample-fixture-only** quirk, not a production blocker — but any
-future real-data COG that isn't already EPSG:3857 will hit the identical bug,
-so it should not be treated as permanently low-priority just because it's
-sample-data-scoped today.
-
-**A starting point for whoever fixes it:** confirm whether
-`@geomatico/maplibre-cog-protocol` is expected to reproject non-3857 COGs
-itself (check its docs/source for a reprojection step, or whether it assumes
-the caller pre-reprojects) — if it assumes pre-reprojection, either (a)
-reproject `ortho.tif`/any future non-3857 sample COG to EPSG:3857 ahead of
-time (`rio warp` or equivalent), or (b) file/patch the library. Either way,
-add a regression assertion (comparing `map.getSource(...).bounds` against a
-`rasterio`-computed ground truth for the fixture COG) so this doesn't silently
-reappear.
+**Any future real or sample COG that isn't already EPSG:3857 will hit this
+identical bug** — reproject ahead of time (as done here) rather than relying
+on the library to handle it. If someone wants to fix it at the library layer
+instead, the specific code to patch is `@geomatico/maplibre-cog-protocol`'s
+`_e=({x,y,z})=>Le.bbox(x,y,z,false,"900913")` (or its equivalent in whatever
+version is installed) — it needs to read the COG's actual CRS and reproject
+accordingly rather than assuming "900913" unconditionally.
 
 ## Phase fit
 
