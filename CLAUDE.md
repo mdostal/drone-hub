@@ -100,3 +100,31 @@ needed by everything below) → 3D-on-land overlay → Minecraft voxelizer +
 content-engine page → telemetry-driven video overlay → CBA's original Phase 2
 tools (Measure/Annotate/Compare/Align), which queue behind all of this new
 scope, not ahead of it.
+
+## Scope boundary (operator, 2026-08-08) — drone-hub is the FRAMEWORK only
+
+**This repo is `@dostal/framework` — the component library + its own demo/
+showcase display. It is NOT the business/client platform.** Real multi-tenant
+concerns (client accounts, per-client data isolation, admin impersonation,
+audit logging of client actions, billing/pricing) belong to the separate
+`personal-drone` platform repo (see the "Platform prep: personal-drone
+monorepo + drone-hub submodule" line of work — canonical pricing/packages,
+the multi-tenant `drone.mdostal.com` client portal, contracts). drone-hub's
+own gating (`middleware.ts`/`lib/gate.ts`, one shared passcode across all
+gated routes) is deliberately staying exactly that simple — it exists so the
+demo/showcase can be shown to trusted people, not to serve real, isolated
+client accounts. **Do not build real auth/multi-tenancy inside drone-hub** —
+if a future session proposes it, the answer is "that belongs in
+personal-drone," not "let's add it here."
+
+Platform/business docs have been moved OUT of this repo (to personal-drone)
+per that same work — `docs/` here is framework/component documentation only
+(the `docs/components/*.md` family), not pricing, contracts, or client-portal
+specs.
+
+**What drone-hub DOES need (its actual job):** a genuinely complete,
+publicly-hostable documentation/showcase site — every component listed in one
+table-of-contents landing page, linking to its live demo AND its
+`docs/components/*.md` writeup, good enough that `tools.mdostal.com` can link
+straight to it and visitors can browse the whole component family. This is
+the "display OF that" the framework needs, not a client platform.
