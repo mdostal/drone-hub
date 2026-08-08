@@ -17,6 +17,16 @@ import type {
 // deferred to stay SSR-safe).
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { LayerDef, PropertyLayers } from "@/lib/layer-types";
+// Type-only — see GeoAnchoredModel's own header comment for why this is a
+// deliberately different shape from Model3D's `ModelDef`.
+import type { GeoAnchoredModel } from "@/lib/geo-model-types";
+// A real value import (not lazy): unlike "maplibre-gl" itself,
+// lib/maplibre-model-layer.ts only touches browser-only globals INSIDE
+// createModelLayer()'s onAdd (behind its own lazy loadRenderingModules()) —
+// its top-level imports are all `import type`, so statically importing
+// createModelLayer here has no module-load-time side effect and doesn't
+// need the loadMapLibreModules()-style lazy-import treatment.
+import { createModelLayer } from "@/lib/maplibre-model-layer";
 import { cx } from "./cx";
 
 /**
@@ -275,11 +285,21 @@ export interface LayerViewerProps {
   onLayersChange?: (layers: LayerDef[]) => void;
   /** Fired if the manifest fails to load. */
   onLoadError?: (message: string) => void;
+  /** Optional geo-anchored 3D models (lib/geo-model-types.ts) to drape onto
+   *  the map via lib/maplibre-model-layer.ts's `createModelLayer()` — the
+   *  land-overlay epic's custom-layer 3D-model engine. Diffed by `id`
+   *  against what's currently on the map on every change: an entry added
+   *  to this array gets `map.addLayer(createModelLayer(model))`'d, an
+   *  entry removed gets `map.removeLayer(id)`'d (which triggers the custom
+   *  layer's own `onRemove` — see maplibre-model-layer.ts's "Correction 5"
+   *  cleanup). Omitted entirely (the default) is fully backward
+   *  compatible: no model-layer code path runs at all. */
+  models?: GeoAnchoredModel[];
   className?: string;
 }
 
 export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(function LayerViewer(
-  { manifest, onLayersChange, onLoadError, className },
+  { manifest, models, onLayersChange, onLoadError, className },
   ref,
 ) {
   const [propertyLayers, setPropertyLayers] = useState<PropertyLayers | null>(null);
@@ -297,6 +317,18 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   useEffect(() => {
     layersRef.current = layers;
   }, [layers]);
+
+  // Latest `models` prop, read from the 'load' handler's initial add below
+  // without needing it in that effect's dependency array — mirrors
+  // layersRef immediately above. addedModelIdsRef tracks which model ids
+  // are CURRENTLY added to the map as custom layers, so both the initial
+  // add and the models-sync effect below can diff by id instead of
+  // blindly re-adding/removing everything on every change.
+  const modelsRef = useRef<GeoAnchoredModel[]>(models ?? []);
+  useEffect(() => {
+    modelsRef.current = models ?? [];
+  }, [models]);
+  const addedModelIdsRef = useRef<Set<string>>(new Set());
 
   // Latest callbacks, read from effects without re-firing just because the
   // caller passed a new inline function each render (same pattern as
@@ -397,6 +429,15 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           if (layer.disabled) continue;
           addLayerToMap(map, layer);
         }
+        // Initial model-layer add — the models-sync effect below only
+        // reconciles SUBSEQUENT `models` prop changes (it's guarded on
+        // `mapReadyRef.current`, which isn't true until this handler
+        // finishes), so the very first add has to happen here, exactly
+        // like layersRef's initial add above.
+        for (const model of modelsRef.current) {
+          map.addLayer(createModelLayer(model));
+          addedModelIdsRef.current.add(model.id);
+        }
         mapReadyRef.current = true;
         // Re-sync in case a toggle/opacity change (via the imperative handle)
         // landed between map construction and 'load' firing.
@@ -425,6 +466,15 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
     return () => {
       cancelled = true;
       if (mapRef.current) {
+        // Symmetric with the addition path above: explicitly remove every
+        // active model layer (triggering its own onRemove — see
+        // maplibre-model-layer.ts's "Correction 5" GPU-resource cleanup)
+        // before tearing down the map itself, same cleanup rigor as the
+        // existing mapRef.current.remove() below.
+        for (const id of addedModelIdsRef.current) {
+          if (mapRef.current.getLayer(id)) mapRef.current.removeLayer(id);
+        }
+        addedModelIdsRef.current.clear();
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -432,6 +482,32 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       firstFitDoneRef.current = false;
     };
   }, [propertyLayers]);
+
+  // Add/remove model layers on every `models` prop change, once the map is
+  // ready. Diffed by id against addedModelIdsRef so an already-added entry
+  // is left untouched — only genuine adds/removes touch the map. Guarded
+  // exactly like the "Notify the consumer..." effect above (no map yet, or
+  // map not ready yet at mount) — that initial-add case is instead handled
+  // directly inside the 'load' handler (modelsRef.current), so this effect
+  // only needs to reconcile changes that happen AFTER the map is ready.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+
+    const nextIds = new Set((models ?? []).map((model) => model.id));
+
+    for (const id of addedModelIdsRef.current) {
+      if (nextIds.has(id)) continue;
+      if (map.getLayer(id)) map.removeLayer(id);
+      addedModelIdsRef.current.delete(id);
+    }
+
+    for (const model of models ?? []) {
+      if (addedModelIdsRef.current.has(model.id)) continue;
+      map.addLayer(createModelLayer(model));
+      addedModelIdsRef.current.add(model.id);
+    }
+  }, [models]);
 
   useImperativeHandle(
     ref,
