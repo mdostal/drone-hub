@@ -272,6 +272,15 @@ export interface LayerViewerHandle {
   setOpacity: (id: string, opacity: number) => void;
   /** Current live layer list (post manifest-resolution). */
   getLayers: () => LayerDef[];
+  /** The underlying MapLibre GL `Map` instance, or `null` before the
+   *  manifest has resolved / the map has been constructed. Escape hatch for
+   *  advanced consumers AND for numeric verification in tests (e.g.
+   *  land-overlay-test-suite's `map.project()`/`map.setPitch()`/
+   *  `map.setBearing()` placement checks) that need direct access to
+   *  MapLibre's own camera math — deliberately not wrapped/proxied here,
+   *  since re-exposing a subset of MapLibre's own API on this handle would
+   *  just be a worse, harder-to-maintain copy of the same surface. */
+  getMap: () => MapLibreMap | null;
 }
 
 export interface LayerViewerProps {
@@ -523,6 +532,9 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       },
       getLayers() {
         return layersRef.current;
+      },
+      getMap() {
+        return mapRef.current;
       },
     }),
     [],

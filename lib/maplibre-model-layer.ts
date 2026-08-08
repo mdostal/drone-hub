@@ -338,6 +338,16 @@ export interface ModelLayer extends CustomLayerInterface {
    *  this layer and avoids re-triggering the glTF load every time the
    *  model is hidden/shown again. */
   setVisible(visible: boolean): void;
+  /** True once the glTF has finished loading AND been added to the scene
+   *  (Correction 1's ready-guard, read externally) — i.e. once `render()`
+   *  will actually draw something on the next frame MapLibre calls it,
+   *  rather than early-returning. Exposed so a consumer/test can wait
+   *  deterministically for "the model has rendered at least one real
+   *  frame" (reachable via `map.getLayer(id).implementation.isReady()`)
+   *  instead of guessing with a fixed timeout — land-overlay-test-suite's
+   *  numeric placement checks need exactly this to avoid a flaky race
+   *  against the async glTF fetch/parse. */
+  isReady(): boolean;
 }
 
 /**
@@ -520,6 +530,10 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
 
     setVisible(value: boolean) {
       visible = value;
+    },
+
+    isReady() {
+      return ready;
     },
   };
 }

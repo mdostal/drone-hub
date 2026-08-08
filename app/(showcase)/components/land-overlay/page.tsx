@@ -23,7 +23,7 @@
 // <Model3D>'s showcase page already uses — no new asset sourcing, no rights
 // concern.
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ComponentShowcase } from "@/components/showcase";
 import { LayerControl } from "@/components/LayerViewer";
 import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
@@ -140,6 +140,24 @@ const models: GeoAnchoredModel[] = [
 export default function LandOverlayShowcasePage() {
   const viewerRef = useRef<LayerViewerHandle>(null);
   const [layers, setLayers] = useState<LayerDef[]>([]);
+
+  // Dev-only test hook: land-overlay-test-suite's numeric placement checks
+  // (lib/maplibre-model-layer.placement.test.ts) need Playwright's
+  // page.evaluate to reach the LIVE MapLibre `Map` instance (for
+  // `map.project()`/`map.setPitch()`/`map.setBearing()` — the design
+  // discussion's required verification method, see that doc's
+  // "verification" section), and a `page.evaluate` callback runs in the
+  // browser with no access to this component's React ref. Re-runs every
+  // render (cheap — one property assignment) so it stays current across
+  // the ref's null -> LayerViewerHandle transition once <LayerViewer>
+  // mounts, instead of only firing once via an empty dependency array.
+  // Gated out of production bundles — this is a test/dev escape hatch, not
+  // a public API this page's real visitors should see on `window`.
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    (window as unknown as { __layerViewerHandle?: LayerViewerHandle | null }).__layerViewerHandle =
+      viewerRef.current;
+  });
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">

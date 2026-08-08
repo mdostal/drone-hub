@@ -1,6 +1,10 @@
 node_modules/
 .next/
+.next-e2e/
 out/
+test-results/
+playwright-report/
+blob-report/
 .vercel/
 .env*
 !.env.example
