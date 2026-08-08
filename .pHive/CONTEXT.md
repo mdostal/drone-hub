@@ -331,6 +331,46 @@ plus a thin gated app that showcases them — the components are the deliverable
   keeping, re-home equivalent assertions against the page that now serves
   that content, in the same story that does the deletion.
 
+- **This app mounts at `tools.mdostal.com/framework` via a Next.js multi-zone
+  rewrite** (in the separate `mdostal-tools-hub` repo, `~/Code/mdostal-tools-hub`
+  locally). `next.config.ts` sets `basePath: "/framework"` (disabled via
+  `E2E_NO_BASE_PATH=1` for local/E2E use, matching mapstack-us/allergy-locator's
+  identical established pattern for their own tools.mdostal.com mounts) —
+  `NEXT_PUBLIC_BASE_PATH` is inlined at build time for the client call sites
+  Next's automatic basePath prefixing doesn't cover (`<Link>`/`<Image>`/router
+  navigation are covered automatically; a raw `fetch`/`<a href>`/`<img src>`
+  string, or a `manifest="/..."` prop, is NOT). `lib/base-path.ts`'s
+  `withBasePath()` wraps those call sites — but **only at drone-hub's own app/
+  page level**, never inside the portable library components themselves
+  (`components/LayerViewer`, `components/VideoTour`), which must stay
+  basePath-agnostic to remain genuinely plug-and-play into other apps.
+  **Two distinct basePath gotchas found and fixed here, both worth knowing
+  before touching gating or manifest-driven components again:**
+  1. **Root-absolute manifest asset URLs break under ANY basePath.**
+     `layers.json`/`tour.json` used to embed root-absolute paths (e.g.
+     `"/layer-viewer-samples/2806-prado/ortho.tif"`) — a browser `fetch()`/
+     `<img src>` of a leading-slash string always resolves against the
+     *origin*, discarding any basePath (WHATWG URL spec), so this broke the
+     moment the app moved off bare-root. Fixed by making manifest asset
+     fields bare filenames (relative to the manifest's own directory) and
+     having `LayerViewer.tsx`'s `resolveManifest()` / `VideoTour.tsx`'s
+     `resolveTourAssetUrls()` re-resolve each one via
+     `new URL(assetUrl, res.url)` (the Fetch API's own resolved URL) — this
+     works under ANY basePath/origin with zero basePath-specific code in the
+     components themselves, which is the more portable fix, not just a
+     patch for this one deployment.
+  2. **`NextResponse.redirect(new URL("/x", request.url))` in middleware
+     silently drops the basePath.** A leading-slash second argument to
+     `new URL()` discards the base's own path per the WHATWG spec regardless
+     of what `request.url` contains — `middleware.ts`'s passcode-gate
+     redirect used exactly this pattern and, under basePath, redirected to
+     `/enter-passcode` instead of `/framework/enter-passcode` (confirmed
+     empirically via a real basePath build + curl before/after). Fixed with
+     `request.nextUrl.clone()` (a `NextURL` instance, basePath-aware on
+     serialization) instead of a raw `new URL()`. **Any future middleware
+     redirect must use `request.nextUrl.clone()`, never
+     `new URL(path, request.url)`.**
+
 ## Known issues
 
 - **`sanitizeNextPath`/`GATED_PATH_PREFIXES` use unanchored string-prefix matching, not

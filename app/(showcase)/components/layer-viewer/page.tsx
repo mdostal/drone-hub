@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { ComponentShowcase } from "@/components/showcase";
 import { LayerControl } from "@/components/LayerViewer";
 import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
+import { withBasePath } from "@/lib/base-path";
 
 // <LayerViewer> is the heavy client-side viewer (MapLibre GL touches
 // window/canvas at construction) — CLAUDE.md's "every heavy viewer =
@@ -68,7 +69,7 @@ export default function LayerViewerShowcasePage() {
           <div className="relative h-[480px] w-full overflow-hidden rounded-md bg-black">
             <LayerViewer
               ref={viewerRef}
-              manifest="/layer-viewer-samples/2806-prado/layers.json"
+              manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}
               onLayersChange={setLayers}
             />
             <div className="pointer-events-auto absolute right-3 top-3">

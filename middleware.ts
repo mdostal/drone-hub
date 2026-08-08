@@ -16,7 +16,20 @@ export function middleware(request: NextRequest) {
   }
 
   const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  const redirectUrl = new URL("/enter-passcode", request.url);
+  // request.nextUrl.clone() (a NextURL instance), not `new URL("/enter-passcode",
+  // request.url)` — the latter is a plain WHATWG URL construction: a
+  // leading-slash second-arg path discards request.url's own path entirely
+  // per spec (same gotcha noted in next.config.ts's E2E_NO_BASE_PATH
+  // comment), which silently drops the /framework basePath prefix from the
+  // redirect's Location header under the tools.mdostal.com multi-zone mount.
+  // NextURL tracks basePath internally and re-adds it on serialization —
+  // confirmed empirically via a real basePath build + curl pass (Location
+  // came back /framework/enter-passcode?next=%2Fframework%2F... after this
+  // fix, vs /enter-passcode?next=%2F... — missing the prefix entirely —
+  // before it).
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/enter-passcode";
+  redirectUrl.search = "";
   redirectUrl.searchParams.set("next", nextPath);
   return NextResponse.redirect(redirectUrl, 307);
 }

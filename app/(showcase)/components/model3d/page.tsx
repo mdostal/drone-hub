@@ -6,6 +6,7 @@
 // public-safe placeholder asset — not property photogrammetry output.
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
+import { withBasePath } from "@/lib/base-path";
 
 // <Model3D> is a heavy client-only viewer (WebGL canvas via
 // @react-three/fiber) — CLAUDE.md's "every heavy viewer =
@@ -29,7 +30,9 @@ export default function Model3DShowcasePage() {
         description="Orbit-and-measure 3D mesh / point-cloud viewer for a property's photogrammetry output."
         demo={
           <div className="h-[480px] w-full overflow-hidden rounded-md bg-neutral-900">
-            <Model3D model={{ id: "duck", url: "/model3d-samples/duck/model.glb", title: "Duck (sample glTF)" }} />
+            <Model3D
+              model={{ id: "duck", url: withBasePath("/model3d-samples/duck/model.glb"), title: "Duck (sample glTF)" }}
+            />
           </div>
         }
         code={USAGE_CODE}

@@ -2,7 +2,8 @@
   "name": "@dostal/framework",
   "version": "0.1.0",
   "private": true,
-  "description": "Property-intelligence drone platform — owned, plug-and-play React components (MapLibre layer viewer + 3D + video annotation). Build the viewer, buy only compute.",
+  "license": "MIT",
+  "description": "Shadcn-style component framework for drone property intelligence — plug-and-play React components (MapLibre layer viewer, 3D/point-cloud viewer, geo-anchored model overlay, video walkthrough player, Minecraft terrain voxelizer + exporter), each with a live demo and full docs. Own the viewer, buy only compute.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -12,7 +12,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { Tour } from "@/lib/tour-types";
-import { VideoTour } from "./VideoTour";
+import { VideoTour, resolveTourAssetUrls } from "./VideoTour";
 import { buildSyntheticTour, makeEdge } from "./tour.fixtures";
 
 // VideoTour's navigation timing, re-declared here from VideoTour.tsx (not
@@ -83,6 +83,52 @@ describe("<VideoTour>", () => {
       render(<VideoTour manifest="/tours/missing/tour.json" />);
 
       expect(await screen.findByRole("alert")).toHaveTextContent(/404/);
+    });
+  });
+
+  describe("resolveTourAssetUrls", () => {
+    it("resolves relative still/spin/clip urls against the manifest's own fetched URL (basePath-safe)", () => {
+      const tour: Tour = {
+        slug: "demo-house",
+        title: "Demo House",
+        startRoom: "entry",
+        rooms: [
+          {
+            id: "entry",
+            label: "Entryway",
+            spin: "entry-spin.mp4",
+            still: "entry.svg",
+            pos: [50, 90],
+            neighbors: [{ to: "living", clip: "entry-to-living.mp4" }],
+          },
+        ],
+      };
+
+      const resolved = resolveTourAssetUrls(
+        tour,
+        "https://tools.mdostal.com/framework/showcase-samples/demo-house/tour.json",
+      );
+
+      expect(resolved.rooms[0].still).toBe(
+        "https://tools.mdostal.com/framework/showcase-samples/demo-house/entry.svg",
+      );
+      expect(resolved.rooms[0].spin).toBe(
+        "https://tools.mdostal.com/framework/showcase-samples/demo-house/entry-spin.mp4",
+      );
+      expect(resolved.rooms[0].neighbors[0].clip).toBe(
+        "https://tools.mdostal.com/framework/showcase-samples/demo-house/entry-to-living.mp4",
+      );
+    });
+
+    it("leaves null spin/clip untouched", () => {
+      const tour = freshTour();
+      const resolved = resolveTourAssetUrls(tour, "https://example.test/tour.json");
+      for (const room of resolved.rooms) {
+        expect(room.spin).toBeNull();
+        for (const edge of room.neighbors) {
+          expect(edge.clip).toBeNull();
+        }
+      }
     });
   });
 

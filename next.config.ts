@@ -1,6 +1,36 @@
 import type { NextConfig } from "next";
 
+/**
+ * Mounted at tools.mdostal.com/framework via a multi-zone rewrite in the
+ * mdostal-tools-hub repo (see that repo's src/lib/tools.ts + next.config.ts).
+ * basePath makes every internal link/redirect and /_next/* asset request
+ * this app emits already carry the /framework prefix, so the hub's rewrite
+ * (which forwards that same prefixed path straight through) just works —
+ * Vercel's own documented mechanism for this exact multi-zone setup, and
+ * the identical pattern mapstack-us and allergy-locator already use for
+ * their own tools.mdostal.com mounts.
+ *
+ * E2E_NO_BASE_PATH (set only by playwright.config.ts's webServer) disables
+ * basePath for the local E2E test server — every existing Playwright spec
+ * navigates with a LEADING slash (page.goto("/...")), which per the WHATWG
+ * URL spec resolves against the origin only and discards baseURL's own path
+ * segment, so a basePath'd server would 404 on every one of those calls.
+ */
+const BASE_PATH = process.env.E2E_NO_BASE_PATH ? "" : "/framework";
+
 const nextConfig: NextConfig = {
+  basePath: BASE_PATH || undefined,
+  // Next's automatic basePath prefixing covers <Link>/<Image>/router
+  // navigation only — it does NOT cover client code that constructs a fetch
+  // URL or a raw <a>/<img> src as a plain string (e.g. a manifest="/..."
+  // prop, or a sample glTF model's url field). Those call sites use
+  // lib/base-path.ts's withBasePath() helper, which reads this inlined
+  // build-time constant — same NEXT_PUBLIC_BASE_PATH pattern mapstack-us
+  // uses for its own multi-zone mount.
+  env: {
+    NEXT_PUBLIC_BASE_PATH: BASE_PATH,
+  },
+
   // Lets playwright.config.ts's webServer run its own `next dev` against an
   // isolated build cache (`NEXT_DIST_DIR=.next-e2e`) instead of the default
   // `.next` — multiple concurrent `next dev` processes against the SAME

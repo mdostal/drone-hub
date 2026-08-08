@@ -108,8 +108,13 @@ describe("demo-house showcase manifest", () => {
 
   it("every room's still resolves to a real, locally-generated placeholder file under public/showcase-samples/demo-house/", () => {
     for (const room of tourJson.rooms) {
-      expect(room.still.startsWith("/showcase-samples/demo-house/"), room.id).toBe(true);
-      const filePath = path.join(process.cwd(), "public", room.still.replace(/^\//, ""));
+      // still is a bare filename, relative to this manifest's own directory
+      // — see components/VideoTour/VideoTour.tsx's resolveTourAssetUrls()
+      // for why (root-absolute paths break under any basePath/mount prefix).
+      expect(room.still.startsWith("/"), `${room.id}: still should be a relative filename, not root-absolute`).toBe(
+        false,
+      );
+      const filePath = path.join(sampleDir, room.still);
       expect(existsSync(filePath), `${room.id}: ${filePath} should exist`).toBe(true);
       const contents = readFileSync(filePath, "utf-8");
       // Generated SVG placeholders (see the story's generator script), not

@@ -6,7 +6,7 @@
       "id": "ortho",
       "type": "raster",
       "format": "cog",
-      "url": "/layer-viewer-samples/2806-prado/ortho.tif",
+      "url": "ortho.tif",
       "opacity": 1,
       "toggle": true
     },
@@ -14,7 +14,7 @@
       "id": "hillshade",
       "type": "raster",
       "format": "cog",
-      "url": "/layer-viewer-samples/2806-prado/hillshade.tif",
+      "url": "hillshade.tif",
       "opacity": 0.6,
       "toggle": false,
       "legend": "synthetic placeholder — not real elevation data"
@@ -22,7 +22,7 @@
     {
       "id": "boundary",
       "type": "geojson",
-      "url": "/layer-viewer-samples/2806-prado/parcel.geojson",
+      "url": "parcel.geojson",
       "opacity": 1,
       "toggle": true,
       "legend": "synthetic placeholder — not a real parcel"

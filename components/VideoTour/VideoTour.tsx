@@ -17,6 +17,32 @@ const BUSY_COOLDOWN_MS = 250;
 // Timed wipe duration when an edge has no transition clip (P1: every edge).
 const WIPE_MS = 900;
 
+/** Re-resolves every room's `still`/`spin` and every edge's `clip` URL in a
+ *  fetched Tour manifest relative to the manifest's OWN resolved URL
+ *  (`manifestUrl`, the Fetch API's final after-redirects `res.url`), via
+ *  `new URL(assetUrl, manifestUrl)`. Mirrors
+ *  components/LayerViewer/LayerViewer.tsx's `resolveManifest` — see its
+ *  comment for the full WHATWG-URL-leading-slash rationale. This is why the
+ *  sample manifests (public/tours/2806-prado/tour.json,
+ *  public/showcase-samples/demo-house/tour.json) author `still`/`spin`/
+ *  `clip` as bare filenames, not root-absolute paths: a root-absolute
+ *  string always resolves against the origin regardless of the manifest's
+ *  own path (WHATWG URL spec), which breaks under any basePath/mount
+ *  prefix. Exported for direct unit testing (no fetch, no component render
+ *  needed) — mirrors resolveManifest's own testability rationale. */
+export function resolveTourAssetUrls(tour: Tour, manifestUrl: string): Tour {
+  const resolve = (url: string | null) => (url ? new URL(url, manifestUrl).href : url);
+  return {
+    ...tour,
+    rooms: tour.rooms.map((room) => ({
+      ...room,
+      still: resolve(room.still) as string,
+      spin: resolve(room.spin),
+      neighbors: room.neighbors.map((edge) => ({ ...edge, clip: resolve(edge.clip) })),
+    })),
+  };
+}
+
 /**
  * <VideoTour> — the interactive fly-through / video-Matterport. Owns the
  * room-graph navigation state machine ported from
@@ -75,7 +101,7 @@ export function VideoTour({
       fetch(manifest)
         .then((res) => {
           if (!res.ok) throw new Error(`Failed to load tour manifest (${res.status})`);
-          return res.json() as Promise<Tour>;
+          return res.json().then((data: Tour) => resolveTourAssetUrls(data, res.url));
         })
         .then((data) => {
           if (!cancelled) setTour(data);

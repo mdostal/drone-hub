@@ -28,6 +28,7 @@ import { ComponentShowcase } from "@/components/showcase";
 import { LayerControl } from "@/components/LayerViewer";
 import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
 import type { GeoAnchoredModel } from "@/lib/geo-model-types";
+import { withBasePath } from "@/lib/base-path";
 
 // <LayerViewer> is the heavy client-side viewer (MapLibre GL touches
 // window/canvas at construction) — CLAUDE.md's "every heavy viewer =
@@ -42,30 +43,13 @@ const LayerViewer = dynamic(() => import("@/components/LayerViewer").then((mod) 
 // rectangle), computed during epic planning, so the model sits inside the
 // parcel outline once the camera is actually looking at that real location.
 //
-// KNOWN LIMITATION (pre-existing, NOT introduced by this story, confirmed
-// present on the untouched .../layer-viewer/page.tsx too): <LayerViewer>'s
-// auto-fit-to-ortho-bounds does NOT land on this parcel/duck by default.
-// public/layer-viewer-samples/2806-prado/ortho.tif is a rio-tiler test COG
-// in EPSG:32621 (UTM zone 21N) — verified directly with rasterio, its real
-// WGS84 extent is ~73.47°N, ~56.8°W (matching the parcel/duck coordinates
-// here). But @geomatico/maplibre-cog-protocol's `RasterTileSource.bounds`
-// for this file comes back as lon 3.35-5.74 / lat 58.25-59.49 (off the coast
-// of Norway) — live-verified via `map.getSource('layer-ortho').bounds`, and
-// the numbers match the Web Mercator (EPSG:3857) inverse-projection of the
-// COG's raw UTM *meters*, i.e. the library appears to treat this non-3857
-// COG's projected coordinates as if they were already EPSG:3857. Both the
-// reported bounds AND the actual tile fetches share this bug, so the ortho
-// imagery only ever paints near Norway, never at the real parcel location.
-// <LayerViewer> exposes no camera-control prop to work around this from a
-// consumer page, and fixing the shared cog-protocol integration is out of
-// this story's scope (do_not: don't source new assets; the fix belongs to
-// whichever story owns the sample-data/cog-protocol pipeline). Real WebODM
-// pipeline output (CLAUDE.md's target pipeline) gets tiled/reprojected
-// before it ever reaches <LayerViewer>, so this is a sample-fixture-only
-// quirk, not a production concern — but it means: on load, you'll see the
-// (mis-located) ortho near Norway, and need to pan/zoom to the real parcel
-// coordinates above to see the duck + boundary together. Once there, the
-// scale/tracking behavior below is fully verified.
+// UPDATE (2026-08-08): the COG-bounds bug this comment used to describe
+// (ortho.tif's EPSG:32621 pixel values misread as EPSG:3857, auto-fit
+// landing off the coast of Norway instead of this parcel) is FIXED — the
+// sample ortho.tif/hillshade.tif were reprojected to EPSG:3857 ahead of
+// time. <LayerViewer>'s auto-fit now lands directly on this parcel/duck by
+// default, no pan/zoom workaround needed. Full root-cause writeup:
+// docs/components/land-overlay.md's "Fixed" section.
 //
 // `scale: 10` — live-tuned via Playwright by flying the camera to the real
 // parcel coordinates (jumpTo, since fitBounds can't get there itself — see
@@ -94,7 +78,7 @@ const SAMPLE_MODEL_SCALE = 10;
 const SAMPLE_MODELS: GeoAnchoredModel[] = [
   {
     id: "duck",
-    url: "/model3d-samples/duck/model.glb",
+    url: withBasePath("/model3d-samples/duck/model.glb"),
     title: "Duck (sample glTF)",
     lat: 73.46748426410694,
     lon: -56.808326092516914,
@@ -168,7 +152,7 @@ export default function LandOverlayShowcasePage() {
           <div className="relative h-[480px] w-full overflow-hidden rounded-md bg-black">
             <LayerViewer
               ref={viewerRef}
-              manifest="/layer-viewer-samples/2806-prado/layers.json"
+              manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}
               models={SAMPLE_MODELS}
               onLayersChange={setLayers}
             />

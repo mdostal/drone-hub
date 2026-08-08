@@ -36,7 +36,7 @@ export default defineConfig({
     // `next dev` running against this same checkout (see next.config.ts's
     // own comment — real, observed contention/hangs otherwise).
     command: "npx next dev -p 3948",
-    env: { NEXT_DIST_DIR: ".next-e2e" },
+    env: { NEXT_DIST_DIR: ".next-e2e", E2E_NO_BASE_PATH: "1" },
     url: "http://localhost:3948",
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,

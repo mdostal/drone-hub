@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { LayerControl } from "@/components/LayerViewer";
 import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
+import { withBasePath } from "@/lib/base-path";
 
 // <LayerViewer> is the heavy client-side viewer (MapLibre GL touches
 // window/canvas at construction) — CLAUDE.md's "every heavy viewer =
@@ -38,7 +39,7 @@ export default function PropertyPage() {
     <main className="relative h-screen w-screen bg-black">
       <LayerViewer
         ref={viewerRef}
-        manifest={`/layer-viewer-samples/${slug}/layers.json`}
+        manifest={withBasePath(`/layer-viewer-samples/${slug}/layers.json`)}
         onLayersChange={setLayers}
       />
       <div className="pointer-events-auto absolute right-3 top-3">

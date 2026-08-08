@@ -12,6 +12,7 @@
 // at public/showcase-samples/demo-house/tour.json.
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
+import { withBasePath } from "@/lib/base-path";
 
 // <VideoTour> is the heavy client-side viewer (video playback + room-graph
 // navigation state machine) — CLAUDE.md's "every heavy viewer =
@@ -33,7 +34,7 @@ export default function VideoTourShowcasePage() {
         description="Scrollytelling walkthrough that steps a floor plan through doorway-linked video clips."
         demo={
           <div className="h-[480px] w-full overflow-hidden rounded-md bg-black">
-            <VideoTour manifest="/showcase-samples/demo-house/tour.json" />
+            <VideoTour manifest={withBasePath("/showcase-samples/demo-house/tour.json")} />
           </div>
         }
         code={USAGE_CODE}

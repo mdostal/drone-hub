@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
+import { withBasePath } from "@/lib/base-path";
 
 // <VideoTour> is the heavy client-side viewer (video playback + room-graph
 // navigation state machine) — CLAUDE.md's "every heavy viewer =
@@ -27,7 +28,7 @@ export default function TourPage() {
 
   return (
     <main className="h-screen w-screen bg-black">
-      <VideoTour manifest={`/tours/${slug}/tour.json`} />
+      <VideoTour manifest={withBasePath(`/tours/${slug}/tour.json`)} />
     </main>
   );
 }

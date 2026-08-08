@@ -85,8 +85,13 @@ describe("2806-prado sample manifest", () => {
   it("every raster/geojson url resolves to a real file under public/", () => {
     for (const layer of manifestJson.layers) {
       if (layer.url === null) continue;
-      // url is a root-relative public path, e.g. "/layer-viewer-samples/2806-prado/ortho.tif"
-      const filePath = path.join(process.cwd(), "public", layer.url.replace(/^\//, ""));
+      // url is a bare filename, relative to this manifest's own directory —
+      // see components/LayerViewer/LayerViewer.tsx's resolveManifest() for
+      // why (root-absolute paths break under any basePath/mount prefix).
+      expect(layer.url.startsWith("/"), `${layer.id}: url should be a relative filename, not root-absolute`).toBe(
+        false,
+      );
+      const filePath = path.join(sampleDir, layer.url);
       expect(existsSync(filePath), `${layer.id}: ${filePath} should exist`).toBe(true);
     }
   });

@@ -9,6 +9,7 @@
 // public-safe derived terrain (see VoxelTerrainDemo.tsx's header comment
 // and app/dev-preview-voxel's precedent), not raw property photogrammetry.
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { ComponentShowcase } from "@/components/showcase";
 
 // <VoxelTerrain>/<VoxelStructure> are heavy client-only WebGL viewers
@@ -47,13 +48,18 @@ export default function VoxelTerrainShowcasePage() {
                 download-anchor is deliberately all this needs (per this
                 story's yaml): the browser's native download handling covers
                 it, no client state/loading-spinner required. */}
-            <a
+            {/* next/link, not a raw <a> — Link's href gets Next's automatic
+                basePath prefixing (the mount-under-tools.mdostal.com/framework
+                multi-zone setup, see next.config.ts), which a hardcoded
+                absolute href would not; the `download` attribute still passes
+                through to the rendered anchor unchanged. */}
+            <Link
               href="/api/minecraft-export?slug=2806-prado"
               download
               className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
             >
               Download for Minecraft
-            </a>
+            </Link>
           </div>
         }
         code={USAGE_CODE}

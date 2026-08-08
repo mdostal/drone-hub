@@ -254,12 +254,34 @@ function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
  *  Extracted out of the manifest-resolution effect below so it's
  *  unit-testable directly (mock `fetch`, no component render, no MapLibre
  *  involved at all — see LayerViewer.test.tsx) instead of only reachable
- *  by rendering the full component, which needs a real WebGL context. */
+ *  by rendering the full component, which needs a real WebGL context.
+ *
+ *  When fetched from a URL, every layer's `url` is re-resolved relative to
+ *  the manifest's OWN resolved URL (`res.url`, the Fetch API's final
+ *  after-redirects URL) via `new URL(layer.url, res.url)`. This is why the
+ *  sample manifests (public/layer-viewer-samples/2806-prado/layers.json,
+ *  etc.) author their `url` fields as bare filenames ("ortho.tif"), not
+ *  root-absolute paths ("/layer-viewer-samples/2806-prado/ortho.tif"): a
+ *  root-absolute string always resolves against the ORIGIN regardless of
+ *  the base URL's own path (WHATWG URL spec), which breaks the moment this
+ *  component — or its manifest — is deployed under any basePath/mount
+ *  prefix (e.g. the tools.mdostal.com/framework multi-zone mount). A
+ *  filename-relative manifest resolves correctly under ANY mount, with zero
+ *  basePath-specific code in this component — this is what actually makes
+ *  the "plug-and-play, own the component" contract portable. Object-manifest
+ *  callers (no fetch involved) are untouched — their `url` fields are used
+ *  exactly as given, since there's no fetched URL to resolve against. */
 export async function resolveManifest(manifest: PropertyLayers | string): Promise<PropertyLayers> {
   if (typeof manifest === "string") {
     const res = await fetch(manifest);
     if (!res.ok) throw new Error(`Failed to load layer manifest (${res.status})`);
-    return (await res.json()) as PropertyLayers;
+    const parsed = (await res.json()) as PropertyLayers;
+    return {
+      ...parsed,
+      layers: parsed.layers.map((layer) =>
+        layer.url ? { ...layer, url: new URL(layer.url, res.url).href } : layer,
+      ),
+    };
   }
   return manifest;
 }

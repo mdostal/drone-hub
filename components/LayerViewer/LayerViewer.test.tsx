@@ -167,4 +167,26 @@ describe("resolveManifest", () => {
 
     await expect(resolveManifest("/properties/missing/layers.json")).rejects.toThrow(/404/);
   });
+
+  it("resolves relative layer urls against the manifest's own fetched URL (basePath-safe)", async () => {
+    const relativeManifest: PropertyLayers = {
+      slug: "test-property",
+      title: "Test Property",
+      layers: [makeLayer({ id: "ortho", type: "raster", url: "ortho.tif" })],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        url: "https://tools.mdostal.com/framework/layer-viewer-samples/2806-prado/layers.json",
+        json: async () => relativeManifest,
+      }),
+    );
+
+    const resolved = await resolveManifest("/framework/layer-viewer-samples/2806-prado/layers.json");
+    expect(resolved.layers[0].url).toBe(
+      "https://tools.mdostal.com/framework/layer-viewer-samples/2806-prado/ortho.tif",
+    );
+  });
 });
