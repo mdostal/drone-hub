@@ -1,7 +1,7 @@
 id: land-overlay-model-layer
 epic: land-overlay
 title: Build the MapLibre custom-layer engine for geo-anchored 3D models
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: []
