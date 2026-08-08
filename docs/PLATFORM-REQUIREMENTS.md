@@ -10,30 +10,36 @@
 
 ---
 
-## 0. TL;DR + the monorepo decision
+## 0. TL;DR + the repo decision (DECIDED 2026-08-07)
 
-**Recommendation: turn `drone-hub` into a monorepo** with two sections, exactly as floated —
-a **framework** (reusable drone components) and **implementations** (the portal app + client sites).
+**`personal-drone` = a NEW standalone repo — the implementation monorepo. `drone-hub` = a git
+SUBMODULE inside it — the reusable component framework.** Completely **separate from personal-site**,
+same as life.mdostal.com is its own property. None of this lives in the personal marketing site.
+Mathew kicks off `personal-drone`; this repo (drone-hub) is prepped as the framework it pulls in.
 
 ```
-drone-hub/                      # monorepo root — "Dostal Aerial platform"
-├─ packages/                    # THE FRAMEWORK (reusable, importable into personal-site too)
-│  ├─ schema/                   # @dostal/schema  — shared TS types (Tour, Client, Property, Deliverable, manifests)
-│  ├─ components/               # @dostal/components — VideoTour, LayerViewer, Model3D, Gallery, VideoAnnotator
-│  └─ ui/                       # @dostal/ui — shared shadcn theme/primitives (optional)
+personal-drone/                 # NEW repo — the Dostal Aerial platform (implementation monorepo)
+├─ packages/
+│  └─ framework/                # ← drone-hub as a GIT SUBMODULE (VideoTour/LayerViewer/... + schema)
 ├─ apps/
-│  └─ portal/                   # THE IMPLEMENTATION — the drone.mdostal.com Next.js app
-│                               #   (marketing + /contracts + owner admin + client portal)
-├─ pipeline/                    # NON-bundled: WebODM/GDAL/overlay/Gemini-catalog scripts + docker
-└─ docs/                        # this file + component specs
+│  └─ portal/                   # the drone.mdostal.com app: marketing + /contracts + owner admin + client portal
+├─ pipeline/                    # NON-bundled WebODM/overlay/catalog scripts + docker
+└─ docs/                        # requirements + setup (travel in from the framework submodule)
 ```
 
-- **Tooling:** **pnpm workspaces + Turborepo** (fast, standard for this shape). Fallback: npm
-  workspaces (simpler, matches personal-site's npm). Pick one in §15.
-- **Why monorepo:** the components must stay **importable into personal-site** (the existing promise)
-  AND power the portal. One source of truth for the framework, versioned packages, shared schema.
-- **Why a standalone `apps/portal` (not fold into personal-site):** multi-tenant **client data + auth
-  + private assets** should NOT live inside the personal marketing site. Clean security boundary.
+- **Kickoff — Mathew runs it:** see **`MONOREPO-SETUP.md`** (git init, add drone-hub as a submodule
+  under `packages/framework`, wire workspaces, scaffold `apps/portal`). Prepped, paint-by-numbers.
+- **Tooling:** pnpm workspaces + Turborepo (recommended) — or npm workspaces to match personal-site.
+  The submodule + structure are identical either way.
+- **Why submodule not copy:** the framework stays its own versioned repo (still importable elsewhere);
+  personal-drone pins a commit and upgrades deliberately.
+- **Why fully separate from personal-site:** multi-tenant client data + auth + private assets get
+  their own repo + deployment — the same split you already run for life-site. The personal-site
+  `/admin` branch was a throwaway stopgap; its content (packages, contracts) is ported here.
+
+**Positioning (your mdostal SMB-vs-others analogy):** the site **tapers to a focused core** —
+**Desktop Property Intelligence** — but you still take listing/roof/other work and share other links.
+Split further later if a lane earns it. Focused brand, flexible hustle.
 
 ---
 
@@ -159,10 +165,19 @@ land as **deliverable manifests** on R2, attached in owner admin.
 - **Portfolio use** gated on a **signed release** (`portfolioUseAllowed`); default private.
 - **No identifiable persons/minors/neighbors** in any published/portfolio media (existing discipline).
 
-## 12. Non-goals (deferred)
-Survey-grade accuracy / RTK / GCP volumetrics · thermal · real-time flight streaming · a public
-multi-vendor marketplace · standalone roof-inspection SKU · recurring progress-mapping retainers
-(both cut/deferred per the pricing panel).
+## 12. Non-goals + the opportunistic lanes
+**Deferred:** survey-grade accuracy / RTK / GCP volumetrics · real-time flight streaming · a public
+multi-vendor marketplace · recurring progress-mapping retainers (solo + relocating can't guarantee
+scheduled revisits — Phase-2 post-Omaha).
+
+**Roof / inspection — NOT cut; reframed as a CONTENT + opportunistic on-demand lane (updated 2026-08-07):**
+- More prevalent than assumed — Mathew counted ~4 drones on his rental's remodel/photos + roof job;
+  insurance & inspectors already do fences, surveying, completion inspections.
+- **Play now:** make the CONTENT (gutter / solar-panel / roof inspection demos) and pitch roofers &
+  inspectors the **"5-minute flight to QC your crew's work → have them clean it up"** and the
+  **"liability lock-in video."** Sell VISUAL condition only; bundled add-on, never a survey-grade claim.
+- **Thermal drone = spend-THEN-to-close:** acquire it WHEN job volume justifies it (unlocks the premium
+  roof / solar / energy / insurance buyers who need radiometric thermal). Not a blocker — a trigger.
 
 ---
 
@@ -184,12 +199,16 @@ multi-vendor marketplace · standalone roof-inspection SKU · recurring progress
   (`lib/admin/dostal-aerial.ts`).
 - Pipeline: `bake-property.py`, the Gemini catalog/overlay flow (proven on Prado), AZ/MT terrain.
 
-## 15. Open decisions (need Mathew)
-1. **Monorepo tooling:** pnpm+Turborepo (recommended) vs npm workspaces (simpler).
-2. **Database:** Supabase (auth+DB+storage bundled) vs Neon+Prisma vs other.
-3. **Client auth:** magic-link email (recommended) vs Google vs password.
-4. **drone.mdostal.com routing:** promote it to the **portal app** (retire the current redirect-to-/drone)
-   vs keep marketing at mdostal.com/drone + portal at `app.drone.mdostal.com`.
-5. **Interim `/admin`:** keep the personal-site branch page live as a stopgap until the portal ships, or
-   wait and build owner admin directly in `apps/portal`.
-6. **Repo:** grow THIS `drone-hub` into the monorepo (recommended) vs a fresh `dostal-aerial` repo.
+## 15. Open decisions
+**Resolved 2026-08-07:**
+- **Repo:** NEW `personal-drone` monorepo + `drone-hub` as a `packages/framework` submodule; fully
+  separate from personal-site (like life-site). ✅
+- **Routing:** promote drone.mdostal.com to the `apps/portal` app (retire the redirect-to-/drone once
+  the portal ships). ✅
+- **Interim /admin:** the personal-site `drone-admin-backoffice` branch is a throwaway; owner admin is
+  built in `apps/portal`, and its content is ported to `docs/pricing-and-packages.md` here. ✅
+
+**Still open (Mathew — needed to scaffold P0):**
+1. **Monorepo tooling:** pnpm + Turborepo (recommended) vs npm workspaces.
+2. **Database:** Supabase (bundles auth + DB + storage — recommended for speed) vs Neon + Prisma.
+3. **Client auth:** magic-link email (recommended — lowest client friction) vs Google.
