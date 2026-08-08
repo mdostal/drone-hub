@@ -1,0 +1,92 @@
+name: minecraft-content-engine
+title: "Landscape-to-Minecraft voxelizer + gated content-engine page"
+description: >
+  Converts the sample hillshade terrain into a blocky, Minecraft-style
+  voxel mesh (<VoxelTerrain>, instanced r3f/drei rendering, reusing
+  <Model3D>'s stack) with a procedural sample structure (<VoxelStructure>),
+  composed into a new gated per-property page (/properties/[slug]/engine)
+  alongside sample "engineering" and "flight log" docs -- the operator's
+  own framing: "the engineering, the minecraft of it, the flight docs."
+  Third epic in the confirmed priority order after <Model3D> and the
+  land-overlay. Establishes a real/fallback content-resolution pattern
+  and a minimally-scoped FlightLogEntry type the next epic (telemetry-
+  driven video overlay) can build on without having been designed to
+  guess its needs.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from feat/land-overlay to build on the app shell, gating,
+    showcase-site pattern, and Model3D's r3f/drei stack (bumped for React
+    19 compat in the model3d epic).
+
+planning_team:
+  matched_tags: [3d-rendering, gated-content, procedural-generation, rights-review]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  confidence: "high -- reuses Model3D's proven r3f/drei stack rather than land-overlay's harder MapLibre-custom-layer technique; main design risk was content-resolution/rights framing, resolved via grill before any code was written."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer. Caught 5 real
+      issues: (1) the content-engine page would have shown identical
+      hardcoded sample content regardless of property slug forever, with
+      no path to real data and no distinction between "no data yet" and
+      "generic demo" -- fixed with a per-slug real-vs-fallback resolution
+      mechanism plus an explicit visible banner when falling back; (2) the
+      same fix resolved a second finding, that showing the exact public
+      showcase terrain behind a passcode gate would misleadingly imply
+      exclusivity; (3) the original FlightLogEntry type speculatively
+      designed fields for a not-yet-planned future epic, contradicting
+      this project's own established anti-speculation practice
+      (GeoAnchoredModel was deliberately NOT pre-unified with Model3D's
+      ModelDef for the same reason) -- walked back to a minimal type
+      scoped to this epic's actual display need; (4) the "/properties/*
+      needs no gating changes" claim was verified against the real
+      matcher/sanitizeNextPath code rather than assumed, surfacing (and
+      explicitly flagging as pre-existing, not this epic's to fix) an
+      unanchored-string-prefix-matching characteristic; (5) confirmed the
+      procedural-block-house-vs-reused-glTF decision was a genuine
+      visual/technical fit call, not just restated asset-avoidance.
+    sign_off: >
+      Operator explicitly requested continuous execution without blocking
+      gates; decisions documented for post-hoc review.
+
+stories:
+  - id: minecraft-types-and-heightmap
+    title: Define voxel types + derive a sample heightmap grid from the hillshade COG
+    complexity: medium
+    depends_on: []
+  - id: minecraft-content-engine-data
+    title: Define a minimal FlightLogEntry type + sample-house fallback content
+    complexity: low
+    depends_on: []
+  - id: minecraft-voxel-terrain-component
+    title: Build <VoxelTerrain> + <VoxelStructure> (instanced-mesh voxel renderer)
+    complexity: high
+    depends_on: [minecraft-types-and-heightmap]
+  - id: minecraft-showcase-page
+    title: Add a public showcase page for <VoxelTerrain>
+    complexity: low
+    depends_on: [minecraft-voxel-terrain-component]
+  - id: minecraft-content-engine-page
+    title: Build the gated content-engine page (/properties/[slug]/engine)
+    complexity: medium
+    depends_on: [minecraft-voxel-terrain-component, minecraft-content-engine-data]
+  - id: minecraft-test-suite
+    title: Close out test coverage for VoxelTerrain + both consuming pages
+    complexity: medium
+    depends_on: [minecraft-showcase-page, minecraft-content-engine-page]
+  - id: minecraft-docs-acceptance-closeout
+    title: Document VoxelTerrain + the content engine, close acceptance criteria
+    complexity: low
+    depends_on: [minecraft-test-suite]
+
+deferred:
+  - "Telemetry-driven scene-tracked video overlay -- next epic, defines its own camera-pose-relevant type rather than extending FlightLogEntry."
+  - "CBA's original Phase 2 tools (Measure/Annotate/Compare/Align) -- queued behind all of the above."
+  - "Hardening sanitizeNextPath/GATED_PATH_PREFIXES to real path-boundary matching -- a pre-existing characteristic flagged during this epic's grill review, not this epic's to fix."
+  - "Real per-property voxel terrain (vs. the shared sample heightmap) -- needs the same resolution-with-fallback pattern this epic established for engineering/flight-log content, once real WebODM DSM output exists."

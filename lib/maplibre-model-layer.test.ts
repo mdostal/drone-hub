@@ -143,6 +143,27 @@ describe("buildModelMatrix", () => {
     expect(z).toBeCloseTo(1);
   });
 
+  it("the fixed correction's Y-axis handedness flip: a local +Z point maps to mercator +Y (not -Y) — the negated-scale term land-overlay-test-suite's Playwright sanity check confirmed is easy to accidentally drop", () => {
+    // Companion to the +Y -> mercator +Z test above, covering the ONE
+    // component the existing suite never isolated: `makeScaleMat4(scale,
+    // -scale, scale)`'s negation (the mercator/GL coordinate-handedness
+    // correction the buildModelMatrix() header comment calls out by name).
+    // Hand-derived: Rx(90) sends local (x,y,z) -> (x,-z,y) (verified
+    // against makeRotationXMat4's own matrix), so a local +Z point becomes
+    // pre-scale (0,-1,0); the negated Y-scale then flips that back to
+    // POSITIVE, landing on mercator +Y. Dropping the negation (a real bug
+    // this exact test caught when deliberately injected during this
+    // story's development — see land-overlay-test-suite's report) would
+    // instead land on mercator -Y, which this test's sign check catches
+    // directly, independent of any screen-space/pixel rendering.
+    const mercator = makeMercator({ x: 0, y: 0, z: 0, meterInMercatorCoordinateUnits: () => 1 });
+    const matrix = buildModelMatrix(makeModel({ rotationDegrees: 0, scale: 1 }), mercator);
+    const [x, y, z] = applyMat4ToPoint(matrix, 0, 0, 1);
+    expect(x).toBeCloseTo(0);
+    expect(y).toBeCloseTo(1); // positive — this is the sign the negation exists to produce
+    expect(z).toBeCloseTo(0);
+  });
+
   it("a 90 degree rotationDegrees yaw composes with the fixed correction: local +X -> (yaw) -> local +Y -> (fixed correction) -> mercator +Z", () => {
     // rotationDegrees rotates in the model's OWN local plane, applied
     // before the fixed up-axis correction (T * S * Rx * Rz — Rz first).
@@ -540,6 +561,44 @@ describe("createModelLayer", () => {
     mocks.pendingLoads[0].onLoad({ scene: { material, children: [] } });
 
     expect(material).toEqual({ transparent: true, opacity: 0.3 });
+  });
+
+  it("isReady() is false immediately after onAdd, before the glTF has loaded", async () => {
+    // New surface (land-overlay-test-suite): exposes the ready-guard's
+    // internal `ready` flag so a Playwright test can deterministically
+    // wait for "the model will actually draw on the next render() call"
+    // instead of guessing with a fixed timeout — see this method's own
+    // doc comment on the ModelLayer interface.
+    const layer = createModelLayer(makeModel());
+    const { map, gl } = fakeMapAndGl();
+    layer.onAdd!(map, gl);
+    await flushOnAdd();
+    expect(mocks.pendingLoads).toHaveLength(1); // load kicked off...
+    expect(layer.isReady()).toBe(false); // ...but hasn't resolved yet.
+  });
+
+  it("isReady() is true once the glTF load callback fires", async () => {
+    const layer = createModelLayer(makeModel());
+    const { map, gl } = fakeMapAndGl();
+    layer.onAdd!(map, gl);
+    await flushOnAdd();
+
+    mocks.pendingLoads[0].onLoad({ scene: { children: [] } });
+
+    expect(layer.isReady()).toBe(true);
+  });
+
+  it("isReady() reverts to false after onRemove(), even if it was true", async () => {
+    const layer = createModelLayer(makeModel());
+    const { map, gl } = fakeMapAndGl();
+    layer.onAdd!(map, gl);
+    await flushOnAdd();
+    mocks.pendingLoads[0].onLoad({ scene: { children: [] } });
+    expect(layer.isReady()).toBe(true);
+
+    layer.onRemove!(map, gl);
+
+    expect(layer.isReady()).toBe(false);
   });
 
   it("onRemove() disposes the loaded scene graph's geometries/materials", async () => {

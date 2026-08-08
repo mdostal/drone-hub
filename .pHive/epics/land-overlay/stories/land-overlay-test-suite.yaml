@@ -1,7 +1,7 @@
 id: land-overlay-test-suite
 epic: land-overlay
 title: Numeric placement verification + GL-state-pollution regression test
-status: pending
+status: complete
 complexity: high
 methodology: tdd
 depends_on: [land-overlay-layerviewer-integration, land-overlay-showcase-page]

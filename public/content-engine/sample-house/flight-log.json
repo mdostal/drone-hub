@@ -1,0 +1,98 @@
+[
+  {
+    "timestampMs": 0,
+    "lat": 40.015,
+    "lon": -105.2705,
+    "altitudeMeters": 0
+  },
+  {
+    "timestampMs": 300,
+    "lat": 40.01506,
+    "lon": -105.27046,
+    "altitudeMeters": 11.3
+  },
+  {
+    "timestampMs": 600,
+    "lat": 40.01512,
+    "lon": -105.27042,
+    "altitudeMeters": 22.5
+  },
+  {
+    "timestampMs": 900,
+    "lat": 40.01518,
+    "lon": -105.27038,
+    "altitudeMeters": 33.8
+  },
+  {
+    "timestampMs": 1200,
+    "lat": 40.01524,
+    "lon": -105.27034,
+    "altitudeMeters": 45
+  },
+  {
+    "timestampMs": 1500,
+    "lat": 40.0153,
+    "lon": -105.2703,
+    "altitudeMeters": 45
+  },
+  {
+    "timestampMs": 1800,
+    "lat": 40.01536,
+    "lon": -105.27026,
+    "altitudeMeters": 45.4
+  },
+  {
+    "timestampMs": 2100,
+    "lat": 40.01542,
+    "lon": -105.27022,
+    "altitudeMeters": 44.7
+  },
+  {
+    "timestampMs": 2400,
+    "lat": 40.01548,
+    "lon": -105.27018,
+    "altitudeMeters": 45.5
+  },
+  {
+    "timestampMs": 2700,
+    "lat": 40.01554,
+    "lon": -105.27014,
+    "altitudeMeters": 44.8
+  },
+  {
+    "timestampMs": 3000,
+    "lat": 40.0156,
+    "lon": -105.2701,
+    "altitudeMeters": 45.3
+  },
+  {
+    "timestampMs": 3300,
+    "lat": 40.01566,
+    "lon": -105.27006,
+    "altitudeMeters": 45
+  },
+  {
+    "timestampMs": 3600,
+    "lat": 40.01572,
+    "lon": -105.27002,
+    "altitudeMeters": 34.3
+  },
+  {
+    "timestampMs": 3900,
+    "lat": 40.01578,
+    "lon": -105.26998,
+    "altitudeMeters": 23.5
+  },
+  {
+    "timestampMs": 4200,
+    "lat": 40.01584,
+    "lon": -105.26994,
+    "altitudeMeters": 12.8
+  },
+  {
+    "timestampMs": 4500,
+    "lat": 40.0159,
+    "lon": -105.2699,
+    "altitudeMeters": 2
+  }
+]

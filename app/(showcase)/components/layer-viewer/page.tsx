@@ -9,7 +9,7 @@
 // photography) — safe to reuse directly here, same manifest
 // app/properties/[slug]/page.tsx uses behind the gate.
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ComponentShowcase } from "@/components/showcase";
 import { LayerControl } from "@/components/LayerViewer";
 import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
@@ -45,6 +45,19 @@ const [layers, setLayers] = useState<LayerDef[]>([]);
 export default function LayerViewerShowcasePage() {
   const viewerRef = useRef<LayerViewerHandle>(null);
   const [layers, setLayers] = useState<LayerDef[]>([]);
+
+  // Dev-only test hook, same pattern/rationale as
+  // app/(showcase)/components/land-overlay/page.tsx's own copy of this
+  // effect: land-overlay-test-suite's GL-state-pollution regression
+  // (lib/maplibre-model-layer.placement.test.ts) needs a "the model layer
+  // never touched this map's GL context at all" reference render of the
+  // ortho layer to compare against — THIS page (no `models` prop, ever) is
+  // that reference. Gated out of production bundles.
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    (window as unknown as { __layerViewerHandle?: LayerViewerHandle | null }).__layerViewerHandle =
+      viewerRef.current;
+  });
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">

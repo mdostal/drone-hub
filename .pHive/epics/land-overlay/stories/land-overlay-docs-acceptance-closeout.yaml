@@ -1,7 +1,7 @@
 id: land-overlay-docs-acceptance-closeout
 epic: land-overlay
 title: Document the land-overlay capability, close acceptance criteria
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [land-overlay-test-suite]

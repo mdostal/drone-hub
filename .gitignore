@@ -1,6 +1,10 @@
 node_modules/
 .next/
+.next-e2e/
 out/
+test-results/
+playwright-report/
+blob-report/
 .vercel/
 .env*
 !.env.example
@@ -12,8 +16,9 @@ public/property-samples/
 # ...except this epic's public sample data (real ortho.tif + synthetic hillshade.tif — layer-viewer-sample-data story)
 !public/layer-viewer-samples/**/*.tif
 
-# hive runtime state — local only, except tracked epics (allowlist below)
+# hive runtime state — local only, except tracked epics + CONTEXT.md (allowlist below)
 .pHive/*
+!.pHive/CONTEXT.md
 !.pHive/epics/
 .pHive/epics/*
 !.pHive/epics/video-tour/
@@ -24,3 +29,5 @@ public/property-samples/
 !.pHive/epics/model3d/**
 !.pHive/epics/land-overlay/
 !.pHive/epics/land-overlay/**
+!.pHive/epics/minecraft-content-engine/
+!.pHive/epics/minecraft-content-engine/**
