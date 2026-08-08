@@ -1,0 +1,69 @@
+id: framework-docs-site-closeout
+epic: framework-docs-site
+title: Full-suite verification, live spot-check, docs closeout
+status: pending
+complexity: low
+methodology: classic
+depends_on: [framework-docs-site-landing-page]
+
+description: |
+  Closeout pass: run the full test suite and `next build` fresh (not
+  trusting prior stories' self-reports), live-verify the landing page and
+  at least two doc routes plus the /components redirect via Playwright
+  against a real dev server, and record what shipped. No new code unless
+  verification surfaces a real defect.
+
+  Specific checks:
+  - `npm test` — full suite passes, zero orphaned references to the
+    deleted ComponentsIndexPage/its test.
+  - `npm run build` — all 7 /docs/components/<slug> routes AND / show as
+    static (○) in the route table, not dynamic (ƒ).
+  - Live Playwright pass against `npm run dev`: navigate to /, confirm all
+    7 ToC cards render with correct link targets; navigate to
+    /docs/components/content-engine (the grill-identified spot-check
+    target) and visually confirm the nested lists / code fences / task
+    checkboxes render cleanly; navigate to /components and confirm it
+    redirects to /.
+  - Update .pHive/CONTEXT.md's Conventions section with this epic's
+    additions: the docs-rendering pattern (hardcoded slug array +
+    generateStaticParams + notFound() guard) and the redirect-then-delete
+    pattern for retiring a duplicate route, so future epics reuse rather
+    than rediscover them.
+
+acceptance_criteria:
+  - "Given the full repo, when npm test runs, then all tests pass with zero failures and zero orphaned references to deleted files"
+  - "Given next build, when it completes, then / and all 7 /docs/components/<slug> routes appear as static (○) in the route output"
+  - "Given a running dev server, when Playwright navigates to /, /docs/components/content-engine, and /components, then all three render/redirect correctly with no console errors beyond expected noise (e.g. favicon 404)"
+  - "Given .pHive/CONTEXT.md, when this story completes, then it documents the two new conventions this epic introduced"
+
+steps:
+  - id: implement
+    description: Run npm test + npm run build fresh; fix any real defect surfaced (do not just re-report prior stories' claims).
+    agent: developer
+  - id: test
+    description: Live Playwright verification of /, /docs/components/content-engine, /components against npm run dev.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm CONTEXT.md updates accurately describe what shipped; confirm no broken links remain anywhere in the ToC.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Final commit on feat/framework-docs-site; merge to master --no-ff; push origin master.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/CONTEXT.md
+      purpose: Accumulated cross-epic conventions — this story adds the docs-rendering and redirect-then-delete patterns.
+
+files_to_modify:
+  - file: .pHive/CONTEXT.md
+    change: Document the two new conventions from this epic.
+
+risks:
+  - severity: low
+    description: Prior stories may have self-reported success without a truly independent re-run (established risk pattern this session — verify, don't trust).
+    mitigation: This story exists specifically to re-run everything from a clean state rather than trusting prior stories' step reports.
