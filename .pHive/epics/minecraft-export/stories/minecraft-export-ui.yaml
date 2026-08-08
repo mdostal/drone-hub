@@ -1,0 +1,58 @@
+id: minecraft-export-ui
+epic: minecraft-export
+title: Add "Download for Minecraft" buttons to the voxel-terrain surfaces
+status: pending
+complexity: low
+methodology: bdd
+depends_on: [minecraft-export-api-route]
+
+description: |
+  The actual feature surface — where a human clicks a button and gets a
+  real file. Add a simple download button/link to:
+  1. `app/(showcase)/components/voxel-terrain/page.tsx` (public showcase).
+  2. `app/properties/[slug]/engine/page.tsx` (gated content-engine page) —
+     pass the real `slug` through to the export route so downloading from
+     a real property's page (once real per-property data exists) exports
+     that property's terrain, not always the sample.
+
+  A plain `<a href="/api/minecraft-export?slug=...">Download for
+  Minecraft</a>` (or a small client component wrapping it) is sufficient —
+  no need for a loading spinner or complex state, the browser's native
+  download handling covers this.
+
+acceptance_criteria:
+  - "Given /components/voxel-terrain, when the download button/link is clicked, then a .schem file downloads"
+  - "Given /properties/<slug>/engine, when the download button/link is clicked, then a .schem file downloads, requested with that page's real slug"
+  - "Given the button's placement, when viewed, then it's clearly associated with the voxel terrain section, not ambiguous"
+
+steps:
+  - id: implement
+    description: Add the download links/buttons to both pages.
+    agent: developer
+  - id: test
+    description: Verify the links point at the correct API route + slug on each page, and (if practical) live-verify a click actually triggers a download via Playwright.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the content-engine page passes its real slug through, not a hardcoded sample slug.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-export.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: app/api/minecraft-export/route.ts
+      purpose: "The endpoint these buttons link to."
+
+files_to_modify:
+  - file: "app/(showcase)/components/voxel-terrain/page.tsx"
+    change: "Add download link"
+  - file: "app/properties/[slug]/engine/EnginePageClient.tsx"
+    change: "Add download link, passing the real slug"
+
+do_not:
+  - "Do not hardcode the sample slug on the content-engine page's download link — it must use the page's own real slug."

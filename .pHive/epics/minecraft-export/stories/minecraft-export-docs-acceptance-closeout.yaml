@@ -1,0 +1,66 @@
+id: minecraft-export-docs-acceptance-closeout
+epic: minecraft-export
+title: Document the export tool, close acceptance criteria
+status: pending
+complexity: low
+methodology: classic
+depends_on: [minecraft-export-ui, minecraft-export-test-suite]
+
+description: |
+  Write docs/components/minecraft-export.md covering: the Sponge Schematic
+  format choice and why (not a full Anvil world export), the writer's
+  three real steps (block classification, integer coordinate mapping,
+  Palette/VarInt BlockData encoding), the DataVersion chosen and both
+  sources that confirmed it, the API route, the UI entry points, and —
+  important, state this clearly and honestly — that full in-game
+  verification (actually loading the file in Minecraft) was not possible
+  in this environment and should be done by the operator on first real
+  use.
+
+  Update .pHive/CONTEXT.md: add the new lib/ and app/api/ paths; add a
+  convention note that "same-library round-trip tests are not sufficient
+  spec-conformance verification — hand-verified golden fixtures are
+  required for binary-format work," generalizing this epic's specific
+  lesson for future format-export work; confirm prismarine-nbt is
+  documented as a real, intentional dependency (not accidental).
+
+  Verify every acceptance criterion against real shipped code and the
+  actual test file (read lib/minecraft-schematic.test.ts directly).
+
+  Run npm run build and npm test as final verification.
+
+acceptance_criteria:
+  - "Given docs/components/minecraft-export.md, when written, then it accurately describes the shipped writer/route/UI and honestly states the in-game verification limitation"
+  - "Given .pHive/CONTEXT.md, when checked, then the golden-fixture-vs-round-trip convention lesson is documented as a generalizable precedent"
+  - "Given npm run build and npm test, when run, then both pass with no regressions"
+
+steps:
+  - id: implement
+    description: Write the doc, update .pHive/CONTEXT.md.
+    agent: technical-writer
+  - id: test
+    description: Full build + test verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent check that the doc's description of the encoding steps matches the real lib/minecraft-schematic.ts code, and that the in-game-verification limitation is stated honestly, not glossed over.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-export.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/content-engine.md
+      purpose: "Precedent doc shape."
+
+files_to_modify:
+  - file: docs/components/minecraft-export.md
+    change: "Create"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic."

@@ -1,0 +1,84 @@
+name: minecraft-export
+title: "Real Minecraft schematic (.schem) export — download and paste into a real world"
+description: >
+  Builds a real, spec-compliant Sponge Schematic file exporter (not the
+  Minecraft-styled renderer the minecraft-content-engine epic already
+  shipped) -- a downloadable .schem file a player can actually paste into
+  real Minecraft Java Edition via WorldEdit/Litematica. Reuses
+  <VoxelTerrain>'s existing block-placement math via a shared refactor,
+  adds real NBT/Palette/VarInt-BlockData encoding (prismarine-nbt), a
+  server-side API route, and download buttons on the existing voxel-
+  terrain surfaces. Decoupled from data source -- takes a VoxelGrid
+  regardless of whether it's derived from the sample hillshade (today) or
+  real WebODM DSM output (later), directly answering the operator's "export
+  the webodm or something to minecraft" ask without needing rework once
+  real data exists.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from master (post-merge of video-tour, layer-viewer, model3d,
+    land-overlay, minecraft-content-engine).
+
+planning_team:
+  matched_tags: [binary-format, minecraft, high-risk, spec-compliance]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  confidence: "medium-high -- Sponge Schematic is a well-documented, widely-implemented format, but this is genuinely precise binary-format work with no in-game verification available in this environment; a thorough grill pass caught 5 real gaps (verification methodology, missing BlockData encoding step, unverifiable DataVersion, unaddressed coordinate-system translation, silent-collision risk) before any code was written."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer, briefed on this
+      epic's binary-format risk. Caught 5 real issues: (1) the planned
+      round-trip verification (write and read back with the same NBT
+      library) only proves self-consistency, not spec conformance --
+      replaced with a mandatory hand-verified golden fixture as the
+      primary check; (2) "map bands to Minecraft blocks" was never
+      actually the BlockData encoding step -- the real Palette-index
+      VarInt encoding in Y/Z/X order was entirely unaddressed in the
+      original draft, now specified explicitly; (3) "DataVersion needs
+      research" had no landing criterion given no Minecraft client exists
+      to verify against -- fixed with a required two-independent-source
+      cross-reference; (4) reusing voxel-geometry.ts's existing
+      three.js-centered, fractional world-space coordinates for Minecraft
+      export was assumed to "just work" -- fixed by routing through raw,
+      zero-origin integer grid coordinates instead, sidestepping the
+      transform entirely; (5) the same fractional-coordinate gap created a
+      silent block-collision risk on integer rounding that no test would
+      have caught -- resolved by the same coordinate fix.
+    sign_off: >
+      Operator explicitly requested continuous execution + merging as work
+      completes; decisions documented for post-hoc review. Given this
+      epic's binary-format correctness risk and complete lack of in-game
+      verification capability, the grill pass was treated as load-bearing
+      (all 5 findings fixed before story-writing) rather than optional.
+
+stories:
+  - id: minecraft-export-schematic-writer
+    title: Build the real Sponge Schematic (.schem) writer
+    complexity: high
+    depends_on: []
+  - id: minecraft-export-api-route
+    title: Serve the schematic as a real downloadable file
+    complexity: medium
+    depends_on: [minecraft-export-schematic-writer]
+  - id: minecraft-export-test-suite
+    title: Hand-verified golden-fixture spec conformance + DataVersion cross-check
+    complexity: high
+    depends_on: [minecraft-export-schematic-writer]
+  - id: minecraft-export-ui
+    title: Add "Download for Minecraft" buttons to the voxel-terrain surfaces
+    complexity: low
+    depends_on: [minecraft-export-api-route]
+  - id: minecraft-export-docs-acceptance-closeout
+    title: Document the export tool, close acceptance criteria
+    complexity: low
+    depends_on: [minecraft-export-ui, minecraft-export-test-suite]
+
+deferred:
+  - "Real WebODM DSM -> heightmap ingestion -- the exporter is decoupled from data source already; no rework needed once real data exists, but the WebODM pipeline itself is still gated on the Phase-0 nadir pass."
+  - "Full Anvil-format world export (region files, level.dat) -- explicitly out of scope; a schematic is the correct target for 'download and paste a build.'"
+  - "CBA's original Phase 2 tools (Measure/Annotate/Compare/Align) -- still queued behind all new scope per operator instruction."

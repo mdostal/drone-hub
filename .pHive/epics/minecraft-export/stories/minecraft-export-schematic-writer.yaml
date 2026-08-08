@@ -1,0 +1,129 @@
+id: minecraft-export-schematic-writer
+epic: minecraft-export
+title: Build the real Sponge Schematic (.schem) writer
+status: pending
+complexity: high
+methodology: bdd
+depends_on: []
+
+description: |
+  The hardest, highest-risk piece of this epic — read the full design
+  discussion at .pHive/epics/minecraft-export/docs/design-discussion.md
+  before starting, it contains 5 corrections from an adversarial design
+  review covering exactly the parts of this story that are easy to get
+  subtly wrong. Do not skip any of them.
+
+  1. **Refactor components/VoxelTerrain/voxel-geometry.ts** so the block-
+     placement logic exposes RAW, zero-origin, non-negative integer grid
+     coordinates (col, stackLevel, row) — NOT the existing centered/
+     fractional three.js world-space position (gridToWorldX/Z's
+     `col - (size-1)/2` style transform) — alongside (or as an alternative
+     output to) what it already returns. The existing three.js renderer
+     keeps using its own centered transform for display; this epic's
+     exporter must NEVER see fractional coordinates, to avoid the
+     integer-rounding collision risk grill flagged (two fractional
+     positions rounding to the same cell, silently overwriting a block).
+     Also expose the existing height-band/is-structure classification as a
+     shared, reusable function (both the three.js color mapper and this
+     epic's Minecraft-block-ID mapper should call the SAME classification,
+     not duplicate it).
+
+  2. **`lib/minecraft-block-palette.ts`** — maps a band/structure
+     classification to a real Minecraft block-state string: low band →
+     "minecraft:grass_block", mid → "minecraft:dirt", high →
+     "minecraft:stone", structure walls → "minecraft:oak_planks", roof →
+     "minecraft:red_wool" (or your own reasoned choices — document them).
+     Stick to core, version-stable block IDs, nothing exotic.
+
+  3. **`lib/minecraft-schematic.ts`** — `buildSchematic(grid: VoxelGrid,
+     structure?: {...}): Buffer`. Implements the Sponge Schematic v2 (or
+     v3 — your call, document which and why) format for real:
+     - Build a `Palette`: a map from unique block-state string to integer
+       index starting at 0, including "minecraft:air" for every empty cell
+       (the schematic is a DENSE grid, not sparse — every position from
+       (0,0,0) to (Width,Height,Length) needs an entry).
+     - Encode `BlockData`: iterate cells in the spec's documented order
+       (Y outer, then Z, then X), and for each cell, VarInt-encode its
+       palette index (standard LEB128-style: 7 payload bits per byte, high
+       bit set on all bytes except the last) into a growing byte buffer.
+     - Write `Version`, `DataVersion` (see the DataVersion research
+       requirement below — this story picks the value, the test-suite
+       story cross-references it), `Width`/`Height`/`Length` (as the
+       grid's size in each dimension), `PaletteMax` (palette size),
+       `Palette`, `BlockData`, and a minimal `Metadata` compound (a `Name`
+       string is enough).
+     - Use `prismarine-nbt` (add as a real dependency — `npm install
+       prismarine-nbt`) to construct the actual NBT compound tag tree and
+       serialize + gzip it into the returned Buffer.
+     - **DataVersion research**: pick a specific, well-known stable
+       Minecraft Java Edition release (e.g. something in the 1.20.x line)
+       and its corresponding DataVersion integer. Use WebSearch/WebFetch to
+       confirm the value against the Minecraft Wiki's data-version
+       reference (or an equivalently authoritative source) — you don't need
+       a second cross-reference in THIS story (that's the test-suite
+       story's job to double-check independently), but document the
+       version + integer + source you used here.
+
+  Write unit tests for the palette-building and VarInt-encoding logic in
+  isolation (pure functions, no NBT/gzip needed to test them) — the
+  full-file hand-verified golden-fixture test is a SEPARATE story
+  (minecraft-export-test-suite), don't duplicate it here, but do cover the
+  pieces that are cleanly unit-testable on their own.
+
+acceptance_criteria:
+  - "Given voxel-geometry.ts's refactor, when called, then it exposes raw integer (col, stackLevel, row) grid coordinates with no fractional/centered offset"
+  - "Given a VoxelGrid, when buildSchematic() is called, then it returns a Buffer that is valid gzip (decompresses without error)"
+  - "Given the decompressed bytes, when parsed as NBT (e.g. via prismarine-nbt itself, as a sanity check — the real spec-conformance check is the test-suite story's golden fixture), then it contains Version/DataVersion/Width/Height/Length/PaletteMax/Palette/BlockData/Metadata tags"
+  - "Given a small hand-traceable grid (e.g. 2x2, uniform height), when buildSchematic() is called, then the Palette contains exactly the expected distinct block types and PaletteMax matches the palette size"
+  - "Given the VarInt encoder, when tested against known LEB128 examples (e.g. 0->[0x00], 127->[0x7F], 128->[0x80,0x01]), then it produces byte-identical output"
+
+steps:
+  - id: research
+    description: Confirm prismarine-nbt's actual API (how to construct compound/list/int-array tags, how to serialize+gzip) by installing it and reading its README/types. Research and confirm a specific DataVersion integer for a specific Minecraft version via WebSearch/WebFetch against the Minecraft Wiki.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given/When/Then specs from the acceptance criteria above, including VarInt encoding correctness and Palette construction.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Refactor voxel-geometry.ts, build lib/minecraft-block-palette.ts and lib/minecraft-schematic.ts per the description above, incorporating all 5 design-review corrections.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run the specs; confirm VarInt encoding matches known examples exactly, confirm the Palette/BlockData structure is internally consistent.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Line-by-line confirm the coordinate-system fix (raw integer grid coords, not centered/fractional) and the real BlockData/VarInt encoding are actually implemented, not just claimed in comments — these are the two corrections grill flagged as previously entirely unaddressed.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-export.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VoxelTerrain/voxel-geometry.ts
+      purpose: "The existing block-placement logic to refactor for shared raw-grid-coordinate + band-classification exports."
+    - path: lib/content-engine-resolution.ts
+      purpose: "SAFE_SLUG_PATTERN precedent — not used in this story directly, but read for the validation-discipline convention the API-route story will reuse."
+    - path: .pHive/epics/minecraft-export/docs/design-discussion.md
+      purpose: "All 5 grill corrections this story must implement — read in full, not just this story's summary of it."
+
+files_to_modify:
+  - file: components/VoxelTerrain/voxel-geometry.ts
+    change: "Refactor to expose raw integer grid coordinates + shared band classification"
+  - file: lib/minecraft-block-palette.ts
+    change: "Create"
+  - file: lib/minecraft-schematic.ts
+    change: "Create"
+  - file: package.json
+    change: "Add prismarine-nbt as a real dependency"
+
+do_not:
+  - "Do not route the exporter through voxel-geometry.ts's existing centered/fractional three.js world-space transform — raw integer grid coordinates only."
+  - "Do not treat BlockData as a flat array of block IDs — it must be VarInt-encoded palette indices in the correct Y/Z/X iteration order."
+  - "Do not hand-roll NBT binary encoding — use prismarine-nbt."
+  - "Do not guess the DataVersion without checking an authoritative source."
