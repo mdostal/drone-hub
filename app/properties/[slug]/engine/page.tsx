@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { FlightLogEntry } from "@/lib/flight-log-types";
+import { resolveContentEngineData, SAMPLE_SLUG } from "@/lib/content-engine-resolution";
 import type { VoxelGrid } from "@/lib/voxel-types";
 import { EnginePageClient } from "./EnginePageClient";
 
@@ -36,20 +36,13 @@ import { EnginePageClient } from "./EnginePageClient";
 // of its own, per this story's explicit "do NOT modify middleware.ts /
 // lib/gate.ts" instruction.
 
-// Only [a-zA-Z0-9_-] slugs are treated as possible "real content" lookups.
-// `slug` is attacker/user-influenced (a URL path segment) and gets joined
-// into a filesystem path below; without this guard a crafted slug like
-// `../../../../etc` could walk `path.join` outside `public/content-engine/`.
-// Rejecting non-conforming slugs here is also semantically correct on its
-// own terms, not just a security patch: a slug that can't possibly match a
-// real property folder name should behave exactly like "no real content
-// exists for this slug" — i.e. fall back to the sample data — rather than
-// erroring.
-const SAFE_SLUG_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-// The generic fallback dataset (built by minecraft-content-engine-data),
-// used whenever a slug has no real public/content-engine/<slug>/ files yet.
-const SAMPLE_SLUG = "sample-house";
+// The actual per-slug real-vs-fallback resolution (which slug's files exist,
+// which one to fall back to, the path-traversal safety guard) lives in
+// lib/content-engine-resolution.ts — extracted out of this file
+// (minecraft-test-suite story) so it's unit-testable in isolation without a
+// Server Component render; see that module's header comment and
+// page.test.tsx. `SAMPLE_SLUG` ("sample-house") is re-exported from there so
+// this file has a single source of truth for it rather than a second literal.
 
 // The shared sample terrain (see this epic's design-discussion.md point 5):
 // deliberately NOT resolved per-slug the way engineering.md/flight-log.json
@@ -64,31 +57,13 @@ const SAMPLE_SLUG = "sample-house";
 // story's scope.
 const TERRAIN_SAMPLE_SLUG = "2806-prado";
 
-interface ContentEngineFiles {
-  engineeringMarkdown: string;
-  flightLog: FlightLogEntry[];
-}
-
-/**
- * Reads public/content-engine/<slug>/{engineering.md,flight-log.json} from
- * disk if BOTH files exist; returns null if either is missing (or `slug`
- * fails the safety pattern above), so the caller can fall back.
- */
-function readContentEngineFiles(slug: string): ContentEngineFiles | null {
-  if (!SAFE_SLUG_PATTERN.test(slug)) return null;
-
-  const dir = path.join(process.cwd(), "public", "content-engine", slug);
-  const engineeringPath = path.join(dir, "engineering.md");
-  const flightLogPath = path.join(dir, "flight-log.json");
-
-  if (!fs.existsSync(engineeringPath) || !fs.existsSync(flightLogPath)) {
-    return null;
-  }
-
-  const engineeringMarkdown = fs.readFileSync(engineeringPath, "utf-8");
-  const flightLog = JSON.parse(fs.readFileSync(flightLogPath, "utf-8")) as FlightLogEntry[];
-  return { engineeringMarkdown, flightLog };
-}
+// Where readContentEngineFiles/resolveContentEngineData look for per-slug
+// (and the sample-house fallback's) engineering.md/flight-log.json — the
+// production `baseDir` argument for lib/content-engine-resolution.ts's
+// injectable-base-dir signature (see that module's header comment for why
+// it's a parameter rather than hardcoded there: unit tests pass a throwaway
+// fixture dir instead).
+const CONTENT_ENGINE_BASE_DIR = path.join(process.cwd(), "public", "content-engine");
 
 function readTerrainGrid(): VoxelGrid {
   const gridPath = path.join(
@@ -112,10 +87,10 @@ export default async function PropertyEnginePage({
   // first, fall back to the generic sample dataset if either file is
   // missing. `isFallback` is what drives EnginePageClient's visible banner
   // — this is the exact check design-discussion.md point 5 requires (not a
-  // hardcoded sample panel shown regardless of slug).
-  const real = readContentEngineFiles(slug);
-  const isFallback = real === null;
-  const content = real ?? readContentEngineFiles(SAMPLE_SLUG);
+  // hardcoded sample panel shown regardless of slug). See
+  // lib/content-engine-resolution.ts for the implementation and
+  // page.test.tsx for the regression coverage proving both directions work.
+  const { isFallback, content } = resolveContentEngineData(CONTENT_ENGINE_BASE_DIR, slug);
 
   if (!content) {
     // Only reachable if the sample-house fallback data itself is missing —
