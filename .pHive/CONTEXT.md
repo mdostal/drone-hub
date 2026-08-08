@@ -297,6 +297,40 @@ plus a thin gated app that showcases them — the components are the deliverable
   codebase does not hand-roll NBT binary encoding; if a future epic needs NBT
   again, reuse this dependency rather than adding a second one.
 
+- **Rendering a static prose doc (`docs/**/*.md`) as a real page: hardcode the
+  slug list in `generateStaticParams`, never `fs.readdirSync` the source
+  directory.** Precedent: `app/(showcase)/docs/components/[slug]/page.tsx`
+  (framework-docs-site epic) enumerates its 7 known slugs as a literal array
+  rather than scanning `docs/components/` — that directory also holds a
+  `reference/` subdirectory (`docs/components/reference/prado-tour.prototype.html`),
+  and an unfiltered directory scan feeding straight into `readFileSync` throws
+  `EISDIR` at build time the moment it hits a non-file entry. A hardcoded slug
+  array both sidesteps this and matches `generateStaticParams`' own job
+  (enumerate exactly the pages that should exist, not "whatever's currently on
+  disk"). Markdown rendering itself uses `react-markdown` + `remark-gfm` (GFM
+  task-list checkboxes — several docs use `- [x]`/`- [ ]` — not tables; no doc
+  in this repo uses GFM pipe tables) — no `rehype-raw` (none of the docs
+  contain raw HTML blocks) and no syntax-highlighter (plain `<pre><code>` is
+  react-markdown's default and these docs aren't a code-reading product
+  surface). **Gotcha, already hit once:** react-markdown passes an extra
+  `node` prop to custom component renderers — spreading `{...props}` directly
+  onto a native DOM element leaks a literal `node="[object Object]"` attribute
+  onto every styled element. Destructure `node` out before spreading.
+- **Retiring a duplicate route via `next.config.ts` `redirects()`: delete the
+  old page file and its test in the same story, don't leave them in place.**
+  Precedent: the framework-docs-site epic consolidated `/components` into `/`
+  by adding a permanent redirect and, in the same commit, deleting
+  `app/(showcase)/components/page.tsx` and its co-located
+  `page.test.tsx`. Reason (caught by this epic's grill pass before any code
+  was written): `next.config.ts` redirects fire before Next's filesystem
+  router ever reaches the old page, so leaving the file in place creates a
+  permanently-dead route — and an RTL test that renders the old page
+  component directly (`render(<OldPage />)`, bypassing routing entirely)
+  keeps passing forever regardless, becoming a false-green test that asserts
+  on an unreachable route. If the retired page's test coverage is worth
+  keeping, re-home equivalent assertions against the page that now serves
+  that content, in the same story that does the deletion.
+
 ## Known issues
 
 - **`sanitizeNextPath`/`GATED_PATH_PREFIXES` use unanchored string-prefix matching, not
@@ -314,16 +348,18 @@ plus a thin gated app that showcases them — the components are the deliverable
   path-boundary check (e.g. exact match or followed by `/`) rather than raw
   `startsWith`.
 
-- **`@geomatico/maplibre-cog-protocol` misreports WGS84 bounds for non-EPSG:3857
-  COGs.** `public/layer-viewer-samples/2806-prado/ortho.tif` is a real COG in
-  EPSG:32621 (true WGS84 extent ~73.47°N/~56.8°W, verified with `rasterio`),
-  but `RasterTileSource.bounds` for it comes back as lon 3.35–5.74 / lat
-  58.25–59.49 (off Norway) — both the reported bounds AND the actual tile
-  fetches share the bug, so `<LayerViewer>`'s default auto-fit lands in the
-  wrong place on both `/components/layer-viewer` and `/components/land-overlay`.
-  Open, unfixed, not in scope for any story so far. Full verification detail,
-  where it was checked, and a starting point for the fix:
-  `docs/components/land-overlay.md`'s "Known open issue" section.
+- ~~`@geomatico/maplibre-cog-protocol` misreports WGS84 bounds for non-EPSG:3857
+  COGs.~~ **Fixed 2026-08-08** by reprojecting the sample `ortho.tif`/
+  `hillshade.tif` from EPSG:32621 to EPSG:3857 (`rio warp` + `rio cogeo
+  create`/`validate`) rather than patching the library — the library hardcodes
+  a Web Mercator assumption (`SphericalMercator`/`"900913"`) for every COG it
+  loads and never reads the file's actual CRS, so any non-3857 COG will hit
+  this identically; reproject ahead of time. Full root-cause writeup:
+  `docs/components/land-overlay.md`'s "Fixed" section (renamed from "Known
+  open issue"). `heightmap.json` (minecraft-content-engine) was regenerated
+  in lockstep since it derives from the same `hillshade.tif`, which changed
+  dimensions (512×512 → 549×522) under the reprojection's bilinear
+  resampling.
 
 ## Canonical references
 
