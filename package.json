@@ -29,6 +29,8 @@
     "prismarine-nbt": "^2.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.5.0",
     "terra-draw": "^1.0.0",
     "three": "^0.169.0"
