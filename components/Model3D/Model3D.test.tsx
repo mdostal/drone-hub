@@ -26,7 +26,7 @@
 // stays covered by a live/manual WebGL check only (same precedent as
 // LayerViewer's addLayerToMap/updateLayerOnMap staying Playwright-only).
 import { describe, expect, it } from "vitest";
-import { toErrorMessage } from "./Model3D";
+import { distanceBetweenPoints, formatDistance, toErrorMessage } from "./Model3D";
 
 describe("toErrorMessage", () => {
   it("returns an Error's own .message", () => {
@@ -62,5 +62,53 @@ describe("toErrorMessage", () => {
     // path (which would include the "GltfParseError: " name prefix) —
     // proves the `instanceof Error` branch, not the fallback, is firing.
     expect(toErrorMessage(err)).not.toBe(String(err));
+  });
+});
+
+// Unit specs for the measure tool's pure math — model3d-measure-tool-and-
+// legend story. Same jsdom-testability precedent as toErrorMessage above:
+// pulled out of the WebGL-only component so the actual arithmetic (not just
+// "does three.js render") is directly, cheaply verifiable. Live click/drag/
+// <Bounds>-non-re-frame behavior is verified separately via Playwright, per
+// the story's acceptance criteria (a pure unit test can't exercise that).
+describe("distanceBetweenPoints", () => {
+  it("computes the correct Euclidean distance between two known 3D points", () => {
+    // A 3-4-12 right "cone" — dx=3, dy=4, dz=12 → sqrt(9+16+144) = sqrt(169) = 13.
+    expect(distanceBetweenPoints({ x: 0, y: 0, z: 0 }, { x: 3, y: 4, z: 12 })).toBe(13);
+  });
+
+  it("returns 0 for two identical points", () => {
+    expect(distanceBetweenPoints({ x: 5, y: -2, z: 7 }, { x: 5, y: -2, z: 7 })).toBe(0);
+  });
+
+  it("is symmetric (order of points doesn't matter)", () => {
+    const a = { x: 1, y: 2, z: 3 };
+    const b = { x: -4, y: 8, z: 0.5 };
+    expect(distanceBetweenPoints(a, b)).toBeCloseTo(distanceBetweenPoints(b, a));
+  });
+
+  it("handles simple 2D-plane (z=0) distances", () => {
+    // Classic 3-4-5 triangle in the XY plane.
+    expect(distanceBetweenPoints({ x: 0, y: 0, z: 0 }, { x: 3, y: 4, z: 0 })).toBe(5);
+  });
+});
+
+describe("formatDistance", () => {
+  it("labels the distance in raw 'units' when no unitsPerMeter hint is given", () => {
+    expect(formatDistance(13)).toBe("13.00 units");
+  });
+
+  it("still labels in 'units' when unitsPerMeter is explicitly undefined", () => {
+    expect(formatDistance(4.5, undefined)).toBe("4.50 units");
+  });
+
+  it("converts to meters when a positive unitsPerMeter scale hint is provided", () => {
+    // 100 raw glTF units, 50 units per real-world meter → 2.00 m.
+    expect(formatDistance(100, 50)).toBe("2.00 m");
+  });
+
+  it("never fabricates a 'meters' label from a zero or negative scale hint", () => {
+    expect(formatDistance(13, 0)).toBe("13.00 units");
+    expect(formatDistance(13, -5)).toBe("13.00 units");
   });
 });

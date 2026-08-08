@@ -1,0 +1,90 @@
+id: brand-theming-viewer-polish-closeout
+epic: brand-theming-and-viewer-polish
+title: Full-suite verification, live spot-check, tools-hub screenshot refresh, docs closeout
+status: complete
+complexity: low
+methodology: classic
+depends_on: [brand-theming-apply-across-pages, layerviewer-sample-dataset-overhaul, model3d-measure-tool-and-legend]
+
+description: |
+  Closeout pass: independently re-verify everything the three feature
+  stories claim (not trusting prior stories' self-reports), live-verify
+  the full visual result via Playwright against a real dev server, refresh
+  the tools.mdostal.com screenshot (the landing page now looks
+  meaningfully different — themed + real imagery instead of a black blob),
+  and record what shipped.
+
+  Specific checks:
+  - `npm test` — full suite passes.
+  - `npm run build` — clean, all routes still prerender as expected.
+  - `npm run test:e2e` — the Playwright placement suite still passes
+    (verifies the land-overlay numeric-placement checks still hold against
+    the NEW duck coordinates from layerviewer-sample-dataset-overhaul —
+    this suite's fixtures/assertions may need updating for the new
+    location; check and fix if so, don't just assume it still passes).
+  - Live Playwright pass against `npm run dev` (both dark and light OS
+    modes): /, /components/layer-viewer, /components/land-overlay,
+    /components/model3d, /docs/components/layer-viewer. Confirm: themed
+    colors render correctly in both modes, the ortho shows real imagery
+    (not black), thermal/contours toggle to visually distinct content, the
+    duck is visible and correctly positioned, Model3D's legend is present
+    and the measure tool works end-to-end (place two points, see a
+    distance line+label, camera doesn't unexpectedly re-frame).
+  - Take a fresh screenshot of the root landing page (now themed) and
+    replace the one at ~/Code/mdostal-tools-hub/public/screenshots/drone-hub.png
+    — this is a SEPARATE repo (already integrated with drone-hub in an
+    earlier epic; see that epic's history for the exact convention: real
+    screenshot from the live/local instance, not a mockup, sized to match
+    the existing ~824x515 convention). Commit and push the updated
+    screenshot there too, matching the existing single-file-update pattern.
+  - Update docs/components/model3d.md to actually document the measure
+    tool + legend (its acceptance-criteria section currently states
+    "Measure... explicitly deferred" — that's now false).
+  - Update .pHive/CONTEXT.md with the new conventions: the design-token
+    system (where tokens live, the dark-first/light-override mechanism),
+    the "regenerate sample data as one atomic dataset, not piecemeal
+    patches" lesson from this epic's grill findings, and the
+    LayerDef.style extensibility pattern.
+
+acceptance_criteria:
+  - "Given the full repo, when npm test / npm run build / npm run test:e2e all run, then all three pass with zero failures"
+  - "Given a running dev server in both light and dark OS modes, when Playwright checks the 5 listed routes, then all render correctly themed with no visual regressions"
+  - "Given the Model3D measure tool, when exercised live end-to-end, then it works exactly as design-discussion.md §3c describes, including the camera not re-framing on point placement"
+  - "Given the tools-hub screenshot, when refreshed, then it reflects the new themed landing page, not the old unthemed one"
+  - "Given docs/components/model3d.md, when read after this story, then it no longer claims measure was deferred — it documents the real feature"
+
+steps:
+  - id: implement
+    description: Run the full verification suite fresh; fix any real defect surfaced (do not just re-report prior stories' claims); refresh the tools-hub screenshot.
+    agent: developer
+  - id: test
+    description: Live Playwright verification across all 5 routes in both light and dark modes, plus the full Model3D measure-tool interaction flow.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm docs (model3d.md, CONTEXT.md) accurately describe what shipped; confirm the tools-hub screenshot update was committed and pushed correctly.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Final commit on feat/brand-theming-and-viewer-polish; merge to master --no-ff; push origin master.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/CONTEXT.md
+      purpose: Accumulated cross-epic conventions — this story adds the design-token and atomic-sample-data-regeneration lessons.
+    - path: docs/components/model3d.md
+      purpose: Currently states measure was deferred — needs correcting to describe the real shipped feature.
+
+files_to_modify:
+  - file: .pHive/CONTEXT.md
+    change: Document the design-token system and the atomic-sample-data-regeneration convention.
+  - file: docs/components/model3d.md
+    change: Document the real measure tool + legend, remove the stale "deferred" claim.
+
+risks:
+  - severity: low
+    description: Prior stories may have self-reported success without truly independent re-verification.
+    mitigation: This story exists specifically to re-run everything from a clean state rather than trusting prior stories' step reports.

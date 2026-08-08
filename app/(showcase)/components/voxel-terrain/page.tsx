@@ -35,7 +35,7 @@ export default function VoxelTerrainShowcasePage() {
         description="Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes with a sample structure resting on top, orbit-controllable."
         demo={
           <div className="flex flex-col gap-3">
-            <div className="h-[480px] w-full overflow-hidden rounded-md bg-neutral-900">
+            <div className="h-[480px] w-full overflow-hidden rounded-xl bg-background">
               <VoxelTerrainDemo />
             </div>
             {/* Ties the export directly to this sample terrain — the same
@@ -53,7 +53,7 @@ export default function VoxelTerrainShowcasePage() {
             <Link
               href="/api/minecraft-export?slug=2806-prado"
               download
-              className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-accent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:border-accent-dark hover:bg-accent-dark"
             >
               Download for Minecraft
             </Link>

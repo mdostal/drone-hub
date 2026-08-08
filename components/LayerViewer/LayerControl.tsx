@@ -33,7 +33,7 @@ export function LayerControl({ layers, onToggle, onOpacityChange, className }: L
       role="group"
       aria-label="Layers"
       className={cx(
-        "flex flex-col gap-3 rounded-lg border border-white/10 bg-black/70 p-3 text-sm text-white backdrop-blur",
+        "flex flex-col gap-3 rounded-xl border border-border bg-surface/90 p-3 text-sm text-foreground backdrop-blur",
         className,
       )}
     >
@@ -69,7 +69,7 @@ export function LayerControl({ layers, onToggle, onOpacityChange, className }: L
               aria-label={`${layer.id} opacity`}
               className="w-24"
             />
-            {layer.legend && <span className="w-28 shrink-0 text-xs text-white/60">{layer.legend}</span>}
+            {layer.legend && <span className="w-28 shrink-0 text-xs text-muted">{layer.legend}</span>}
           </div>
         );
       })}

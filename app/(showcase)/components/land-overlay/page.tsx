@@ -36,9 +36,9 @@ const LayerViewer = dynamic(() => import("@/components/LayerViewer").then((mod) 
 });
 
 // Placed at the sample parcel boundary's centroid
-// (public/layer-viewer-samples/2806-prado/parcel.geojson's ~120m x 100m
-// rectangle), computed during epic planning, so the model sits inside the
-// parcel outline once the camera is actually looking at that real location.
+// (public/layer-viewer-samples/2806-prado/parcel.geojson's rectangle),
+// computed during epic planning, so the model sits inside the parcel
+// outline once the camera is actually looking at that real location.
 //
 // UPDATE (2026-08-08): the COG-bounds bug this comment used to describe
 // (ortho.tif's EPSG:32621 pixel values misread as EPSG:3857, auto-fit
@@ -48,28 +48,53 @@ const LayerViewer = dynamic(() => import("@/components/LayerViewer").then((mod) 
 // default, no pan/zoom workaround needed. Full root-cause writeup:
 // docs/components/land-overlay.md's "Fixed" section.
 //
-// `scale: 10` — live-tuned via Playwright by flying the camera to the real
-// parcel coordinates (jumpTo, since fitBounds can't get there itself — see
-// above) and reading back actual rendered pixels. `scale`
-// (lib/geo-model-types.ts) is a multiplier on top of
+// UPDATE (2026-08-08, layerviewer-sample-dataset-overhaul): the sample
+// ortho.tif was fully replaced — the old file was a single-band uint16
+// rio-tiler test fixture (near-solid-black when rendered) at ~73.47°N in
+// the high Arctic. It's now a real 3-band RGB drone orthophoto (cropped
+// from an OpenAerialMap CC-BY 4.0 image, see
+// docs/components/layer-viewer.md's "Sample data provenance" section for
+// the full source/license writeup), which naturally sits at a real small
+// extent in South Carolina, ~33.35°N/-81.27°W. hillshade.tif/thermal.tif/
+// parcel.geojson/contours.geojson were all regenerated together at this
+// SAME new extent so every layer (and this duck anchor) stays registered
+// to one consistent grid — CLAUDE.md's "#1 registration gate." The lat/lon
+// below is the new parcel's centroid.
+//
+// `scale` — originally live-tuned via Playwright (see the history below)
+// against the OLD parcel's ~120m x 100m footprint. RE-VERIFIED live for
+// this story's much smaller new parcel (~29m x 53m — see the UPDATE
+// comment above): rather than assume the old absolute value (`10`) still
+// works, it was re-measured directly against the new imagery via the same
+// pixel-readback method (a live R-B>100 duck-colored-pixel scan — see
+// lib/maplibre-model-layer.placement.test.ts's own header comment for the
+// mask's full derivation) — the duck renders as a clearly-visible,
+// non-degenerate silhouette comfortably inside the new parcel at the SAME
+// `scale: 10`, so it was kept unchanged rather than re-tuned to a new
+// number. `scale` (lib/geo-model-types.ts) is a multiplier on top of
 // createModelLayer's meters-per-glTF-unit conversion. The sample duck glTF
 // (public/model3d-samples/duck/model.glb, the classic Khronos "Duck"
 // sample) is authored in oversized raw units — its glTF position accessor's
 // min/max (read directly from the .glb's JSON chunk, not guessed) span
-// roughly 165 x 154 x 115 raw units. The story's starting guess of `scale:
-// 5` and this file's earlier `scale: 0.1` were both tested live: at 0.1 the
-// duck was a genuine sub-pixel speck (a 100x100 CSS-px pixel sample
-// centered exactly on its projected anchor found only the parcel's fill
-// color, zero duck pixels — confirmed via canvas.toDataURL() readback, not
-// just a visual guess). At `scale: 50` (tested to bound the search from the
-// other side) it was oversized, covering most of the parcel. `scale: 10`
-// lands in between: a clearly-visible, recognizably duck-shaped silhouette
-// occupying roughly 15-20% of the parcel's ~120m width — present, not a
-// speck, not swallowing the frame. (Separately observed: it renders as a
-// solid black silhouette, not the duck's usual yellow — createModelLayer's
-// three.js scene has no light source, and the glTF's material needs one;
-// pre-existing behavior in lib/maplibre-model-layer.ts, unrelated to scale
-// and out of this story's scope to change.)
+// roughly 165 x 154 x 115 raw units.
+//
+// Original tuning history (against the OLD, larger parcel): the story's
+// starting guess of `scale: 5` and this file's earlier `scale: 0.1` were
+// both tested live: at 0.1 the duck was a genuine sub-pixel speck (a
+// 100x100 CSS-px pixel sample centered exactly on its projected anchor
+// found only the parcel's fill color, zero duck pixels — confirmed via
+// canvas.toDataURL() readback, not just a visual guess). At `scale: 50`
+// (tested to bound the search from the other side) it was oversized,
+// covering most of the parcel. `scale: 10` landed in between: a clearly
+// visible, recognizably duck-shaped silhouette occupying roughly 15-20% of
+// the OLD parcel's ~120m width.
+//
+// (Previously observed against the old sample data: it rendered as a
+// solid black silhouette, not the duck's usual yellow, for lack of a light
+// source. Re-observed live against the new ortho: the duck now renders
+// with visible yellow/orange coloring, not solid black — createModelLayer's
+// lighting setup is pre-existing behavior in lib/maplibre-model-layer.ts,
+// unrelated to this story's sample-data change and out of scope here.)
 const SAMPLE_MODEL_SCALE = 10;
 
 const SAMPLE_MODELS: GeoAnchoredModel[] = [
@@ -77,8 +102,8 @@ const SAMPLE_MODELS: GeoAnchoredModel[] = [
     id: "duck",
     url: withBasePath("/model3d-samples/duck/model.glb"),
     title: "Duck (sample glTF)",
-    lat: 73.46748426410694,
-    lon: -56.808326092516914,
+    lat: 33.350613554313604,
+    lon: -81.2681617934123,
     altitudeMeters: 0,
     scale: SAMPLE_MODEL_SCALE,
   },
@@ -96,8 +121,8 @@ const models: GeoAnchoredModel[] = [
     id: "duck",
     url: "/model3d-samples/duck/model.glb",
     title: "Duck (sample glTF)",
-    lat: 73.46748426410694,
-    lon: -56.808326092516914,
+    lat: 33.350613554313604,
+    lon: -81.2681617934123,
     altitudeMeters: 0,
     scale: ${SAMPLE_MODEL_SCALE},
   },
@@ -146,7 +171,7 @@ export default function LandOverlayShowcasePage() {
         title="LandOverlay"
         description="A geo-anchored 3D model draped onto <LayerViewer>'s map, positioned by real lat/lon alongside the ortho/hillshade/boundary layers."
         demo={
-          <div className="relative h-[480px] w-full overflow-hidden rounded-md bg-black">
+          <div className="relative h-[480px] w-full overflow-hidden rounded-xl bg-background">
             <LayerViewer
               ref={viewerRef}
               manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}

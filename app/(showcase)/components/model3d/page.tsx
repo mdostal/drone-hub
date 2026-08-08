@@ -29,7 +29,7 @@ export default function Model3DShowcasePage() {
         title="Model3D"
         description="Orbit-and-measure 3D mesh / point-cloud viewer for a property's photogrammetry output."
         demo={
-          <div className="h-[480px] w-full overflow-hidden rounded-md bg-neutral-900">
+          <div className="h-[480px] w-full overflow-hidden rounded-xl bg-background">
             <Model3D
               model={{ id: "duck", url: withBasePath("/model3d-samples/duck/model.glb"), title: "Duck (sample glTF)" }}
             />

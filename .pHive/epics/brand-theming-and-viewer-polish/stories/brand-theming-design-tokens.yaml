@@ -1,0 +1,106 @@
+id: brand-theming-design-tokens
+epic: brand-theming-and-viewer-polish
+title: Real design tokens (app/globals.css) — mdostal-family-adjacent, dark-first
+status: complete
+complexity: medium
+methodology: bdd
+depends_on: []
+
+description: |
+  app/globals.css's `@theme {}` block is currently empty. This story adds
+  the real token layer every other story in this epic builds on.
+
+  Read .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+  §3a in full before starting — it has the exact color values, the
+  reasoning for each (verified against the real compiled CSS of
+  mdostal.com, tools.mdostal.com, life.mdostal.com), and the grill-revised
+  color-distinctness justification (match on saturation/lightness, not hue
+  — do not substitute a different "family orange" by hue alone).
+
+  Add to app/globals.css's `@theme` block (Tailwind v4 CSS-first config,
+  `@theme` block already exists and is imported — do not add a separate
+  tailwind.config file):
+  - `--color-accent: #e8590c` (and consider an `--color-accent-dark` /
+    hover-state variant if useful, e.g. a ~10% darker shade for active
+    states)
+  - Dark (default) tokens: `--color-background: #09090a`,
+    `--color-surface: #131316`, `--color-border: #27272a`,
+    `--color-foreground: #f4f4f5`, `--color-muted: #9ca3af`
+  - Light tokens via `@media (prefers-color-scheme: light)` override block
+    (matching tools.mdostal.com's exact mechanism — no toggle, no client
+    JS, OS-driven): `--color-background: #fafafa`, `--color-surface: #ffffff`,
+    `--color-border: #e4e4e7`, `--color-foreground: #18181b`,
+    `--color-muted: #52525b` (accent unchanged in both modes)
+  - Radius tokens: confirm/set `--radius-xl: 0.75rem` (12px) if not already
+    Tailwind's default — this is the family's cross-site constant.
+
+  Add Inter via `next/font/google` in app/layout.tsx (self-hosted, matching
+  mdostal.com/tools.mdostal.com's precedent) and wire its CSS variable into
+  the body's font-family (Tailwind v4's `@theme` can reference a
+  `--font-sans` variable set from the loaded font object).
+
+  This story does NOT need to apply the tokens to every page yet (that's
+  brand-theming-apply-across-pages, a separate story) — it needs the token
+  layer to exist, be correctly dark-first/light-aware, and be verified
+  render-correct on at least one real page (the root landing page is fine
+  as the verification surface, but don't do a full visual pass across
+  every page here).
+
+acceptance_criteria:
+  - "Given app/globals.css, when inspected, then @theme{} contains real color/font/radius tokens matching the values in design-discussion.md §3a, not the empty placeholder"
+  - "Given no explicit dark-mode toggle exists, when the OS is set to light vs. dark, then the page's background/foreground/border/surface colors switch accordingly (verified via Playwright's emulateMedia or by checking the CSS media query is correctly scoped)"
+  - "Given the root landing page rendered with the new tokens, when inspected, then Inter is the applied font (not a system-font fallback) and the accent color used anywhere is #e8590c, not a default Tailwind blue/black"
+  - "Given the full test suite, when run after this story, then it still passes — no existing test asserts on the old empty-theme/default-Tailwind-neutral styling in a way that would need updating (verify this rather than assume)"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3a in full; read app/globals.css and app/layout.tsx as they exist now.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above before implementing.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add the @theme tokens, wire Inter via next/font/google, verify on the landing page.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests from the behavior specs; live-verify dark/light switching via Playwright emulateMedia.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the token values exactly match design-discussion.md §3a and the family-relatedness reasoning holds.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/brand-theming-and-viewer-polish.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+      purpose: Full rationale + exact token values (§3a) — the single source of truth for this story's numbers.
+    - path: app/globals.css
+      purpose: Where the @theme block lives; currently empty.
+
+files_to_modify:
+  - file: app/globals.css
+    change: Add real @theme tokens (color, font, radius), dark-first with light override.
+  - file: app/layout.tsx
+    change: Wire Inter via next/font/google.
+
+design_decisions:
+  - decision: Dark-first via prefers-color-scheme, no manual toggle.
+    rationale: Matches tools.mdostal.com exactly — the direct sibling site drone-hub is listed under — and avoids client-side toggle-state complexity for a static/mostly-server-rendered app.
+  - decision: "Accent #e8590c, distinguished by S/L not hue."
+    rationale: "Grill-verified: hue alone is only 3-4° from sibling sites' oranges; the real distinguishing mechanism is saturation/lightness (90%/48% vs siblings' 100%/50%), which makes it MORE distinct from either sibling than they are from each other."
+
+references:
+  - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+    relevant_excerpt: |
+      Accent: #e8590c — HSL(21°, 90%, 48%)... this is a darker, more muted
+      "burnt orange" against the siblings' fully-saturated vivid orange...
+      Do not pick a replacement color by hue alone if this value changes
+      later — match on the S/L contrast, not the hue band.

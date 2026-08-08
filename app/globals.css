@@ -1,8 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  /* Design tokens land here as brand-system/design-token work is done.
-     Intentionally empty for this scaffold. */
+  /* mdostal-family-adjacent design tokens. See
+     .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+     §3a for the full color-science rationale (grill-verified) — do not
+     substitute a "family orange" by hue alone if these values ever change;
+     match on saturation/lightness contrast instead.
+
+     Dark is the default (defined here); the light variant lives in the
+     `@media (prefers-color-scheme: light)` override below, mirroring
+     tools.mdostal.com's own mechanism exactly — no toggle, no client JS,
+     OS-driven only. */
+
+  /* Accent — burnt orange, HSL(21deg 90% 48%). Distinct from sibling sites'
+     more saturated/lighter oranges (100% sat/50% light) via S/L, not hue:
+     stays in the same warm-orange band (reads as related) while being a
+     clearly darker, more muted shade (doesn't read as a copy). */
+  --color-accent: #e8590c;
+  /* ~10% darker for hover/active states. */
+  --color-accent-dark: #c94b09;
+
+  /* Dark (default) surface tokens. */
+  --color-background: #09090a;
+  --color-surface: #131316;
+  --color-border: #27272a;
+  --color-foreground: #f4f4f5;
+  --color-muted: #9ca3af;
+
+  /* Font — Inter, wired from next/font/google in app/layout.tsx via the
+     --font-sans CSS variable it sets on <html>/<body>. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radius — the one true cross-family constant (rounded-xl cards,
+     rounded-full pills/status dots). Tailwind v4 already ships a default
+     --radius-xl; this pins it explicitly to the family's 12px value so it
+     doesn't silently drift if the default ever changes upstream. */
+  --radius-xl: 0.75rem;
+}
+
+/* Light-mode override — matches tools.mdostal.com's exact mechanism
+   (prefers-color-scheme, no manual toggle). Accent is unchanged in both
+   modes.
+
+   `@theme` (above) both declares the tokens' existence (so `bg-background`
+   etc. utilities exist) AND emits their dark values as real CSS custom
+   properties on `:root`. Utilities compile to `var(--color-background)`
+   etc., so redefining those same custom properties on `:root` inside a
+   plain `@media` block (NOT a nested `@theme`, which is a build-time
+   token-registration directive, not a runtime-scoped one) is what actually
+   flips the rendered colors under the OS light scheme. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-background: #fafafa;
+    --color-surface: #ffffff;
+    --color-border: #e4e4e7;
+    --color-foreground: #18181b;
+    --color-muted: #52525b;
+  }
 }
 
 /* <VideoTour> stage animations (components/VideoTour/TourStage.tsx).

@@ -37,6 +37,10 @@ export interface ModelDef {
   id: string;
   url: string;
   title: string;
+  /** How many raw glTF units equal one real-world meter, for the measure
+   *  tool's distance label. Optional, absent by default (including for the
+   *  sample duck) — see "Measure tool + controls legend" below. */
+  unitsPerMeter?: number;
 }
 
 export interface Model3DProps {
@@ -47,12 +51,20 @@ export interface Model3DProps {
 }
 ```
 
-That's the whole registry entry — `{id, url, title}`, no more. This matches what's
-actually shipped in `components/Model3D/Model3D.tsx`; there is no separate manifest file
-for P1 (a single sample model, hardcoded inline on the showcase page — see "Sample
-data" below), unlike `<LayerViewer>`'s `PropertyLayers`/`<VideoTour>`'s `Tour`, which
-both do have a manifest-file convention. A single-model P1 scope didn't warrant one; if
-a future epic needs to list multiple models per property, that's the point to add one.
+That's the whole registry entry — `{id, url, title}`, plus one narrow, additive
+exception added by the `brand-theming-and-viewer-polish` epic's measure tool
+(`unitsPerMeter?`, covered below). This matches what's actually shipped in
+`components/Model3D/Model3D.tsx`; there is no separate manifest file for P1 (a single
+sample model, hardcoded inline on the showcase page — see "Sample data" below), unlike
+`<LayerViewer>`'s `PropertyLayers`/`<VideoTour>`'s `Tour`, which both do have a
+manifest-file convention. A single-model P1 scope didn't warrant one; if a future epic
+needs to list multiple models per property, that's the point to add one.
+
+`unitsPerMeter` is still not a scale/position/geo-anchoring *transform* field — it
+doesn't move, resize, or reorient the mesh in any scene. It only feeds the measure
+tool's distance-label formatting (see below). The "no scale/position/geo-anchoring on
+`ModelDef`" rule from the original epic (next section) is about placement, and stays
+intact.
 
 ### Deliberately deferred: scale, position, geo-anchoring
 
@@ -104,6 +116,83 @@ no placement decision to make yet that guessing on `ModelDef` would actually ser
    file) — `ModelErrorBoundary`, a class component (error boundaries have no hook
    equivalent), catches that and calls `onLoadError`, rendering nothing rather than
    unmounting the whole viewer with an uncaught error.
+
+## Measure tool + controls legend
+
+**Shipped by the `brand-theming-and-viewer-polish` epic's `model3d-measure-tool-and-
+legend` story.** This corrects `README.md`/`app/page.tsx`'s pre-existing "orbit-and-
+measure" copy, which had been describing an unbuilt feature since `<Model3D>` first
+shipped — see `design-discussion.md §2`'s research note for that history. It also
+corrects this doc's own prior claim that measure was "explicitly deferred" — that was
+true for the original `model3d` epic (P1, glTF viewer only) but is no longer true of
+the component as it exists today.
+
+1. **A "Measure" toggle button** lives in the on-canvas controls legend (see below).
+   Clicking it flips `measureMode` on/off; the button's own label and styling reflect
+   the state (`"Measure"` vs. `"Measure: On"`, accent-filled when active).
+2. **Click-to-place two points, via raycasting against the loaded mesh.**
+   `MeasureController` (a `<Canvas>`-level component with no visual output of its own)
+   listens for native `pointerdown`/`pointerup` on the canvas's own DOM element — not
+   r3f's per-object synthetic pointer events — and only registers a placement when the
+   gesture qualifies as a genuine click: less than `CLICK_MAX_MOVEMENT_PX` (6px) of
+   on-screen movement between down and up, completed within `CLICK_MAX_DURATION_MS`
+   (500ms). A drag (or a long press) is ignored, so measure mode can be left on without
+   ever fighting `<OrbitControls>` for the same drag gesture — `MeasureController` never
+   calls `stopPropagation`/`preventDefault`, so `OrbitControls`' own native listeners on
+   that same canvas element see every drag event untouched. A qualifying click converts
+   the pointer position to normalized device coordinates, raycasts against the loaded
+   scene graph (reported up via `GltfScene`'s `onSceneReady`), and reports the first
+   hit's world-space point up to `<Model3D>`'s own state.
+3. **The distance line + midpoint label.** Once two points are placed, `MeasureOverlay`
+   renders a small accent-colored sphere at each point, an accent-colored `Line`
+   connecting them (drei's `<Line>`), and a floating label at the segment's midpoint
+   (drei's `<Html>`, a DOM portal) showing the distance. **The label is deliberately
+   "X.XX units", not a fabricated real-world unit** — `formatDistance()`
+   (`components/Model3D/Model3D.tsx`) only prints `"X.XX m"` if the caller's `ModelDef`
+   supplies `unitsPerMeter` (a raw-glTF-units-per-real-meter scale hint); absent, as it
+   is for the sample duck (there is no known real-world scale for it, and none in
+   general for `<Model3D>` until a real photogrammetry pipeline supplies one), it stays
+   labeled `"units"`. This matches this repo's established honesty-about-precision
+   convention — the same reasoning `CLAUDE.md`'s "visual property-intelligence, not
+   survey-grade" framing applies to `<LayerViewer>`'s ortho output, and the same reasoning
+   behind every synthetic sample layer's `legend: "synthetic placeholder — not real ..."`
+   wording: never imply a precision or ground-truth the data doesn't actually have.
+4. **A grill-flagged placement constraint: measure geometry renders OUTSIDE `<Bounds>`,
+   as a `<Canvas>`-level sibling, never as its child.** `<Bounds fit clip observe
+   margin={1.2}>` recomputes the camera's fit from the bounding box of everything it
+   wraps; placing `MeasureOverlay`'s markers/line *inside* it would grow that box with
+   every new point and trigger an unwanted camera re-frame/zoom mid-measurement — exactly
+   the "camera doesn't unexpectedly re-frame" requirement `design-discussion.md §3c`
+   calls out explicitly. `<Bounds>`'s own wrapping `<group>` applies no transform of its
+   own (verified by reading `@react-three/drei`'s `Bounds.js` directly, not assumed), so
+   world-space points raycast against the mesh *inside* `<Bounds>` still line up correctly
+   with markers rendered *outside* it — no coordinate conversion needed. Live-verified via
+   Playwright: placing two points produced a distance label with the duck staying
+   pixel-identical in position/scale (camera did not move).
+5. **Clearing a measurement — two ways, both real.** Placing a third point (once two are
+   already placed) discards the old pair and starts a fresh measurement at the new
+   point (`handlePlacePoint`'s `prev.length >= 2 ? [point] : [...prev, point]` reset).
+   Independently, the legend's **"Clear measurement" button** (visible only while measure
+   mode is on, disabled/greyed when there are no points to clear) resets the same state
+   on demand without requiring a third click. Both call the same `setPoints` reset under
+   the hood — there is no separate "undo one point" affordance, only "start over."
+6. **The on-canvas controls legend.** A small fixed-corner panel (top-right, absolutely
+   positioned within `<Model3D>`'s own container, not a separate page element — "a little
+   legend on the side," per the operator's own request) always lists the always-available
+   controls (`Drag to orbit`, `Scroll to zoom`) plus the Measure toggle button, and — only
+   while measure mode is active — `Click two points to measure` and the Clear button
+   described above. Styled via this epic's design tokens (`bg-surface/90`, `border-border`,
+   `text-foreground`, `text-accent` from `app/globals.css`'s `@theme` block — see
+   `.pHive/CONTEXT.md`'s design-token entry), with a `backdrop-blur` so it stays legible
+   over an arbitrary mesh/background. The legend's outer wrapper is `pointer-events-none`
+   (only the panel itself is `pointer-events-auto`), so it never intercepts orbit/measure
+   clicks over the rest of the canvas.
+
+The marker-sphere radius (`markerRadius` state) is computed from the loaded mesh's own
+bounding-box diagonal (`handleSceneReady`, 1% of the diagonal, falling back to a fixed
+`0.02` for an empty/degenerate box) rather than hardcoded, so a marker reads sensibly
+whether the glTF is duck-scale (tens of units) or a future real photogrammetry mesh at a
+totally different scale.
 
 ## Tech
 
@@ -178,9 +267,14 @@ import { Model3D } from "@/components/Model3D";
 
 ## Acceptance criteria
 
-Scoped to this epic (P1: `<Model3D>` on a single sample glTF, plus the showcase-site
-pattern). Measure, point-cloud rendering, and scale/position/geo-anchoring are explicitly
-out of scope — see Phase fit.
+The first block below is scoped to the original `model3d` epic (P1: `<Model3D>` on a
+single sample glTF, plus the showcase-site pattern) — point-cloud rendering and
+scale/position/geo-anchoring *placement* were, and remain, explicitly out of scope, see
+Phase fit. **Measure is no longer out of scope** — the original P1 scoping here read
+"Measure... explicitly deferred"; that was accurate when this doc was first written but
+is now stale. The real, shipped measure tool + controls legend (from the
+`brand-theming-and-viewer-polish` epic) is documented above under "Measure tool +
+controls legend," with its own acceptance criteria in the second block below.
 
 - [x] Given a glTF/glb url, when `<Model3D>` mounts, then the mesh renders visibly in the
       canvas, reasonably framed (not off-screen/invisibly tiny/huge).
@@ -224,11 +318,58 @@ out of scope — see Phase fit.
   `/components/*`). `model3d-showcase-pages`'s Playwright pass loaded the page with no
   passcode cookie set and confirmed no redirect occurred.
 - [x] Given `ModelDef`, when inspected, then it carries no `scale`/`position`/
-      geo-anchoring fields.
-  Verified: `components/Model3D/Model3D.tsx`'s `ModelDef` interface is exactly
-  `{id: string; url: string; title: string}` — no other fields. Matches the `do_not` in
-  `model3d-component.yaml` and the reasoning in `design-discussion.md` §2.3, reproduced
-  above under "Deliberately deferred."
+      geo-anchoring *transform* fields.
+  Verified: `components/Model3D/Model3D.tsx`'s `ModelDef` interface is
+  `{id: string; url: string; title: string; unitsPerMeter?: number}`. The one field
+  added since this criterion was first written (`unitsPerMeter`, by the
+  `brand-theming-and-viewer-polish` epic) is a measure-tool label-formatting hint, not a
+  transform — it doesn't move, resize, or reorient the mesh in any scene. Still matches
+  the `do_not` in `model3d-component.yaml` and the reasoning in `design-discussion.md`
+  §2.3, reproduced above under "Deliberately deferred."
+
+### Measure tool + controls legend — acceptance criteria
+
+Scoped to the `brand-theming-and-viewer-polish` epic's `model3d-measure-tool-and-legend`
+story. See "Measure tool + controls legend" above for the full behavior description.
+
+- [x] Given the Measure toggle is on, when the user clicks two distinct points on the
+      mesh, then a connecting line and a distance-labeled midpoint marker render, and the
+      label reads "X.XX units" (not a fabricated real-world unit) unless the `ModelDef`
+      supplies `unitsPerMeter`.
+  Verified: `distanceBetweenPoints`/`formatDistance` (`components/Model3D/Model3D.tsx`)
+  are pure, WebGL-independent functions with direct unit coverage in
+  `Model3D.test.tsx`. Live-verified via Playwright against the real running app:
+  toggling Measure and placing two points on the sample duck produced a distance line
+  and a `"0.50 units"` label.
+- [x] Given measure mode is active, when the user drags to orbit, then no measure point
+      is placed (orbit and measure don't conflict).
+  Verified: `MeasureController`'s click-vs-drag threshold (`CLICK_MAX_MOVEMENT_PX`,
+  `CLICK_MAX_DURATION_MS`) gates point placement on `pointerup`, and it never calls
+  `stopPropagation`/`preventDefault`, so `<OrbitControls>`'s own native drag listeners on
+  the same canvas element are unaffected either way. Live-verified via Playwright
+  (drag-to-orbit while measure mode is on does not add a point).
+- [x] Given two points already placed, when a third point is clicked, then the old pair
+      clears and a fresh measurement starts at the new point; independently, the
+      "Clear measurement" button resets the same state on demand.
+  Verified: `handlePlacePoint`'s `prev.length >= 2 ? [point] : [...prev, point]` reset
+  (third-click behavior) and the legend's `handleClearMeasurement`/"Clear measurement"
+  button (`disabled` when `points.length === 0`) both call the same `setPoints` reset —
+  read directly in `components/Model3D/Model3D.tsx`.
+- [x] Given a point is placed, when the camera is observed, then it does not
+      unexpectedly re-frame or zoom.
+  Verified: `MeasureOverlay`'s markers/line render as `<Canvas>`-level siblings of
+  `<Bounds fit clip observe margin={1.2}>`, never as its children — `<Bounds>`'s own
+  wrapping `<group>` applies no transform of its own (confirmed by reading
+  `@react-three/drei`'s `Bounds.js` directly), so measure geometry can't grow the bounds
+  computation `observe` reacts to. Live-verified via Playwright: placing two points left
+  the duck pixel-identical in position/scale before and after.
+- [x] Given the showcase page, when it loads, then an on-canvas controls legend is
+      visible, listing orbit/zoom and the Measure controls, themed via this epic's
+      design tokens.
+  Verified: `Model3D.tsx`'s legend panel (`bg-surface/90`, `border-border`,
+  `text-foreground`, `text-accent`) renders unconditionally in the returned JSX, not
+  gated behind any loaded/ready state. Live-verified via Playwright: the "Controls"
+  panel with a "Measure" toggle is visible on `/components/model3d` by default.
 
 ## Phase fit
 

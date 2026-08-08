@@ -177,6 +177,31 @@ export function buildLayerMapConfig(layer: LayerDef): LayerMapConfig | null {
     };
   }
 
+  // Style resolution: lib/layer-types.ts's optional `LayerDef.style` field.
+  // Absent entirely (the pre-existing case for every showcase page/manifest
+  // built before this field existed) falls through to the exact same
+  // hardcoded green `#22c55e` fill+line this function always used — zero
+  // behavior change for the absent case, by construction (every `??`
+  // below bottoms out at the old literal).
+  const fillColor = layer.style?.fillColor ?? "#22c55e";
+  const lineColor = layer.style?.lineColor ?? "#22c55e";
+  const lineOnly = layer.style?.lineOnly ?? false;
+
+  const lineLayer: LayerSpecification = {
+    id: mapLineLayerId(layer.id),
+    type: "line",
+    source: sourceId,
+    layout: { visibility },
+    paint: { "line-color": lineColor, "line-width": lineOnly ? 1.5 : 2, "line-opacity": layer.opacity },
+  };
+
+  if (lineOnly) {
+    // Thin accent-colored line, no fill at all — e.g. a contours layer,
+    // which shouldn't read as a filled area the way the parcel boundary
+    // does.
+    return { sourceId, source: { type: "geojson", data: layer.url }, mapLayers: [lineLayer] };
+  }
+
   return {
     sourceId,
     source: { type: "geojson", data: layer.url },
@@ -189,15 +214,9 @@ export function buildLayerMapConfig(layer: LayerDef): LayerMapConfig | null {
         type: "fill",
         source: sourceId,
         layout: { visibility },
-        paint: { "fill-color": "#22c55e", "fill-opacity": layer.opacity * 0.25 },
+        paint: { "fill-color": fillColor, "fill-opacity": layer.opacity * 0.25 },
       },
-      {
-        id: mapLineLayerId(layer.id),
-        type: "line",
-        source: sourceId,
-        layout: { visibility },
-        paint: { "line-color": "#22c55e", "line-width": 2, "line-opacity": layer.opacity },
-      },
+      lineLayer,
     ],
   };
 }

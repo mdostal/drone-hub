@@ -1,0 +1,107 @@
+id: brand-theming-apply-across-pages
+epic: brand-theming-and-viewer-polish
+title: Apply design tokens across the landing page, showcase wrapper, LayerControl, doc pages
+status: complete
+complexity: medium
+methodology: bdd
+depends_on: [brand-theming-design-tokens]
+
+description: |
+  brand-theming-design-tokens added the real @theme token layer. This
+  story applies it everywhere — "across the board," per the operator's own
+  words, not just the landing page.
+
+  Before starting, VERIFY (don't assume) how much shared surface actually
+  exists: read components/showcase.tsx (or find <ComponentShowcase>,
+  wherever it lives) and confirm whether it genuinely wraps all 5
+  /components/* showcase pages identically, or whether some pages
+  (land-overlay, voxel-terrain with its download button) have enough
+  page-specific chrome outside the shared wrapper that they need separate
+  attention too — the epic's design doc flagged this as something the
+  grill should have checked; confirm the real answer here if it wasn't
+  fully settled, and theme whatever chrome actually exists outside the
+  wrapper.
+
+  Apply the tokens (replace raw Tailwind neutrals — bg-black, text-neutral-*,
+  border-neutral-*, etc. — with the new @theme-backed utility classes) to:
+  - app/page.tsx (root landing page / table of contents) — card
+    background/border/hover state, accent usage on links, the "Live"-style
+    status treatment if any exists there.
+  - components/showcase.tsx / <ComponentShowcase> (however it's actually
+    structured) — the wrapper every showcase page renders through.
+  - components/LayerViewer/LayerControl.tsx — currently a hardcoded
+    dark-panel style regardless of site theme; make it theme-aware
+    (respects light/dark via the new tokens, not a fixed bg-black/80).
+  - app/(showcase)/docs/components/[slug]/page.tsx — both its own chrome
+    (the "← Components" back-link) AND the react-markdown rendering itself
+    (headings, links, code blocks currently use bare Tailwind neutrals
+    with zero accent color anywhere — links should use the accent color at
+    minimum).
+  - The VoxelTerrain showcase page's "Download for Minecraft" button.
+
+  Do NOT restyle the actual map/3D canvas content (MapLibre's own
+  attribution control, the WebGL scenes) — this story is about the
+  chrome/UI around those canvases, not their internal rendering.
+
+acceptance_criteria:
+  - "Given every /components/* showcase page, when rendered, then none of them use raw bg-black/text-neutral-*/border-neutral-* Tailwind utilities where a themed equivalent now exists — spot-check via grep, not just visual"
+  - "Given the root landing page, when rendered in both light and dark OS modes (Playwright emulateMedia), then card borders/backgrounds and the accent color both switch correctly"
+  - "Given LayerControl, when rendered on a light-mode system, then it is NOT still a fixed dark panel — it respects the current theme"
+  - "Given a /docs/components/<slug> page, when rendered, then markdown links render in the accent color, not the default black/blue link color"
+  - "Given the full test suite, when run after this story, then it still passes — check for any test that snapshots specific className strings and update them if they now differ"
+
+steps:
+  - id: research
+    description: Confirm the actual shared-wrapper coverage across all 5 showcase pages; enumerate every raw-Tailwind-neutral usage across the listed files via grep.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Apply themed classes across every listed surface.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify light/dark switching via Playwright across at least 3 distinct pages (landing, one showcase page, one doc page).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm no raw-neutral styling was missed (re-grep after implementation) and the WebGL/map canvas content itself was left untouched.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/brand-theming-and-viewer-polish.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerControl.tsx
+      purpose: Currently a hardcoded dark panel — the clearest example of theme-unaware chrome to fix.
+    - path: app/(showcase)/docs/components/[slug]/page.tsx
+      purpose: Renders react-markdown output with zero accent-color styling currently.
+
+files_to_modify:
+  - file: app/page.tsx
+    change: Apply themed card/link/accent styling.
+  - file: components/LayerViewer/LayerControl.tsx
+    change: Make theme-aware instead of hardcoded dark.
+  - file: "app/(showcase)/docs/components/[slug]/page.tsx"
+    change: Theme the chrome and the react-markdown rendering (links, headings, code blocks).
+  - file: "app/(showcase)/components/voxel-terrain/page.tsx"
+    change: Theme the download button.
+
+risks:
+  - severity: low
+    description: Some existing RTL tests may assert on specific className strings that change.
+    mitigation: Re-run the full suite after implementation and fix any snapshot/className-string mismatches rather than assuming none exist.
+
+references:
+  - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+    relevant_excerpt: |
+      Apply scope (site-wide means every page, not just the landing page):
+      app/layout.tsx, app/globals.css, app/page.tsx, components/showcase.tsx,
+      components/LayerViewer/LayerControl.tsx, the doc-page chrome +
+      react-markdown rendering, VoxelTerrain's download button.

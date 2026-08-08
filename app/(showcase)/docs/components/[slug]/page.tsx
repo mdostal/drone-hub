@@ -85,7 +85,7 @@ const MARKDOWN_COMPONENTS = {
     <h3 className="mt-6 text-xl font-semibold" {...rest} />
   ),
   p: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"p">>) => (
-    <p className="mt-4 leading-7 text-neutral-800" {...rest} />
+    <p className="mt-4 leading-7 text-foreground" {...rest} />
   ),
   ul: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"ul">>) => (
     <ul className="mt-4 list-disc space-y-1 pl-6" {...rest} />
@@ -97,25 +97,25 @@ const MARKDOWN_COMPONENTS = {
     <li className="leading-7" {...rest} />
   ),
   blockquote: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"blockquote">>) => (
-    <blockquote className="mt-4 border-l-2 border-neutral-300 pl-4 italic text-neutral-600" {...rest} />
+    <blockquote className="mt-4 border-l-2 border-border pl-4 italic text-muted" {...rest} />
   ),
   code: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"code">>) => (
-    <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-sm" {...rest} />
+    <code className="rounded bg-surface px-1 py-0.5 font-mono text-sm text-foreground" {...rest} />
   ),
   pre: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"pre">>) => (
     <pre
-      className="mt-4 overflow-x-auto rounded-lg bg-neutral-100 p-4 font-mono text-sm [&>code]:bg-transparent [&>code]:p-0"
+      className="mt-4 overflow-x-auto rounded-xl border border-border bg-surface p-4 font-mono text-sm text-foreground [&>code]:bg-transparent [&>code]:p-0"
       {...rest}
     />
   ),
   a: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"a">>) => (
-    <a className="underline hover:text-neutral-600" {...rest} />
+    <a className="text-accent underline hover:text-accent-dark" {...rest} />
   ),
   strong: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"strong">>) => (
     <strong className="font-semibold" {...rest} />
   ),
   hr: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"hr">>) => (
-    <hr className="mt-8 border-neutral-200" {...rest} />
+    <hr className="mt-8 border-border" {...rest} />
   ),
   input: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"input">>) => (
     // GFM task-list checkboxes (- [x] / - [ ]) — remark-gfm renders these
@@ -141,7 +141,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
-      <Link href="/" className="text-sm text-neutral-600 hover:text-neutral-900">
+      <Link href="/" className="text-sm text-muted hover:text-accent">
         ← Components
       </Link>
       <article>

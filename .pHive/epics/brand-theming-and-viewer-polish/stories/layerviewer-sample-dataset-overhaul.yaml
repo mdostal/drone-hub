@@ -1,0 +1,191 @@
+id: layerviewer-sample-dataset-overhaul
+epic: brand-theming-and-viewer-polish
+title: Regenerate one coherent sample dataset (real ortho + matched-scale hillshade/thermal/contours + realigned boundary/duck)
+status: complete
+complexity: high
+methodology: bdd
+depends_on: []
+
+description: |
+  READ .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+  §3b IN FULL before starting — including its "Revised after grill" preamble.
+  This is not a "swap one file" story. The current sample ortho.tif is a
+  rio-tiler test fixture — single-band uint16, not real RGB imagery — which
+  is why it renders as a near-solid-black shape on /components/land-overlay
+  today (confirmed live). The existing hillshade.tif is ALSO wrong for this
+  purpose in a way that isn't visually obvious: it's continental-scale
+  (522x549px over a ~1000km x 950km extent, ~1823 m/pixel — verified
+  directly with rasterio during grill review), while parcel.geojson's
+  rectangle is ~120m x 100m — about 1/15th of a SINGLE hillshade pixel.
+  Deriving new "thermal"/"contours" layers from that existing array (a
+  tempting shortcut) would produce geometrically nonsensical output at
+  parcel scale. Do not do that.
+
+  This story generates ONE new, internally-consistent sample dataset at a
+  new real small-scale location, all together:
+
+  1. Source a real, small-scale, genuinely visual 3-band RGB ortho — a
+     public-domain small-area aerial/drone orthophoto (e.g. a cropped USGS
+     NAIP tile, public domain, ~0.6-1m resolution; or another
+     permissively-licensed small real orthomosaic). Reproject to EPSG:3857
+     (rio warp + rio cogeo create/validate — the established convention
+     from this session's COG-bounds-bug fix). Whatever real small extent
+     this imagery naturally covers becomes the new sample location — do
+     NOT force it to the old ~73.47°N Arctic coordinates or invent a fake
+     address. Document the real source/license in
+     docs/components/layer-viewer.md's "Sample data provenance" section
+     (existing convention — follow the exact documentation pattern already
+     used for ortho.tif/hillshade.tif/parcel.geojson there).
+  2. Generate a NEW synthetic hillshade/DEM at the SAME extent/resolution
+     as the new ortho (rasterio/numpy procedural elevation field →
+     hillshade render, same technique as the existing hillshade.tif's
+     generation, just correctly scaled this time — do not reuse the old
+     continental-scale array).
+  3. Generate the thermal layer from an INDEPENDENTLY-VARIED synthetic
+     intensity field (a separate procedural pass — NOT the literal same
+     array the hillshade step uses; two layers colorized from one
+     identical source would show identical ridgelines under different
+     palettes when toggled, which is an obvious tell, not two distinct
+     layers), LUT-mapped through an ironbow colormap (black → purple → red
+     → orange → yellow → white) at the new extent. Update layers.json's
+     thermal entry: disabled: false, url: "thermal.tif", legend stays
+     "synthetic placeholder — not real radiometric data" (exact existing
+     wording convention, do not invent new phrasing), toggle: false by
+     default.
+  4. Add a contours layer — derive real contour lines from the NEW,
+     correctly-scaled DEM (skimage.measure.find_contours or equivalent,
+     converting pixel space to the COG's real geo-coordinates) as a
+     GeoJSON MultiLineString/LineString FeatureCollection. Add scikit-image
+     as a one-time data-prep dependency (not a runtime npm dependency —
+     matches this repo's existing "pipeline tools live outside the
+     bundle" pattern; the generation script itself should NOT be
+     committed, matching the established throwaway-script convention used
+     for the original hillshade generation).
+  5. Regenerate parcel.geojson as a placeholder rectangle within the NEW
+     ortho's real extent (same "centered on the ortho, synthetic
+     placeholder, not a real parcel" convention as today — just
+     re-anchored to the new location).
+  6. Update app/(showcase)/components/land-overlay/page.tsx's
+     SAMPLE_MODELS duck lat/lon to sit inside the new extent. This is a
+     REQUIRED cascading change, not optional — CLAUDE.md's own "#1
+     registration gate" (boundary + ortho + model all register to one
+     grid) breaks if this is skipped.
+  7. Extend lib/layer-types.ts's LayerDef with an optional style field
+     (fill color, line color, or a lineOnly: boolean flag) and update
+     components/LayerViewer/LayerViewer.tsx's buildLayerMapConfig to use
+     it — contours render as thin accent-colored lines with NO fill
+     (lineOnly), distinct from the boundary's existing green fill+line
+     treatment. This must be additive: every existing LayerDef object
+     (all 5 showcase pages, the manifest.test.ts fixtures) must keep
+     working with zero changes when style is absent — verify this
+     directly, don't just assume optional-field additivity holds.
+  8. Update public/layer-viewer-samples/2806-prado/manifest.test.ts's TWO
+     hardcoded assertions that this change breaks: the
+     "matches CBA's exact thermal stub shape" test (currently asserts
+     disabled: true, url: null — now false/non-null) and the
+     "has exactly the four expected layer ids" test (now five, with
+     "contours" added). Rewrite both to match the new manifest shape —
+     do not just delete them; they exist to catch drift and should keep
+     doing so for the new shape.
+
+  Once all of the above lands, re-verify (via Playwright against a real
+  running dev server) that /components/layer-viewer and
+  /components/land-overlay both render a genuinely recognizable, non-black
+  aerial image by default, with the duck visible and correctly positioned
+  on /components/land-overlay, and that toggling hillshade/thermal/contours
+  on/off each shows visually distinct content.
+
+acceptance_criteria:
+  - "Given /components/layer-viewer loaded fresh, when the page renders, then the default view shows real, recognizable aerial imagery — not a black or near-black shape (verified via a real screenshot, not just an HTTP 200)"
+  - "Given the thermal layer toggled on, when rendered, then it shows an ironbow-colormap image that is visually DISTINCT from the hillshade layer (not the same terrain pattern in a different palette)"
+  - "Given the contours layer toggled on, when rendered, then it shows thin line geometry (no fill) that is visually plausible as elevation contours within the visible parcel extent, not invisible or spanning far outside the frame"
+  - "Given /components/land-overlay loaded fresh, when the page renders, then the sample duck is visible and sits within the new ortho's real extent (verified via map.project() numeric check against the new parcel/duck coordinates, mirroring the land-overlay epic's original numeric-verification method — not just a visual glance)"
+  - "Given lib/layer-types.ts's LayerDef.style field, when an existing LayerDef object with no style field is passed through buildLayerMapConfig, then it renders identically to before this story (green fill+line for geojson, unchanged raster handling) — zero behavior change for the absent case"
+  - "Given public/layer-viewer-samples/2806-prado/manifest.test.ts, when run, then it passes against the NEW 5-layer manifest shape, not the old 4-layer one, and its assertions still meaningfully catch drift (not just loosened to always pass)"
+  - "Given the full test suite and a real npm run build, when run after this story, then both pass cleanly with the new sample data and all 7 /docs/components/<slug> + / routes still prerender static"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3b in full; verify hillshade.tif's real scale characteristics directly via rasterio to confirm the grill's findings before starting; survey candidate real small-scale public-domain RGB ortho sources.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above, including the LayerDef.style additivity guarantee.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Execute all 8 steps above as one coherent change — source/generate the new dataset, extend LayerDef, update LayerViewer.tsx, update land-overlay's duck anchor, update manifest.test.ts.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify via Playwright that the new imagery renders correctly, thermal/contours are visually distinct, and the duck is correctly positioned.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm all 8 sub-items actually landed together (not partially), the style field is genuinely additive, and the sample data documentation was updated to describe the new real source.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/brand-theming-and-viewer-polish.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+      purpose: Full rationale for why this must be one atomic regenerate, not piecemeal patches — §3b and the grill-findings risk items.
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: buildLayerMapConfig — where the style field needs to be consumed; currently hardcodes green fill+line for all geojson layers.
+    - path: lib/layer-types.ts
+      purpose: LayerDef — where the optional style field gets added.
+    - path: "app/(showcase)/components/land-overlay/page.tsx"
+      purpose: SAMPLE_MODELS — the duck's lat/lon that must move to the new extent.
+    - path: public/layer-viewer-samples/2806-prado/manifest.test.ts
+      purpose: The two hardcoded assertions that will break and need rewriting.
+    - path: docs/components/layer-viewer.md
+      purpose: "Sample data provenance" section — the documentation pattern to follow for the new real ortho source.
+
+files_to_modify:
+  - file: public/layer-viewer-samples/2806-prado/ortho.tif
+    change: Replace with real small-scale RGB imagery at a new location.
+  - file: public/layer-viewer-samples/2806-prado/hillshade.tif
+    change: Regenerate at the new location/scale.
+  - file: public/layer-viewer-samples/2806-prado/thermal.tif
+    change: New file — ironbow-colormap synthetic thermal layer.
+  - file: public/layer-viewer-samples/2806-prado/contours.geojson
+    change: New file — contour lines derived from the new DEM.
+  - file: public/layer-viewer-samples/2806-prado/parcel.geojson
+    change: Re-anchor to the new location.
+  - file: public/layer-viewer-samples/2806-prado/layers.json
+    change: Add thermal (enabled) and contours entries.
+  - file: lib/layer-types.ts
+    change: Add optional LayerDef.style field.
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: Consume style in buildLayerMapConfig for geojson layers.
+  - file: "app/(showcase)/components/land-overlay/page.tsx"
+    change: Update SAMPLE_MODELS duck lat/lon to the new extent.
+  - file: public/layer-viewer-samples/2806-prado/manifest.test.ts
+    change: Rewrite the thermal-stub-shape and layer-id-count assertions for the new 5-layer manifest.
+  - file: docs/components/layer-viewer.md
+    change: Update "Sample data provenance" to describe the new real ortho source and the new thermal/contours layers.
+
+design_decisions:
+  - decision: Generate one new coherent dataset at a new real location, not patch the existing arctic/continental-scale files.
+    rationale: "Grill findings #2 and #3: real sourced RGB imagery won't be at the old Arctic coordinates (breaking parcel/duck alignment if only ortho is swapped), and the existing hillshade.tif is continental-scale, unusable as a source for parcel-scale thermal/contours."
+  - decision: Thermal and contours derive from independently-varied synthetic sources, not one shared array.
+    rationale: "Grill finding #4: sharing one source would make toggling between them show identical terrain under different treatments."
+  - decision: LayerDef gets an optional style field rather than hardcoding a second special case by layer id.
+    rationale: Keeps the "typed layer registry" contract (CBA's own stated design goal) genuinely extensible for any future geojson layer, not just contours.
+
+risks:
+  - severity: high
+    description: Sourcing a real, good-looking, rights-safe small-scale RGB ortho is the epic's highest-uncertainty item — may not find an ideal pre-packaged COG.
+    mitigation: "Documented fallback per design-discussion.md's risk section: generate a clearly-labeled synthetic-but-photographic-looking ortho (e.g. a real public-domain aerial photo, even if not already COG-ified, converted via rio cogeo create) rather than blocking on finding a perfect pre-made COG."
+
+references:
+  - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+    relevant_excerpt: |
+      The fix: generate one new, real small-area location and build every
+      layer at THAT location and scale, together, so they're internally
+      consistent — not reuse-and-patch the old arctic/continental-scale
+      files.

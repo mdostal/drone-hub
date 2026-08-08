@@ -42,18 +42,20 @@
 // uses `map.once("render", () => { <synchronous getImageData read> })` +
 // `map.triggerRepaint()`.
 //
-// DUCK-COLORED-PIXEL MASK: `R - B > 60` on the captured RGBA buffer. The
-// classic Khronos "Duck" sample glTF (public/model3d-samples/duck/model.glb,
-// the same asset <Model3D>'s showcase page uses) is yellow-bodied/
-// orange-beaked; live-sampled at the duck's real anchor coordinates, its
-// body/beak pixels cluster at R-B in roughly [140, 255], while every
-// background this scene can show at that location (Esri World Imagery
-// satellite tiles, Esri's "Map data not available" placeholder texture for
-// this remote-Arctic sample coordinate — see
-// app/(showcase)/components/land-overlay/page.tsx's own KNOWN LIMITATION
-// comment for why the ortho itself never paints here — and the sample
-// parcel's green boundary fill/line) clusters at R-B in roughly [-15, 35].
-// 60 sits with wide margin on both sides.
+// DUCK-COLORED-PIXEL MASK: `R - B > 100` on the captured RGBA buffer.
+// UPDATED by layerviewer-sample-dataset-overhaul (threshold raised from the
+// original 60): the new sample ortho is REAL, colorful drone photography
+// (trees/road/graded dirt — see docs/components/layer-viewer.md's "Sample
+// data provenance"), unlike the old near-blank Arctic/placeholder
+// background the original 60 threshold was calibrated against. Live-sampled
+// directly against `CLEAN_REFERENCE_URL` (the SAME ortho, zero duck models)
+// at the duck's real anchor coordinates: the ortho's dirt/gravel-field
+// pixels cluster at R-B in roughly [60, 70] — high enough to false-positive
+// past the OLD 60 threshold (confirmed live: 253 stray matches with zero
+// duck present), but nowhere near the duck's own body/beak cluster, which
+// live-sampled at R-B in roughly [120, 220]. 100 sits cleanly between the
+// two with real margin on both sides (confirmed live: zero false-positive
+// pixels anywhere in the clean-reference frame at this threshold).
 import { expect, test, type Page } from "@playwright/test";
 
 const LAND_OVERLAY_URL = "/components/land-overlay";
@@ -67,16 +69,27 @@ const CLEAN_REFERENCE_URL = "/components/layer-viewer";
 
 // Mirrors app/(showcase)/components/land-overlay/page.tsx's SAMPLE_MODELS
 // duck anchor exactly (the sample parcel's centroid — see that file for
-// full provenance).
-const DUCK_LAT = 73.46748426410694;
-const DUCK_LON = -56.808326092516914;
-// Live-tuned against the real showcase page: at this zoom the duck renders
-// as a clearly-visible, non-degenerate silhouette (tens of thousands of
-// sampled device pixels) comfortably inside the canvas — zoom 19 was tried
-// first and found too close (the duck's curved body fills/exceeds the
-// entire frame, no usable silhouette edges); zoom 17 under-fills it. 18
-// lands cleanly in between.
-const DUCK_ZOOM = 18;
+// full provenance). Updated by layerviewer-sample-dataset-overhaul: the
+// sample ortho/hillshade/thermal/contours/parcel were all regenerated
+// together at a new real location (a cropped OpenAerialMap drone
+// orthophoto near 33.35°N/-81.27°W), so the duck anchor moved too.
+const DUCK_LAT = 33.350613554313604;
+const DUCK_LON = -81.2681617934123;
+// Live-tuned against the real showcase page (RE-TUNED by
+// layerviewer-sample-dataset-overhaul for the new, much smaller parcel —
+// see DUCK_LAT/DUCK_LON's own comment): at this zoom the duck renders as a
+// clearly-visible, non-degenerate silhouette comfortably inside the canvas.
+// zoom 18 (the OLD value) was tried first and found broken for an unrelated
+// reason — at that EXACT zoom, `map.getSource("layer-ortho")`'s `cog://`
+// raster tiles failed to paint at all against the new ortho (the real Esri
+// World Imagery basemap showed through instead, confirmed live via
+// screenshot + `map.getPaintProperty`/`getLayoutProperty` checks showing
+// the layer itself was visible/opacity-1 — a `@geomatico/maplibre-cog-protocol`
+// tile-request quirk at that specific integer zoom against this COG's
+// overview levels, not a real/duck issue). zoom 19 does not hit that
+// quirk (confirmed live, ortho renders correctly) and gives a
+// comfortably-sized, non-clipped duck silhouette.
+const DUCK_ZOOM = 19;
 
 // ---------------------------------------------------------------------------
 // Browser-context types. Declared structurally/minimally (not imported from
@@ -186,7 +199,7 @@ async function measureDuck(page: Page, pitch: number, bearing: number): Promise<
           const idx = (y * imageData.width + x) * 4;
           const r = imageData.data[idx];
           const b = imageData.data[idx + 2];
-          if (r - b > 60) {
+          if (r - b > 100) {
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
             minY = Math.min(minY, y);
@@ -336,7 +349,12 @@ test.describe("numeric placement accuracy (map.project() vs actual rendered posi
     expect(m.projected.y).toBeGreaterThanOrEqual(m.bbox!.minY - margin);
     expect(m.projected.y).toBeLessThanOrEqual(m.bbox!.maxY + margin);
 
-    const golden = { x: 353.05, y: 233.22 }; // see header comment for provenance
+    // RE-DERIVED by layerviewer-sample-dataset-overhaul (new duck anchor,
+    // new DUCK_ZOOM, new R-B>100 mask — see this file's header comment and
+    // DUCK_LAT/DUCK_LON/DUCK_ZOOM's own comments). Two independent live
+    // measurements against the current, correct code reproduced this value
+    // to sub-pixel precision (deterministic static scene).
+    const golden = { x: 345.25, y: 235.82 };
     const dist = Math.hypot(m.centroid!.x - golden.x, m.centroid!.y - golden.y);
     expect(dist, `centroid=${JSON.stringify(m.centroid)} golden=${JSON.stringify(golden)}`).toBeLessThanOrEqual(15);
   });
@@ -361,7 +379,9 @@ test.describe("numeric placement accuracy (map.project() vs actual rendered posi
     expect(m.projected.y).toBeGreaterThanOrEqual(m.bbox!.minY - margin);
     expect(m.projected.y).toBeLessThanOrEqual(m.bbox!.maxY + margin);
 
-    const golden = { x: 329.88, y: 160.17 };
+    // RE-DERIVED by layerviewer-sample-dataset-overhaul — see the default-camera
+    // test's own golden comment above for provenance.
+    const golden = { x: 331.46, y: 187.44 };
     const dist = Math.hypot(m.centroid!.x - golden.x, m.centroid!.y - golden.y);
     expect(dist, `centroid=${JSON.stringify(m.centroid)} golden=${JSON.stringify(golden)}`).toBeLessThanOrEqual(15);
   });
@@ -423,13 +443,37 @@ test.describe("GL-state-pollution regression", () => {
     expect(afterToggleFingerprint.length).toBe(cleanFingerprint.length);
     let maxChannelDiff = 0;
     let diffSamples = 0;
+    let duckPixelsExcluded = 0;
     for (let i = 0; i < cleanFingerprint.length; i++) {
       const [cr, cg, cb] = cleanFingerprint[i];
       const [ar, ag, ab] = afterToggleFingerprint[i];
+      // layerviewer-sample-dataset-overhaul: the new sample duck anchor sits
+      // at the new (much smaller) parcel's centroid, which this test's own
+      // fitBounds-to-ortho-extent framing now brings clearly into view (the
+      // OLD duck anchor/ortho combination didn't overlap the sampled region
+      // this way — confirmed live by dumping the actual differing samples:
+      // every one of them was the duck's own yellow body color
+      // (R-B/G-B >100-ish, e.g. [166,140,0]) on the "after" side, vs. real
+      // ortho grass/dirt color on the "clean" (model-free) side). Excluding
+      // duck-colored samples (same mask convention as
+      // measureDuck()/MASK-header-comment above) keeps this regression
+      // check honest about what it actually verifies — the ORTHO layer's
+      // own pixels, unaffected by three.js GL state — without being
+      // defeated by the simple, expected fact that one page has a visible
+      // duck drawn over that same region and the other doesn't.
+      if (ar - ab > 100) {
+        duckPixelsExcluded++;
+        continue;
+      }
       const diff = Math.max(Math.abs(cr - ar), Math.abs(cg - ag), Math.abs(cb - ab));
       if (diff > maxChannelDiff) maxChannelDiff = diff;
       if (diff > 8) diffSamples++; // small slop for tile-decode/AA nondeterminism, not a real tolerance for corruption
     }
+    // Sanity floor: the exclusion above should only ever strip a small
+    // minority of samples (the duck's own footprint), never swallow the
+    // whole comparison — if this ever fires, the mask/scene changed enough
+    // to need a fresh look, not a silently-passing test.
+    expect(duckPixelsExcluded, "duck-colored sample exclusion").toBeLessThan(cleanFingerprint.length / 2);
     expect(diffSamples, `maxChannelDiff=${maxChannelDiff} of ${cleanFingerprint.length} samples`).toBe(0);
   });
 });

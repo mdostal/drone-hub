@@ -1,0 +1,119 @@
+id: model3d-measure-tool-and-legend
+epic: brand-theming-and-viewer-polish
+title: Real measure tool for <Model3D> + on-canvas controls legend
+status: complete
+complexity: high
+methodology: bdd
+depends_on: [brand-theming-design-tokens]
+
+description: |
+  <Model3D>'s own docs and copy already claim "orbit-and-measure" (README.md,
+  package.json's description, app/page.tsx's ToC, docs/components/model3d.md's
+  own tagline) — but only orbit exists today. This story builds the actual
+  measure feature the claim describes, plus a small on-canvas legend
+  explaining the controls (which today are completely undocumented in the
+  UI itself — a first-time visitor has no way to know drag-to-orbit or
+  scroll-to-zoom work at all, let alone measure).
+
+  Read .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+  §3c in full before starting, including the grill-flagged <Bounds>
+  gotcha below.
+
+  Implementation:
+  1. Add a "Measure" toggle button (themed via this epic's design tokens —
+     depends on brand-theming-design-tokens landing first) that enters/exits
+     measure mode. While inactive, the component behaves exactly as today
+     (orbit/zoom only).
+  2. While measure mode is active, a genuine click (mousedown+mouseup
+     within a small pixel/time threshold at the same screen position — NOT
+     a drag-to-orbit gesture) raycasts against the loaded glTF scene
+     (three.js Raycaster) and places a point marker at the intersection.
+  3. After two points are placed: draw a thin accent-colored Line between
+     them, and show a floating distance label at the segment midpoint via
+     drei's <Html>. Distance is computed in raw glTF units and labeled
+     "units" (not "meters" or any real-world unit) — there is no real-world
+     scale for the sample duck or for <Model3D> in general until a real
+     photogrammetry pipeline supplies one. Add an optional
+     `unitsPerMeter?: number` field to `ModelDef` (defined directly in
+     components/Model3D/Model3D.tsx, not a separate types file — confirmed
+     by reading the current file) for a future real-data caller to opt
+     into real-unit display; when absent, the label stays "units" — do not
+     fabricate a fake "meters" precision the component doesn't actually have.
+  4. A "Clear" action removes the current measurement and lets a new pair
+     of points be placed.
+  5. **Critical implementation constraint (grill finding #5, not optional):**
+     Model3D.tsx currently wraps only <GltfScene> inside
+     <Bounds fit clip observe margin={1.2}>; `observe` recomputes the
+     camera fit from the bounding box of everything <Bounds> wraps.
+     Measure-point markers and the connecting Line MUST render as
+     <Canvas>-level siblings OUTSIDE <Bounds> (or otherwise excluded from
+     its bounds computation) — placed inside it, each new measurement
+     point grows the wrapped bounding box and triggers an unwanted camera
+     re-frame/zoom mid-measurement. Verify this live (place two points,
+     confirm the camera does NOT jump/re-zoom when the second point is
+     placed) — this is exactly the kind of thing that looks fine in code
+     review and only breaks live.
+  6. Add the controls legend: a small fixed-corner panel on the canvas
+     (not a separate page element) listing drag-to-orbit, scroll-to-zoom,
+     the Measure toggle, and (once active) "click two points to measure" +
+     the Clear action. Themed via this epic's design tokens.
+
+  Apply this to BOTH the Model3D showcase page's live demo AND (if
+  <LandOverlay> reuses any of this — check whether it does before assuming
+  scope; if not, this story is Model3D-only).
+
+acceptance_criteria:
+  - "Given the Model3D showcase page loaded fresh, when rendered, then a controls legend is visible on the canvas listing at minimum: orbit, zoom, and how to start measuring"
+  - "Given measure mode is off, when the user drags on the canvas, then the model orbits exactly as it did before this story (no regression)"
+  - "Given measure mode is on, when the user clicks two distinct points on the mesh, then a line is drawn between them and a distance label appears at the midpoint, labeled in 'units' not a fabricated real-world unit"
+  - "Given measure mode is on and two points are already placed, when a third click happens, then the previous measurement is cleared and a new one starts (or an explicit Clear action does this — pick one behavior and document it)"
+  - "Given a measurement is placed, when observed live, then the camera does NOT re-frame/zoom unexpectedly (the <Bounds observe> gotcha from design-discussion.md §3c must not reproduce) — verify this specific behavior via Playwright, not just unit-test the distance math"
+  - "Given the distance-computation logic, when unit-tested in isolation (two known 3D points, expected Euclidean distance), then it returns the mathematically correct value"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3c in full; read the current Model3D.tsx and ModelDef type; confirm the <Bounds observe> re-frame risk is real by testing it live before designing around it.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above, including the click-vs-drag disambiguation behavior and the <Bounds> exclusion requirement.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the measure toggle, raycasting/click handling, line+label rendering (outside <Bounds>), Clear action, and the controls legend.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Unit-test the distance math; live-verify via Playwright the click-vs-drag boundary, the <Bounds> non-re-frame behavior, and the legend's presence/content.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm orbit-only behavior is unregressed, the camera re-frame gotcha was actually verified (not just assumed fixed), and the legend is genuinely legible against the themed canvas.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/brand-theming-and-viewer-polish.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/Model3D/Model3D.tsx
+      purpose: Current orbit-only implementation; where <Bounds>/<Canvas> structure lives — the exclusion constraint applies here directly.
+    - path: .pHive/epics/brand-theming-and-viewer-polish/docs/design-discussion.md
+      purpose: Full rationale for the measure-tool design, including the grill-caught <Bounds> gotcha.
+
+files_to_modify:
+  - file: components/Model3D/Model3D.tsx
+    change: Add measure mode, raycasting/click handling, line+label rendering outside <Bounds>, controls legend, and the optional ModelDef.unitsPerMeter field (ModelDef is defined in this same file).
+
+design_decisions:
+  - decision: Distance labeled "units", not "meters", when no scale hint is provided.
+    rationale: There is no real-world scale for the sample duck or for Model3D in general yet — claiming a real unit would be a fabricated precision the component doesn't have.
+  - decision: Measure geometry renders outside <Bounds>.
+    rationale: "Grill finding #5: <Bounds observe> recomputes camera fit from everything it wraps; measure points inside it would trigger unwanted re-framing mid-measurement."
+
+risks:
+  - severity: medium
+    description: Click-vs-drag disambiguation threshold could be wrong in either direction (accidental points while orbiting, or measuring feels unresponsive).
+    mitigation: Real Playwright verification of the actual interaction boundary is a named acceptance criterion, not just a unit test of the math.
