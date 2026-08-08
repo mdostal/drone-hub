@@ -1,7 +1,7 @@
 id: minecraft-types-and-heightmap
 epic: minecraft-content-engine
 title: Define voxel types + derive a sample heightmap grid from the hillshade COG
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

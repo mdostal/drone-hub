@@ -1,7 +1,7 @@
 id: minecraft-showcase-page
 epic: minecraft-content-engine
 title: Add a public showcase page for <VoxelTerrain>
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: [minecraft-voxel-terrain-component]

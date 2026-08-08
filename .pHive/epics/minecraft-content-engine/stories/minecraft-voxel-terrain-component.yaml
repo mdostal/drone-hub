@@ -1,7 +1,7 @@
 id: minecraft-voxel-terrain-component
 epic: minecraft-content-engine
 title: Build <VoxelTerrain> + <VoxelStructure> (instanced-mesh voxel renderer)
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: [minecraft-types-and-heightmap]

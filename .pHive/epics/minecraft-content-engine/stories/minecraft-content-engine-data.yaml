@@ -1,7 +1,7 @@
 id: minecraft-content-engine-data
 epic: minecraft-content-engine
 title: Define a minimal FlightLogEntry type + sample-house fallback content
-status: pending
+status: complete
 complexity: low
 methodology: bdd
 depends_on: []

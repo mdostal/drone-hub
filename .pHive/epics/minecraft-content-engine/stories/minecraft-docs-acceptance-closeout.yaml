@@ -1,7 +1,7 @@
 id: minecraft-docs-acceptance-closeout
 epic: minecraft-content-engine
 title: Document VoxelTerrain + the content engine, close acceptance criteria
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [minecraft-test-suite]

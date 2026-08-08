@@ -1,7 +1,7 @@
 id: minecraft-test-suite
 epic: minecraft-content-engine
 title: Close out test coverage for VoxelTerrain + both consuming pages
-status: pending
+status: complete
 complexity: medium
 methodology: tdd
 depends_on: [minecraft-showcase-page, minecraft-content-engine-page]

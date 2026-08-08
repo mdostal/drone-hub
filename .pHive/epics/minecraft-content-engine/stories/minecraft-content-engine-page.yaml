@@ -1,7 +1,7 @@
 id: minecraft-content-engine-page
 epic: minecraft-content-engine
 title: Build the gated content-engine page (/properties/[slug]/engine)
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [minecraft-voxel-terrain-component, minecraft-content-engine-data]
