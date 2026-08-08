@@ -1,0 +1,138 @@
+import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import type { LayerDef, PropertyLayers } from "@/lib/layer-types";
+import manifestJson from "./layers.json";
+
+// Verification for the layer-viewer-sample-data story. Kept (not throwaway)
+// so it re-runs under `npm run test` and catches drift if the sample data
+// or lib/layer-types.ts shape ever changes.
+//
+// `manifestJson` is imported via tsconfig's resolveJsonModule, but plain
+// JSON imports widen string-literal fields to `string` (TypeScript can't
+// infer `"raster" | "geojson"` from JSON), so a bare `const x: PropertyLayers
+// = manifestJson` doesn't actually exercise the union types. Instead,
+// `assertPropertyLayers` below is a runtime type-guard against
+// lib/layer-types.ts's exact shape (including the `type`/`format` unions) -
+// this both type-checks at compile time (its `asserts` signature is checked
+// by `tsc`/`npm run build`) and proves the *actual* JSON content is valid at
+// runtime, which a blind cast would not.
+
+function assertLayerDef(x: unknown, index: number): asserts x is LayerDef {
+  expect(x, `layers[${index}] should be an object`).toBeTypeOf("object");
+  const l = x as Record<string, unknown>;
+  expect(typeof l.id, `layers[${index}].id`).toBe("string");
+  expect(["raster", "geojson"], `layers[${index}].type`).toContain(l.type);
+  expect(
+    l.url === null || typeof l.url === "string",
+    `layers[${index}].url should be string | null`,
+  ).toBe(true);
+  expect(typeof l.opacity, `layers[${index}].opacity`).toBe("number");
+  expect(typeof l.toggle, `layers[${index}].toggle`).toBe("boolean");
+  if ("disabled" in l) expect(typeof l.disabled, `layers[${index}].disabled`).toBe("boolean");
+  if ("legend" in l) expect(typeof l.legend, `layers[${index}].legend`).toBe("string");
+  if ("format" in l) expect(["cog", "xyz"], `layers[${index}].format`).toContain(l.format);
+}
+
+function assertPropertyLayers(x: unknown): asserts x is PropertyLayers {
+  expect(x).toBeTypeOf("object");
+  const p = x as Record<string, unknown>;
+  expect(typeof p.slug).toBe("string");
+  expect(typeof p.title).toBe("string");
+  expect(Array.isArray(p.layers)).toBe(true);
+  (p.layers as unknown[]).forEach((l, i) => assertLayerDef(l, i));
+}
+
+const sampleDir = path.dirname(new URL(import.meta.url).pathname);
+
+describe("2806-prado sample manifest", () => {
+  it("runtime-validates and type-checks as a valid PropertyLayers", () => {
+    const raw: unknown = manifestJson;
+    assertPropertyLayers(raw);
+    const manifest: PropertyLayers = raw; // narrowed by the assertion above, no cast needed
+    expect(manifest.slug).toBe("2806-prado");
+    expect(manifest.title).toBe("2806 Prado (sample data)");
+    expect(Array.isArray(manifest.layers)).toBe(true);
+  });
+
+  it("has exactly the four expected layer ids", () => {
+    const ids = manifestJson.layers.map((l) => l.id);
+    expect(ids).toEqual(["ortho", "hillshade", "boundary", "thermal"]);
+  });
+
+  it("matches CBA's exact thermal stub shape", () => {
+    const thermal = manifestJson.layers.find((l) => l.id === "thermal") as LayerDef;
+    expect(thermal).toEqual({
+      id: "thermal",
+      type: "raster",
+      url: null,
+      opacity: 1,
+      toggle: false,
+      disabled: true,
+      legend: "ironbow",
+    });
+  });
+
+  it.each(["ortho", "hillshade", "boundary"])(
+    "%s layer has a non-null url",
+    (id) => {
+      const layer = manifestJson.layers.find((l) => l.id === id) as LayerDef;
+      expect(typeof layer.url).toBe("string");
+    },
+  );
+
+  it("every raster/geojson url resolves to a real file under public/", () => {
+    for (const layer of manifestJson.layers) {
+      if (layer.url === null) continue;
+      // url is a root-relative public path, e.g. "/layer-viewer-samples/2806-prado/ortho.tif"
+      const filePath = path.join(process.cwd(), "public", layer.url.replace(/^\//, ""));
+      expect(existsSync(filePath), `${layer.id}: ${filePath} should exist`).toBe(true);
+    }
+  });
+
+  it("ortho.tif and hillshade.tif have valid little-endian TIFF magic bytes", () => {
+    for (const file of ["ortho.tif", "hillshade.tif"]) {
+      const buf = readFileSync(path.join(sampleDir, file));
+      // Bytes 49 49 2A 00 ("II*\0") - little-endian classic TIFF magic.
+      // Both files were produced/verified as little-endian TIFFs.
+      expect(buf.subarray(0, 4).toString("hex")).toBe("49492a00");
+    }
+  });
+
+  it("ortho.tif and hillshade.tif pass strict COG validation (rio-cogeo), if python3+rio-cogeo is available", () => {
+    for (const file of ["ortho.tif", "hillshade.tif"]) {
+      const script = `
+from rio_cogeo.cogeo import cog_validate
+ok, errors, warnings = cog_validate("${path.join(sampleDir, file)}")
+import sys
+sys.exit(0 if ok else 1)
+`;
+      try {
+        execFileSync("python3", ["-c", script], { stdio: "pipe" });
+      } catch (err: unknown) {
+        const e = err as { code?: string; status?: number };
+        if (e.code === "ENOENT") {
+          // python3 not on PATH in this environment - skip rather than fail.
+          return;
+        }
+        throw new Error(`${file} failed rio-cogeo strict COG validation`);
+      }
+    }
+  });
+
+  it("parcel.geojson is a valid GeoJSON FeatureCollection with a Polygon geometry, labeled as a placeholder", () => {
+    const geojson = JSON.parse(readFileSync(path.join(sampleDir, "parcel.geojson"), "utf-8"));
+    expect(geojson.type).toBe("FeatureCollection");
+    expect(Array.isArray(geojson.features)).toBe(true);
+    expect(geojson.features).toHaveLength(1);
+    const [feature] = geojson.features;
+    expect(feature.type).toBe("Feature");
+    expect(feature.geometry.type).toBe("Polygon");
+    expect(feature.geometry.coordinates[0].length).toBeGreaterThanOrEqual(4);
+    // First/last ring point must match (closed ring) - a basic Polygon-validity check.
+    const ring = feature.geometry.coordinates[0];
+    expect(ring[0]).toEqual(ring[ring.length - 1]);
+    expect(feature.properties.placeholder).toBe(true);
+  });
+});

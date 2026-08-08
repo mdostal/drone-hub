@@ -1,0 +1,75 @@
+name: layer-viewer
+title: "<LayerViewer> — MapLibre satellite base + toggleable georeferenced overlays (Phase 1: sample data)"
+description: >
+  Ship <LayerViewer> + <LayerControl> — CLAUDE.md's stated "core"/"killer
+  feature" component — built and fully tested now against real public
+  sample geospatial data (a real sample COG ortho, a hillshade layer,
+  a synthetic parcel boundary), with real Prado/Omaha data swapping in
+  later via new registry entries once the Phase-0 nadir pass + WebODM
+  output exist. Explicitly excludes MeasureTool/AnnotationLayer/
+  CompareSwipe/AlignControl (Phase 2) and <Model3D> (Phase 3, separate
+  epic).
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from feat/video-tour (not master directly) because this epic
+    reuses the app shell, gating middleware, and test infra video-tour
+    built — none of that exists on master yet (feat/video-tour hasn't been
+    merged). Operator will decide final merge order.
+
+planning_team:
+  matched_tags: [geospatial, map-component, ui-component, typescript]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  per_tag_reasoning:
+    geospatial: "MapLibre GL + COG rendering — first geospatial work in this repo."
+    map-component: "Core viewer component, CBA's stated 'owned IP.'"
+  confidence: "high — CBA + CLAUDE.md specify the architecture precisely (typed layer registry, exact thermal-stub shape); main uncertainty was sample-data sourcing, resolved via network verification during planning and left appropriately flexible for the sourcing story."
+  gate_decisions:
+    grill: "one round, general-purpose adversarial reviewer; 6 findings (gating sanitizeNextPath bug, global-vs-per-dataset passcode gap, real-ortho cross-origin gating gap, unused PMTiles, registry type divergence from CBA, unspecified thermal-stub render path) — all resolved into the design discussion before proceeding"
+    sign_off: "Operator explicitly requested continuous execution without blocking gates for this epic ('keep going, don't stop, I can edit at the end') — design discussion decisions made and documented for post-hoc review rather than gated confirmation, per that instruction."
+
+stories:
+  - id: layer-viewer-spec-doc
+    title: Write the <LayerViewer> component spec doc
+    complexity: low
+    depends_on: []
+  - id: layer-viewer-registry-types
+    title: Define the typed layer registry (lib/layer-types.ts)
+    complexity: low
+    depends_on: []
+  - id: layer-viewer-gating-extension
+    title: Extend gating to /properties/* and fix sanitizeNextPath's hardcode
+    complexity: low
+    depends_on: []
+  - id: layer-viewer-sample-data
+    title: Source real public sample geospatial data + write the property-layers manifest
+    complexity: medium
+    depends_on: [layer-viewer-registry-types]
+  - id: layer-viewer-core-components
+    title: Build <LayerViewer> (MapLibre map) and <LayerControl> (toggle/opacity)
+    complexity: high
+    depends_on: [layer-viewer-sample-data, layer-viewer-spec-doc]
+  - id: layer-viewer-gated-route-integration
+    title: Mount <LayerViewer> on a real gated route
+    complexity: low
+    depends_on: [layer-viewer-core-components, layer-viewer-gating-extension]
+  - id: layer-viewer-test-suite
+    title: Close out automated test coverage for <LayerViewer>/<LayerControl>
+    complexity: medium
+    depends_on: [layer-viewer-core-components]
+  - id: layer-viewer-docs-acceptance-closeout
+    title: Reconcile docs and close out the acceptance criteria checklist
+    complexity: low
+    depends_on: [layer-viewer-gated-route-integration, layer-viewer-test-suite]
+
+deferred:
+  - "MeasureTool, AnnotationLayer, CompareSwipe, AlignControl — Phase 2 per docs/CBA.md."
+  - "<Model3D> — Phase 3 per docs/CBA.md, separate epic, not planned here."
+  - "PMTiles rendering path, R2 asset hosting, cross-origin gated-asset auth (presigned URLs / proxy) for real large orthos — named as real gaps in the design discussion, deferred until real data actually needs them."
+  - "Per-dataset/per-property passcodes — gating stays one global passcode for now, a known accepted limitation."

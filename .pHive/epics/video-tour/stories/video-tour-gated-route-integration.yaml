@@ -1,0 +1,52 @@
+id: video-tour-gated-route-integration
+epic: video-tour
+title: Mount <VideoTour> on a real gated route
+status: complete
+complexity: low
+methodology: bdd
+depends_on: [video-tour-core-components, video-tour-gating-middleware]
+
+description: |
+  Wire the component and the gate together: a real Next.js route that mounts
+  <VideoTour> against the Prado manifest, sits behind the passcode middleware,
+  and follows CLAUDE.md's heavy-viewer convention (next/dynamic({ssr:false})).
+  This is the first slice where the whole vertical stack (app shell → gate →
+  data → component) is provably connected end to end.
+
+acceptance_criteria:
+  - "Given no passcode, when /tours/2806-prado is requested, then access is blocked by the gating middleware"
+  - "Given a valid passcode, when /tours/2806-prado is requested, then <VideoTour> renders and is fully navigable"
+  - "Given the route's implementation, when inspected, then <VideoTour> is loaded via next/dynamic({ssr:false}) per CLAUDE.md's heavy-viewer convention"
+  - "Given `npm run build`, when run, then the route builds with no errors"
+
+steps:
+  - id: implement
+    description: Create app/tours/[slug]/page.tsx (or equivalent), loading the manifest for the given slug and rendering <VideoTour> via next/dynamic({ssr:false}). Confirm middleware.ts's matcher covers this route.
+    agent: developer
+  - id: test
+    description: Verify gated-access and rendering acceptance criteria end to end (with and without passcode).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm next/dynamic ssr:false is actually applied (not just imported normally) and the route doesn't leak gating logic into <VideoTour> itself.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  notes: |
+    This story is intentionally thin — it's the connective tissue between two
+    already-built pieces (gating middleware + core components), not new logic.
+
+files_to_modify:
+  - file: app/tours/[slug]/page.tsx
+    change: "Create — gated route mounting <VideoTour> via next/dynamic"
+
+references:
+  - path: CLAUDE.md
+    relevant_excerpt: |
+      Every heavy viewer = next/dynamic({ssr:false}).

@@ -3,13 +3,24 @@ node_modules/
 out/
 .vercel/
 .env*
+!.env.example
 # gated/un-released property assets
 public/property-samples/
 *.tif
 *.laz
 *.las
+# ...except this epic's public sample data (real ortho.tif + synthetic hillshade.tif — layer-viewer-sample-data story)
+!public/layer-viewer-samples/**/*.tif
 
-# hive runtime state (per-epic allowlist below re-includes tracked epics)
+# hive runtime state — local only, except tracked epics (allowlist below)
 .pHive/*
+!.pHive/epics/
+.pHive/epics/*
 !.pHive/epics/video-tour/
 !.pHive/epics/video-tour/**
+!.pHive/epics/layer-viewer/
+!.pHive/epics/layer-viewer/**
+!.pHive/epics/model3d/
+!.pHive/epics/model3d/**
+!.pHive/epics/land-overlay/
+!.pHive/epics/land-overlay/**

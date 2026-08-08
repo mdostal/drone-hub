@@ -1,0 +1,81 @@
+id: video-tour-app-shell-scaffold
+epic: video-tour
+title: Scaffold the Next.js app shell
+status: complete
+complexity: low
+methodology: bdd
+depends_on: []
+
+description: |
+  drone-hub has package.json declaring Next 15 / React 19 / Tailwind 4 but no
+  actual app shell exists: no next.config, tsconfig.json, Tailwind/PostCSS
+  config, and no app/ directory. Every other story in this epic depends on
+  this existing. Stand up the minimal, standard shell — no custom conventions
+  invented here, just what next/tailwind/typescript expect.
+
+acceptance_criteria:
+  - "Given a fresh checkout, when `npm install && npm run dev` is run, then the dev server boots without error"
+  - "Given the app is running, when a placeholder route is hit, then it renders (proves app/layout.tsx + app/page.tsx wire up correctly)"
+  - "Given `npm run build`, when run, then it completes with no TypeScript or config errors"
+
+steps:
+  - id: research
+    description: Confirm exact Next 15 App Router + TypeScript 5.6 scaffold conventions compatible with the locked package.json versions.
+    agent: researcher
+
+  # Pre-made decision: Tailwind 4 uses CSS-first config (`@import "tailwindcss"`
+  # in a global stylesheet via @theme), not a tailwind.config.ts file. Do NOT
+  # scaffold a Tailwind 3-style JS config unless a concrete customization need
+  # arises later that CSS-first config can't express.
+  - id: behavior-spec
+    description: Write a smoke-test behavior spec (dev server boots, placeholder route renders, build succeeds) — this is infra, so the "behavior" is build/boot success rather than UI behavior.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add next.config.ts, tsconfig.json, tailwind config + postcss config, app/layout.tsx, app/page.tsx (placeholder). Run npm install to materialize node_modules.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run the smoke spec; confirm dev boot + build both succeed.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review config choices for consistency with package.json's locked versions and CLAUDE.md's stated stack.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  tech_stack:
+    frontend: "next.js 15 (App Router) / react 19 / typescript 5.6 / tailwindcss 4"
+  key_files:
+    - path: package.json
+      purpose: "Locked dependency versions this scaffold must be compatible with — do not upgrade/downgrade anything here."
+
+files_to_modify:
+  - file: next.config.ts
+    change: "Create — minimal Next 15 config"
+  - file: tsconfig.json
+    change: "Create — standard Next 15 + App Router TS config"
+  - file: app/globals.css
+    change: "Create — Tailwind 4 CSS-first config (`@import \"tailwindcss\"` + `@theme`), no JS config file"
+  - file: postcss.config.mjs
+    change: "Create — Tailwind 4's PostCSS plugin"
+  - file: app/layout.tsx
+    change: "Create — root layout"
+  - file: app/page.tsx
+    change: "Create — placeholder home route"
+
+references:
+  - path: package.json
+    relevant_excerpt: |
+      "next": "^15.0.0", "react": "^19.0.0", "typescript": "^5.6.0", "tailwindcss": "^4.0.0"
+
+do_not:
+  - "Do not add a tailwind.config.ts/js file — Tailwind 4 is CSS-first (see pre-made decision above)."
+  - "Do not add any routes/components beyond the placeholder home page — that's every other story's job."
+  - "Do not install devDependencies beyond what package.json already declares plus what the chosen scaffold literally requires (e.g. autoprefixer is already listed)."

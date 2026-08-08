@@ -1,0 +1,68 @@
+id: model3d-test-suite
+epic: model3d
+title: Close out automated test coverage for Model3D + showcase pages
+status: complete
+complexity: medium
+methodology: tdd
+depends_on: [model3d-component, model3d-showcase-pages]
+
+description: |
+  Same constraint as LayerViewer's test-suite story: react-three-fiber/
+  Three.js needs a real WebGL context and won't run meaningfully under
+  jsdom. Reuse existing Vitest+RTL, no new infra.
+
+  Cover:
+  - Any pure logic in <Model3D> that doesn't need real WebGL (e.g. if you
+    extracted a bounding-box-framing calculation or ModelDef validation as a
+    pure function — if nothing meaningfully extracts, say so honestly rather
+    than forcing an awkward refactor, same precedent as LayerViewer's
+    test-suite story).
+  - A smoke test per showcase page confirming it renders without throwing
+    and — critically — confirming (via a mocked fetch assertion or similar)
+    that the video-tour showcase page's fetch target is
+    public/showcase-samples/demo-house/tour.json and NEVER
+    public/tours/2806-prado/tour.json. This specific assertion is the most
+    important test in this story — treat it as a regression guard against
+    the exact rights mistake the design discussion caught and fixed.
+
+acceptance_criteria:
+  - "Given a test asserting the video-tour showcase page's manifest source, when run, then it fails loudly if the page ever points at public/tours/2806-prado/tour.json or any /tours/[slug] route"
+  - "Given `npm test`, when run, then all new specs pass alongside every pre-existing test (must stay at 100% pass, no regressions to the ~92 already-passing tests from prior epics)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Read components/Model3D/Model3D.tsx and the three showcase pages to identify what's testable under jsdom vs. WebGL-only.
+    agent: researcher
+  - id: test-spec
+    description: Write the failing tests first, including the critical video-tour-showcase-data-source regression guard.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Make the tests pass; refactor only if a clean, behavior-preserving extraction is possible (same bar as LayerViewer's precedent).
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm the rights-status regression guard is real (would actually fail if someone later pointed the showcase at the real data) and not a tautological mock.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.test.tsx
+      purpose: "Precedent for testing pure logic extracted from a WebGL-dependent component."
+
+files_to_modify:
+  - file: components/Model3D/Model3D.test.tsx
+    change: "Create (if meaningful logic exists to extract/test — document if not)"
+  - file: "app/(showcase)/components/video-tour/page.test.tsx"
+    change: "Create — the critical rights-status regression guard"
+
+do_not:
+  - "Do not add a new test framework or config."
+  - "Do not skip or weaken the video-tour-showcase-data-source test even if it's the hardest one to write — it's the most important test in this story."

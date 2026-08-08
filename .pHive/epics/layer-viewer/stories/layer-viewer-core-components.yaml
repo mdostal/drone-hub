@@ -1,0 +1,103 @@
+id: layer-viewer-core-components
+epic: layer-viewer
+title: Build <LayerViewer> (MapLibre map) and <LayerControl> (toggle/opacity)
+status: complete
+complexity: high
+methodology: bdd
+depends_on: [layer-viewer-sample-data, layer-viewer-spec-doc]
+
+description: |
+  The "killer feature" per CLAUDE.md: a MapLibre GL satellite base map with
+  toggleable, opacity-controlled georeferenced overlays, driven entirely by
+  the typed layer registry (lib/layer-types.ts) and proven against the real
+  sample manifest from layer-viewer-sample-data.
+
+  Build:
+  - <LayerViewer manifest={PropertyLayers} className? /> — MapLibre GL map,
+    Esri World Imagery satellite basemap (free, no token:
+    server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/
+    tile/{z}/{y}/{x}), renders each non-disabled LayerDef as a MapLibre
+    source/layer: type:'raster'+format:'cog' via
+    @geomatico/maplibre-cog-protocol (already a locked dependency, unused
+    until now), type:'geojson' via a plain MapLibre geojson source. Layers
+    with disabled:true get NO MapLibre source/layer added at all (nothing to
+    render — no data, url is null) — this is a real branch, not a comment.
+    Opacity and visibility (toggle) are driven by component state, applied
+    via MapLibre's setPaintProperty/setLayoutProperty.
+  - <LayerControl layers manifest onToggle onOpacityChange /> — one row per
+    LayerDef: a toggle (checkbox/switch) + an opacity slider. disabled:true
+    entries render a visibly greyed-out, non-interactive row (the thermal
+    stub's "present but inert" requirement from the design discussion).
+  - Wire them together in a small composed export (mirror how VideoTour
+    composes TourStage/DoorwayControls/FloorPlanMap) so a consumer can drop
+    in one component that renders both the map and its control panel, OR
+    keep them as two components a consumer wires up themselves — read
+    docs/components/layer-viewer.md (layer-viewer-spec-doc's output) for
+    which API shape it specifies and match that exactly.
+
+  Verify against the REAL sample manifest from layer-viewer-sample-data —
+  toggle the ortho layer on/off, drag the opacity slider, confirm the
+  parcel boundary geojson renders, confirm the thermal row is present but
+  inert. Use Playwright if available for real browser verification (the
+  core-components story for VideoTour set this precedent and caught a real
+  bug doing so — don't skip live verification in favor of code-reading alone).
+
+acceptance_criteria:
+  - "Given the real sample manifest, when <LayerViewer> mounts, then the Esri satellite basemap + all non-disabled layers render"
+  - "Given a layer's toggle is switched off, when observed, then that layer's MapLibre source/layer visibility updates immediately (not just component state)"
+  - "Given a layer's opacity slider is dragged, when observed, then the rendered layer's opacity updates live"
+  - "Given the thermal (disabled:true) entry, when rendered, then <LayerControl> shows its row greyed-out/non-interactive, and <LayerViewer> adds NO MapLibre source/layer for it"
+  - "Given the parcel boundary geojson layer, when toggled on, then it renders as a visible polygon outline on the map, correctly positioned relative to the ortho layer"
+  - "Given next/dynamic({ssr:false}), when <LayerViewer> is imported anywhere, then it's wrapped per CLAUDE.md's heavy-viewer convention (verify at the integration story, but don't build this component in a way that fights ssr:false — e.g. no server-only APIs inside it)"
+
+steps:
+  - id: research
+    description: Read @geomatico/maplibre-cog-protocol's README/types (it's an installed but never-used dependency) to confirm its exact registration + source-type API. Read lib/layer-types.ts and docs/components/layer-viewer.md (both should exist by now) as the contracts to implement against.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given/When/Then specs from the acceptance criteria above for both <LayerViewer> and <LayerControl>.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Implement <LayerViewer> and <LayerControl> per the task description and docs/components/layer-viewer.md's API.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run behavior specs; live-verify against the real sample manifest (Playwright if available) — toggle/opacity/thermal-stub/parcel-render all actually observed, not just code-reviewed.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the disabled-stub skip is a real render-time branch (not just a CSS hide), confirm the component stays gate-agnostic (no auth logic — mirrors VideoTour's precedent), confirm it's cleanly importable.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  tech_stack:
+    map: "maplibre-gl ^4.7.0 + @geomatico/maplibre-cog-protocol ^0.4.0 (locked, unused until this story)"
+    frontend: "next.js 15 app router (client components) / react 19 / typescript"
+  key_files:
+    - path: lib/layer-types.ts
+      purpose: "LayerDef/PropertyLayers — the exact contract to render."
+    - path: public/layer-viewer-samples/<slug>/layers.json
+      purpose: "The real manifest to develop and verify against (exact path set by layer-viewer-sample-data — check what slug was actually used)."
+    - path: components/VideoTour/VideoTour.tsx
+      purpose: "Precedent for this repo's client-component + manifest-resolution pattern (fetch if URL, use directly if object) — mirror the shape, not the domain logic."
+
+files_to_modify:
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: "Create"
+  - file: components/LayerViewer/LayerControl.tsx
+    change: "Create"
+  - file: components/LayerViewer/index.ts
+    change: "Create — public export surface"
+
+do_not:
+  - "Do not implement MeasureTool, AnnotationLayer, CompareSwipe, or AlignControl — Phase 2, out of scope."
+  - "Do not add gating/auth logic to the component — stays gate-agnostic, mirrors VideoTour's precedent."
+  - "Do not wire real thermal imagery or invent fake thermal data — the stub stays inert."
+  - "Do not use the PMTiles path (pmtiles package) — this epic's data scale doesn't need it (see design discussion); raw COG protocol is the right choice here."

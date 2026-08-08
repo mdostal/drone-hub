@@ -1,0 +1,73 @@
+id: land-overlay-layerviewer-integration
+epic: land-overlay
+title: Wire the model-layer engine into <LayerViewer> via a new models prop
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [land-overlay-model-layer]
+
+description: |
+  Extend components/LayerViewer/LayerViewer.tsx with an optional `models?:
+  GeoAnchoredModel[]` prop. Small, contained glue — the actual rendering
+  logic already lives in lib/maplibre-model-layer.ts (land-overlay-model-layer),
+  this story just wires it in without regressing anything LayerViewer
+  already does.
+
+  - When the map is ready (same `mapReadyRef`-gated point where existing
+    LayerDef sources/layers get added — read the existing 'load' handler)
+    and `models` is provided, call `createModelLayer(model)` for each entry
+    and `map.addLayer(...)`.
+  - Clean up: when a model is removed from the `models` array (prop change)
+    or the component unmounts, call `map.removeLayer(...)` (which invokes
+    the custom layer's own `onRemove`).
+  - Preserve everything LayerViewer already does — this must be additive,
+    not a rewrite. Do not touch `buildLayerMapConfig`, `addLayerToMap`,
+    `updateLayerOnMap`, or the disabled-stub skip logic.
+
+acceptance_criteria:
+  - "Given <LayerViewer manifest={...} models={[geoAnchoredModel]} />, when the map finishes loading, then the model layer is added via map.addLayer"
+  - "Given a models prop change (a model removed from the array), when re-rendered, then the corresponding MapLibre layer is removed (map.removeLayer called, triggering the custom layer's onRemove)"
+  - "Given <LayerViewer> unmounts with an active model layer, when torn down, then the model layer is removed (no leaked GL resources) — same cleanup rigor as the existing map.remove() cleanup"
+  - "Given the existing layer-toggle/opacity acceptance criteria from the layer-viewer epic, when re-tested, then they still pass unchanged (no regression)"
+  - "Given `models` is omitted entirely, when <LayerViewer> renders, then behavior is identical to before this story (fully backward compatible, opt-in feature)"
+
+steps:
+  - id: research
+    description: Re-read LayerViewer.tsx's map-init effect and its existing cleanup return function to find the exact insertion points for adding/removing model layers.
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs for the acceptance criteria above, including an explicit regression check against LayerViewer's existing layer-toggle tests.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add the models prop and the add/remove glue.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run specs; run the full existing LayerViewer test suite to confirm zero regressions.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm this is genuinely additive (diff should show only new code, no changes to existing layer-rendering logic) and that cleanup is symmetric with the addition path.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/land-overlay.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: "The file being extended — read in full before touching it."
+    - path: lib/maplibre-model-layer.ts
+      purpose: "createModelLayer() — the function this story calls, built by the prior story."
+
+files_to_modify:
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: "Add models? prop + add/remove glue"
+
+do_not:
+  - "Do not modify buildLayerMapConfig, addLayerToMap, updateLayerOnMap, or the disabled-stub skip logic."
+  - "Do not make models required — it must be a fully backward-compatible opt-in addition."

@@ -1,0 +1,67 @@
+id: land-overlay-docs-acceptance-closeout
+epic: land-overlay
+title: Document the land-overlay capability, close acceptance criteria
+status: pending
+complexity: low
+methodology: classic
+depends_on: [land-overlay-test-suite]
+
+description: |
+  Write docs/components/land-overlay.md (no pre-existing doc — this is a
+  capability extension of <LayerViewer>, not a wholly separate component,
+  so document it as such: "this doc covers the models prop; see
+  layer-viewer.md for the base component"). Cover: the GeoAnchoredModel
+  type, how the custom-layer engine works at a level useful to a future
+  maintainer (not a copy of the design discussion, a practical summary),
+  the numeric verification approach this epic committed to, and the current
+  limitation that only glTF models are supported (no point-cloud overlay
+  yet — that's a different, later concern).
+
+  Update .pHive/CONTEXT.md: add lib/maplibre-model-layer.ts and
+  lib/geo-model-types.ts to Key paths; add a Conventions entry noting that
+  MapLibre custom layers in this codebase must call renderer.resetState()
+  and follow the ready/cancelled-guard pattern established here — useful
+  for whoever builds the next MapLibre custom layer (the Minecraft
+  voxelizer, queued next, will likely need a similar pattern).
+
+  Verify every acceptance criterion in the new doc against real shipped
+  code and the actual test results from land-overlay-test-suite (read the
+  test file, don't just trust a summary).
+
+  Run npm run build and npm test as final verification.
+
+acceptance_criteria:
+  - "Given docs/components/land-overlay.md, when written, then it accurately describes the shipped GeoAnchoredModel/models prop and the numeric verification approach actually used"
+  - "Given .pHive/CONTEXT.md, when checked, then the new files and the resetState/ready-guard convention are documented"
+  - "Given npm run build and npm test, when run, then both pass with no regressions"
+
+steps:
+  - id: implement
+    description: Write docs/components/land-overlay.md, update .pHive/CONTEXT.md.
+    agent: technical-writer
+  - id: test
+    description: Full build + test verification pass.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Independent check that the doc's description of the verification approach matches what land-overlay-test-suite's actual test file does.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/land-overlay.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/model3d.md
+      purpose: "Precedent doc shape."
+
+files_to_modify:
+  - file: docs/components/land-overlay.md
+    change: "Create"
+
+cross_cutting:
+  - concern: documentation
+    action: "This story IS the documentation cross-cutting concern's closeout for the epic."

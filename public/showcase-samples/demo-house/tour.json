@@ -1,0 +1,72 @@
+{
+  "slug": "demo-house",
+  "title": "Demo House (showcase sample — not a real property)",
+  "startRoom": "entry",
+  "rooms": [
+    {
+      "id": "entry",
+      "label": "Entryway",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/entry.svg",
+      "pos": [50, 90],
+      "neighbors": [
+        { "to": "living", "clip": null }
+      ]
+    },
+    {
+      "id": "living",
+      "label": "Living Room",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/living.svg",
+      "pos": [50, 62],
+      "neighbors": [
+        { "to": "entry", "clip": null },
+        { "to": "kitchen", "clip": null },
+        { "to": "bedroom", "clip": null },
+        { "to": "patio", "clip": null }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "label": "Kitchen",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/kitchen.svg",
+      "pos": [78, 45],
+      "neighbors": [
+        { "to": "living", "clip": null },
+        { "to": "dining", "clip": null }
+      ]
+    },
+    {
+      "id": "dining",
+      "label": "Dining Room",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/dining.svg",
+      "pos": [78, 68],
+      "neighbors": [
+        { "to": "kitchen", "clip": null },
+        { "to": "living", "clip": null }
+      ]
+    },
+    {
+      "id": "bedroom",
+      "label": "Bedroom",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/bedroom.svg",
+      "pos": [20, 50],
+      "neighbors": [
+        { "to": "living", "clip": null }
+      ]
+    },
+    {
+      "id": "patio",
+      "label": "Patio",
+      "spin": null,
+      "still": "/showcase-samples/demo-house/patio.svg",
+      "pos": [50, 25],
+      "neighbors": [
+        { "to": "living", "clip": null }
+      ]
+    }
+  ]
+}

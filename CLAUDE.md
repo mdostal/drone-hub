@@ -49,3 +49,54 @@ Phase 1 (MVP this week): `MapLayerViewer` + `LayerControl` + `VideoAnnotator` (p
 
 ## Hive kickoff — what to build first
 Ship `<LayerViewer>` (MapLibre + satellite + toggleable hillshade/heightmap/boundary layers, opacity + measure + annotate) as the first plug-play component, wired to a folder-per-property manifest. Then `<VideoAnnotator>` (from his existing code), then `<Model3D>`. Keep everything importable into personal-site. See `docs/` for the CBA output when it lands.
+
+## Vision expansion (operator, 2026-08-07) — component-framework docs site + overlay/content-engine
+
+**This is fundamentally a component framework (shadcn-style), not an app.** Every
+component gets its own showcase surface: live demo + sample data + props docs +
+usage snippet — "components, samples, and display as well as full documentation
+AROUND the components entirely." Build this pattern once as shared docs-site
+infrastructure, then every component (including `<VideoTour>`/`<LayerViewer>`
+already shipped) gets a page in it. This is a durable structural requirement, not
+a one-off page.
+
+**New product surface: 3D-overlay + landscape-to-Minecraft content engine.**
+Beyond CBA's original phase plan, the operator needs:
+1. **`<Model3D>` overlaid onto the land** (a real, buildable 2.5D/3D drape — a
+   glTF model composited into `<LayerViewer>`'s georeferenced map/terrain
+   context, anchored at a real lat/lon).
+2. **`<Model3D>` overlaid onto video, scene-tracked** (the model appears
+   anchored to a fixed point in the video's 3D space as the camera moves — NOT
+   a static screen-pinned overlay). **Drone-native approach, not generic SLAM:**
+   DJI exports carry per-frame GPS + gimbal pitch/yaw/roll telemetry (burned into
+   an `.SRT` sidecar, or extractable from `.DAT` flight logs). Given that
+   telemetry + a known real-world position for the 3D model (from the same
+   georeferenced layer data `<LayerViewer>` already uses), the camera's
+   pose/projection matrix per video timestamp is computable directly — no
+   vision-based SLAM/structure-from-motion needed. This is the "easy toolset
+   FOR the drone stuff" the operator wants: real telemetry-driven AR compositing
+   that doubles as a showcase of the flight-log data itself.
+3. **Landscape → Minecraft voxelizer.** Convert the DSM/hillshade terrain data
+   (same raster layers `<LayerViewer>` renders) into a blocky, Minecraft-style
+   voxel terrain mesh (three.js/r3f, same renderer as `<Model3D>`), with a
+   sample structure/house model placeable on it.
+4. **Content engine page** — a new gated per-property page (NOT a mode inside
+   `<LayerViewer>` — a separate surface) that composes: the Minecraft-voxel
+   view + a sample structure, "engineering" documentation, and flight-log/
+   telemetry docs, so a visitor sees "the engineering, the minecraft of it, the
+   flight docs" together. Ships against sample/placeholder engineering + flight
+   docs for now (no real files exist yet) — same public-sample-data pattern as
+   `<VideoTour>`/`<LayerViewer>`.
+
+**Pipeline framing matters as much as the components:** the operator wants this
+buildable as an actual repeatable pipeline he can run his own drone footage
+through later ("overlay drone footage directly into this and pipeline this...
+so our components are super easy to just run through"), not a one-off demo.
+Favor composable, documented steps (telemetry parse → pose compute → composite)
+over ad-hoc one-off code.
+
+**Priority order (operator-confirmed, 2026-08-07):** `<Model3D>` (foundation,
+needed by everything below) → 3D-on-land overlay → Minecraft voxelizer +
+content-engine page → telemetry-driven video overlay → CBA's original Phase 2
+tools (Measure/Annotate/Compare/Align), which queue behind all of this new
+scope, not ahead of it.

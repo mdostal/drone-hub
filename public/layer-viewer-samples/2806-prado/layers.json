@@ -1,0 +1,40 @@
+{
+  "slug": "2806-prado",
+  "title": "2806 Prado (sample data)",
+  "layers": [
+    {
+      "id": "ortho",
+      "type": "raster",
+      "format": "cog",
+      "url": "/layer-viewer-samples/2806-prado/ortho.tif",
+      "opacity": 1,
+      "toggle": true
+    },
+    {
+      "id": "hillshade",
+      "type": "raster",
+      "format": "cog",
+      "url": "/layer-viewer-samples/2806-prado/hillshade.tif",
+      "opacity": 0.6,
+      "toggle": false,
+      "legend": "synthetic placeholder — not real elevation data"
+    },
+    {
+      "id": "boundary",
+      "type": "geojson",
+      "url": "/layer-viewer-samples/2806-prado/parcel.geojson",
+      "opacity": 1,
+      "toggle": true,
+      "legend": "synthetic placeholder — not a real parcel"
+    },
+    {
+      "id": "thermal",
+      "type": "raster",
+      "url": null,
+      "opacity": 1,
+      "toggle": false,
+      "disabled": true,
+      "legend": "ironbow"
+    }
+  ]
+}

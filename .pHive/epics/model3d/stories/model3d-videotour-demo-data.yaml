@@ -1,0 +1,79 @@
+id: model3d-videotour-demo-data
+epic: model3d
+title: Source a genuinely public-safe demo tour for the VideoTour showcase
+status: complete
+complexity: medium
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  CRITICAL rights constraint, caught during grill review of this epic's
+  design discussion — read this carefully before starting: the real
+  `public/tours/2806-prado/tour.json` is REAL photography of Mathew's actual,
+  currently-listed property address. It sits inside middleware.ts's gated
+  `/tours/*` prefix for exactly this reason, and docs/components/video-tour.md
+  says it's "private until Mathew flips a tour to public." It must NEVER be
+  used on the public, ungated showcase route this epic is building — doing so
+  would violate CLAUDE.md's hard rule ("never deploy un-released assets
+  un-gated") for real.
+
+  Build a SEPARATE, genuinely public-safe demo tour instead:
+  - Reproduce docs/components/video-tour.md's / lib/tour-types.ts's Tour
+    shape (rooms + neighbors graph, same structure the real Prado tour uses)
+    but with FICTIONAL content — not Mathew's real house, not any real
+    address. Use either: (a) clearly-labeled placeholder/generic images
+    (simple colored/labeled graphics generated locally, similar in spirit to
+    how layer-viewer-sample-data generated a synthetic hillshade), or
+    (b) genuinely public-domain/CC0 stock interior photos if you can source
+    a small set quickly and confirm the license — your call, document which
+    and why. Either way: 4-6 rooms is plenty (doesn't need to match Prado's
+    exact 6-room graph), all spin:null/clip:null (stills + wipes, same P1
+    scope as the real component).
+  - slug/title should make it obviously a demo, e.g. slug:"demo-house",
+    title:"Demo House (showcase sample — not a real property)".
+  - Store under public/showcase-samples/demo-house/ — a path OUTSIDE
+    middleware.ts's GATED_PATH_PREFIXES (verify this — do not accidentally
+    place it under public/tours/).
+
+acceptance_criteria:
+  - "Given the demo tour's images, when inspected, then none are real photos of 2806 Prado or any other real, identifiable property"
+  - "Given the manifest, when validated against lib/tour-types.ts's Tour interface, then it type-checks with no errors"
+  - "Given the manifest's slug/title, when read, then they clearly signal 'demo/sample,' not a real address"
+  - "Given public/showcase-samples/demo-house/, when checked against middleware.ts's GATED_PATH_PREFIXES, then it is NOT covered by the gate (fetchable with no passcode)"
+
+steps:
+  - id: implement
+    description: Source or generate the demo room images and write public/showcase-samples/demo-house/tour.json.
+    agent: developer
+  - id: test
+    description: Verify the manifest type-checks, the path is genuinely outside the gated prefixes, and (if using licensed stock photos) the license is confirmed and documented.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm with certainty that no real Prado imagery or any other real property's photos ended up in this dataset — this is the one check in this story that cannot be skipped or rushed.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/tour-types.ts
+      purpose: "The Tour/TourRoom/TourEdge shape to conform to."
+    - path: middleware.ts
+      purpose: "GATED_PATH_PREFIXES — confirm public/showcase-samples/ is NOT covered."
+
+files_to_modify:
+  - file: public/showcase-samples/demo-house/tour.json
+    change: "Create"
+  - file: "public/showcase-samples/demo-house/*.(jpg|png)"
+    change: "Create — placeholder or licensed stock room images"
+
+do_not:
+  - "Do not use any real photo of 2806 Prado, any other real address, or any real person's property, under any circumstances."
+  - "Do not place this data under public/tours/ — it must live outside the gated prefix."

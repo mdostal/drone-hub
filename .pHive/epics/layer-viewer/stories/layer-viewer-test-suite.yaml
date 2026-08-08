@@ -1,0 +1,72 @@
+id: layer-viewer-test-suite
+epic: layer-viewer
+title: Close out automated test coverage for <LayerViewer>/<LayerControl>
+status: complete
+complexity: medium
+methodology: tdd
+depends_on: [layer-viewer-core-components]
+
+description: |
+  Unlike video-tour-test-suite, no new test infrastructure is needed —
+  Vitest + RTL (vitest.config.mts, vitest.setup.ts) already exists and is
+  reusable as-is. This story's job is coverage, not setup: make sure
+  <LayerViewer>/<LayerControl>'s behavior is covered by real automated tests,
+  not just the live Playwright verification done during their own story
+  (which proved it works once, not that it keeps working).
+
+  MapLibre GL needs a real WebGL-capable browser context and won't run
+  meaningfully under jsdom — don't try to force full map-rendering
+  assertions into jsdom tests. Instead: (a) unit-test the pure logic that
+  doesn't need a real map (layer registry → MapLibre source/layer-config
+  mapping functions, opacity/toggle state reducers, the disabled-stub skip
+  decision) by extracting that logic into testable functions if it isn't
+  already separated from the MapLibre-mounting side effects, and (b) for
+  <LayerControl> (a plain DOM component, no WebGL) use full RTL rendering/
+  interaction tests same as DoorwayControls.test.tsx's pattern.
+
+acceptance_criteria:
+  - "Given the layer-registry → MapLibre source/layer-config mapping logic, when unit-tested, then raster+cog, raster+xyz, and geojson entries all produce the expected config shape"
+  - "Given a disabled:true entry, when passed through the mapping logic, then it produces no source/layer config at all (confirms the skip decision at the logic level, not just visually)"
+  - "Given <LayerControl> with a real sample layer list, when rendered, then every layer gets a toggle+opacity row, and the disabled entry's row is non-interactive"
+  - "Given a toggle click on <LayerControl>, when fired, then the corresponding onToggle callback receives the correct layer id"
+  - "Given an opacity slider change, when fired, then the corresponding onOpacityChange callback receives the correct layer id + value"
+  - "Given `npm test`, when run, then all new specs pass alongside the existing 41 video-tour specs (no regressions)"
+
+steps:
+  - id: research
+    description: Read how components/LayerViewer/LayerViewer.tsx is structured (from the core-components story) to identify what logic can be extracted/tested without a real WebGL context, vs. what genuinely needs live/manual verification.
+    agent: researcher
+  - id: test-spec
+    description: Write the failing tests first per the acceptance criteria, using synthetic fixtures (not necessarily the real sample manifest — keep unit tests fast and independent of network/file assets).
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: If needed, refactor LayerViewer.tsx to separate pure mapping logic from MapLibre side effects (extract a testable function), then make the failing tests pass. Do not modify the tests.
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm coverage is real (not tautological — e.g. not just testing that a mock was called) and that MapLibre-dependent behavior is honestly left to live verification rather than faked with brittle mocks.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VideoTour/DoorwayControls.test.tsx
+      purpose: "Precedent RTL test pattern for a plain interactive DOM component (mirrors LayerControl's shape)."
+    - path: vitest.config.mts
+      purpose: "Already-configured jsdom environment + @/* alias — reuse as-is, no new config needed."
+
+files_to_modify:
+  - file: components/LayerViewer/LayerViewer.test.tsx
+    change: "Create"
+  - file: components/LayerViewer/LayerControl.test.tsx
+    change: "Create"
+
+do_not:
+  - "Do not add a new test framework or config — Vitest + RTL already exists, reuse it."
+  - "Do not attempt real WebGL/MapLibre rendering assertions in jsdom — extract testable logic instead, and be honest in the story report about what's covered by automated tests vs. live verification only."

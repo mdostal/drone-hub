@@ -1,0 +1,80 @@
+name: model3d
+title: "<Model3D> + public component-showcase site (framework docs pattern)"
+description: >
+  Ships CBA's Phase-3 <Model3D> component (glTF viewer via r3f/drei against
+  a public-domain sample model) AND the shadcn-style component-framework
+  docs-site pattern (public, ungated showcase pages: demo + docs per
+  component), retrofitting VideoTour and LayerViewer into it. Foundation
+  for the next epics in the confirmed priority order: 3D-on-land overlay,
+  landscape-to-Minecraft voxelizer + gated content-engine page, and
+  telemetry-driven scene-tracked video overlay.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from feat/layer-viewer (not master) to build on its app shell,
+    gating, and component conventions.
+
+planning_team:
+  matched_tags: [3d-rendering, component-framework, docs-site, rights-review]
+  roster: [researcher, technical-writer, tester, developer, reviewer]
+  confidence: "high — CBA specifies Model3D's stack precisely; the docs-site pattern was clarified directly by the operator mid-epic-planning."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer. Caught a serious,
+      real issue before any code was written: the original design draft
+      would have reused real, currently-gated photography of Mathew's
+      actual property (public/tours/2806-prado/) as "public sample data"
+      for the ungated showcase site -- a direct violation of CLAUDE.md's
+      hard rule against deploying un-released property assets un-gated.
+      Fixed by sourcing a wholly separate, genuinely public-safe demo
+      dataset for the VideoTour showcase page (model3d-videotour-demo-data
+      story), with a dedicated regression-guard test
+      (model3d-test-suite) and a final independent grep check
+      (model3d-docs-acceptance-closeout) to confirm it stays fixed. Also
+      caught and resolved: ModelDef's position/scale fields were deferred
+      to avoid a premature scene-space-vs-geo-space guess; ComponentShowcase
+      was made gating-agnostic so it's reusable inside the future gated
+      content-engine page.
+    sign_off: >
+      Operator explicitly requested continuous execution without blocking
+      gates for this scope of work; design decisions made and documented
+      for post-hoc review, except the rights-status finding above, which
+      was corrected immediately rather than deferred given its severity.
+
+stories:
+  - id: model3d-showcase-shell
+    title: Build the public component-showcase route + <ComponentShowcase> layout
+    complexity: medium
+    depends_on: []
+  - id: model3d-videotour-demo-data
+    title: Source a genuinely public-safe demo tour for the VideoTour showcase
+    complexity: medium
+    depends_on: []
+  - id: model3d-component
+    title: Build <Model3D> (glTF mesh viewer) + source a sample glTF model
+    complexity: high
+    depends_on: []
+  - id: model3d-showcase-pages
+    title: Give VideoTour, LayerViewer, and Model3D each a real showcase page
+    complexity: medium
+    depends_on: [model3d-showcase-shell, model3d-videotour-demo-data, model3d-component]
+  - id: model3d-test-suite
+    title: Close out automated test coverage for Model3D + showcase pages
+    complexity: medium
+    depends_on: [model3d-component, model3d-showcase-pages]
+  - id: model3d-docs-acceptance-closeout
+    title: Write the Model3D spec doc, reconcile all docs, close acceptance criteria
+    complexity: low
+    depends_on: [model3d-test-suite]
+
+deferred:
+  - "3D-on-land overlay (geo-anchored <Model3D> inside <LayerViewer>) -- next epic per confirmed priority order."
+  - "Landscape-to-Minecraft voxelizer + gated content-engine page -- queued after land overlay."
+  - "Telemetry-driven scene-tracked video overlay (DJI SRT/flight-log-derived camera pose) -- queued after the Minecraft/content-engine epic."
+  - "CBA's original Phase 2 tools (Measure/Annotate/Compare/Align) -- now queued behind all of the above, per operator instruction."

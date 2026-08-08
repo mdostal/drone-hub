@@ -1,0 +1,83 @@
+id: video-tour-prado-manifest
+epic: video-tour
+title: Extract Prado assets and write the tour.json manifest
+status: complete
+complexity: low
+methodology: bdd
+depends_on: [video-tour-app-shell-scaffold]
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  The reference prototype (docs/components/reference/prado-tour.prototype.html)
+  embeds its 6 room stills as inline base64 data URIs. The real component
+  needs them as addressable static assets. Extract them to
+  public/tours/2806-prado/ and write a manifest reproducing the prototype's
+  room graph exactly (front/living/kitchen/great/bedroom/bath, same
+  neighbors/pos), conforming to the `Tour` interface in lib/tour-types.ts.
+  P1 scope: all `spin: null`, all `clip: null` (stills + wipes only).
+
+  Title/slug decision (confirmed by operator during planning): keep "2806
+  Prado" / "2806-prado" as-is — gated, Mathew's own address, property being
+  sold (historical record, not ongoing PII exposure).
+
+  Pre-made decision: write a static tour.json file, not a .ts const.
+  VideoTourProps.manifest accepts `Tour | string`; a JSON file served by URL
+  matches CLAUDE.md's authoring flow ("Fill tour.json") and lets future
+  properties be added without a rebuild — the .ts-const path would fight that.
+
+acceptance_criteria:
+  - "Given the prototype's embedded data URIs, when extracted, then 6 image files exist under public/tours/2806-prado/ matching the prototype's rooms 1:1"
+  - "Given the manifest, when validated against lib/tour-types.ts's Tour interface, then it type-checks with no errors"
+  - "Given the manifest, when compared to the prototype's ROOMS array, then room ids, labels, pos, and neighbor edges match exactly"
+
+steps:
+  - id: implement
+    description: |
+      Extract the 6 base64 data URIs from the prototype's ROOMS array (line 56
+      of docs/components/reference/prado-tour.prototype.html — decode each
+      data URI to a file). Write public/tours/2806-prado/tour.json with slug
+      "2806-prado", title "2806 Prado", startRoom "front", and all 6 TourRoom
+      entries with spin:null, clip:null throughout, still URLs pointing at the
+      extracted image files.
+    agent: developer
+  - id: test
+    description: Write a small script/test asserting the manifest parses as a valid Tour and every still URL resolves to a real file.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Diff the manifest's room graph against the prototype's ROOMS array for exact parity (ids, labels, pos, neighbors).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/video-tour.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/tour-types.ts
+      purpose: "The Tour/TourRoom/TourEdge interfaces the manifest must conform to."
+    - path: docs/components/reference/prado-tour.prototype.html
+      purpose: "Source of truth for the room graph and the embedded still images (line 56 — a single very long line; extract programmatically, do not read the whole file into an editor/LLM context)."
+  notes: |
+    Runs in parallel with video-tour-gating-middleware (bounded-slice:
+    public/tours/** + tour.json vs middleware.ts, disjoint touch-sets).
+    R2 migration is explicitly deferred — public/ is a P1-only convenience per
+    the design discussion's stated boundary (switch to R2 no later than P2's
+    real video clips).
+
+files_to_modify:
+  - file: public/tours/2806-prado/*.jpg
+    change: "Create — 6 extracted room still images"
+  - file: public/tours/2806-prado/tour.json
+    change: "Create — the Tour manifest"
+
+cross_cutting:
+  - concern: documentation
+    action: "Note the public/tours/<slug>/ convention in .pHive/CONTEXT.md as a P1-only local-asset pattern, distinct from the R2 folder-per-property convention CLAUDE.md describes for the eventual target state."
+
+do_not:
+  - "Do not invent new room ids, positions, or edges — reproduce the prototype's ROOMS array exactly (this story is extraction, not redesign)."
+  - "Do not wire R2 or any remote storage — public/ only, per the design discussion's explicit P1 boundary."

@@ -1,0 +1,58 @@
+id: layer-viewer-spec-doc
+epic: layer-viewer
+title: Write the <LayerViewer> component spec doc
+status: complete
+complexity: low
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Unlike <VideoTour>, <LayerViewer> has no docs/components/*.md spec yet —
+  CLAUDE.md and docs/CBA.md describe it at a high level but there's no
+  component-level spec (API, behavior, acceptance criteria) the way
+  docs/components/video-tour.md was for VideoTour. Write one now, following
+  that doc's shape, so layer-viewer-core-components has a concrete target
+  and layer-viewer-docs-acceptance-closeout has a real checklist to verify.
+
+  Source content: CLAUDE.md's "What it is" and "The components to build"
+  sections (LayerViewer bullet), docs/CBA.md's "Components (owned,
+  plug-and-play)" MapLayerViewer/LayerControl bullets and the layer registry
+  description, and this epic's design-discussion.md (already resolved the
+  registry type shape, gating extension, and thermal-stub semantics — pull
+  those decisions in verbatim, don't re-derive them).
+
+acceptance_criteria:
+  - "Given docs/components/video-tour.md's structure (why/model/behavior/tech/acceptance-criteria/phase-fit sections), when layer-viewer.md is written, then it follows the same shape"
+  - "Given the design discussion's resolved layer registry type (type: 'raster'|'geojson', format?: 'cog'|'xyz', url: string|null for disabled stubs), when documented, then it matches lib/layer-types.ts exactly once that story lands (may need a follow-up sync pass — note this explicitly in the doc rather than silently risking drift)"
+  - "Given CBA's exact thermal-stub example (type:'raster', legend:'ironbow', disabled:true), when documented, then it's reproduced verbatim as the canonical stub shape"
+
+steps:
+  - id: implement
+    description: Write docs/components/layer-viewer.md — why, the layer-registry model, behavior (map render, toggle/opacity, disabled-stub skip), tech (MapLibre GL, @geomatico/maplibre-cog-protocol, Esri World Imagery basemap), the gated-route convention, acceptance criteria, and phase fit (P1 = this epic; P2 = measure/annotate/compare/align; P3 = Model3D, separate epic).
+    agent: technical-writer
+  - id: review
+    description: Cross-check against CLAUDE.md and docs/CBA.md for accuracy; flag anything that contradicts the finalized stack decisions there.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/video-tour.md
+      purpose: "Structural template — same section shape, adapted content."
+    - path: .pHive/epics/layer-viewer/docs/design-discussion.md
+      purpose: "All the architecture decisions this doc should document as resolved, not open."
+
+files_to_modify:
+  - file: docs/components/layer-viewer.md
+    change: "Create"
+
+do_not:
+  - "Do not invent new architecture decisions here — this story documents what design-discussion.md already resolved, it doesn't make new calls."
+  - "Do not write acceptance criteria for Measure/Annotate/Compare/Align/Model3D — explicitly out of scope, later phases."

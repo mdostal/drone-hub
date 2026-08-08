@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#c9d8cf"/>
+  <rect x="0" y="0" width="1600" height="900" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="24"/>
+  
+      <rect x="200" y="620" width="420" height="140" rx="16" fill="rgba(0,0,0,0.18)"/>
+      <rect x="980" y="600" width="220" height="160" rx="10" fill="rgba(0,0,0,0.12)"/>
+      <circle cx="1300" cy="700" r="60" fill="rgba(0,0,0,0.1)"/>
+    
+  <text x="800" y="440" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="96" font-weight="700" fill="rgba(0,0,0,0.72)">Living Room</text>
+  <text x="800" y="510" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="32" fill="rgba(0,0,0,0.55)">DEMO — fictional room, not a real property</text>
+  <text x="24" y="876" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="rgba(0,0,0,0.35)">showcase-samples/demo-house — generated placeholder graphic</text>
+</svg>

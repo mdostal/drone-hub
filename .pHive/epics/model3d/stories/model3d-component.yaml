@@ -1,0 +1,95 @@
+id: model3d-component
+epic: model3d
+title: Build <Model3D> (glTF mesh viewer) + source a sample glTF model
+status: complete
+complexity: high
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  CBA's Phase-3 component: a 3D mesh viewer. `@react-three/fiber` and
+  `@react-three/drei` are both locked npm dependencies, installed but unused
+  until now. Note the app-shell-scaffold story already worked around a
+  React-19-vs-@react-three/fiber-v8 peer-dependency conflict via
+  `.npmrc`'s `legacy-peer-deps=true` — re-verify this covers `drei` too, it
+  may have its own peer constraints.
+
+  Build:
+  - `components/Model3D/Model3D.tsx` — 'use client', a `@react-three/fiber`
+    `<Canvas>` containing drei's `<OrbitControls>` + a mesh loaded via
+    drei's `useGLTF` hook. Props: `ModelDef {id, url, title}` — deliberately
+    MINIMAL for this epic (no scale/position fields — see design discussion:
+    those are being deferred to avoid guessing wrong about scene-space vs.
+    geo-space semantics before the land-overlay epic actually needs them).
+    Sensible default camera framing (e.g. auto-fit to the loaded mesh's
+    bounding box) so an arbitrary glTF isn't tiny/huge/off-center by default.
+  - `components/Model3D/index.ts` — public export surface.
+  - Sample data: download a small public-domain glTF — Khronos's own
+    `glTF-Sample-Models` repo, `Duck.glb`
+    (raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Duck/glTF-Binary/Duck.glb,
+    verified reachable during planning, ~120KB, CC0-equivalent license per
+    that repo) — store under public/model3d-samples/duck/model.glb (or
+    similar), write a small ModelDef manifest alongside it if that fits the
+    component's manifest pattern, or just hardcode the sample path in the
+    showcase page (model3d-showcase-pages' job) — your call on whether a
+    full manifest file is warranted for a single-model P1 scope; document
+    the choice.
+
+  Verify with Playwright against the real sample model: confirm the mesh
+  actually renders, orbit controls actually rotate/zoom/pan the view. Same
+  rigor as every prior component story in this project — live-verify, don't
+  just code-review.
+
+acceptance_criteria:
+  - "Given a glTF/glb url, when <Model3D> mounts, then the mesh renders visibly in the canvas, reasonably framed (not off-screen/invisibly tiny/huge)"
+  - "Given mouse drag/scroll on the canvas, when performed, then OrbitControls actually rotates/zooms the view (verify live, not just that the prop is wired)"
+  - "Given next/dynamic({ssr:false}), when <Model3D> is imported anywhere, then it's compatible with that wrapping (no server-only APIs, confirm via a real usage in a later story)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Confirm @react-three/fiber + drei's exact API for useGLTF + OrbitControls + auto-fit-to-bounding-box framing, and re-verify the React 19 peer-dependency situation for drei specifically (not just fiber).
+    agent: researcher
+  - id: behavior-spec
+    description: Given/When/Then specs from the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build <Model3D>, source the sample glTF.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Live-verify via Playwright against the real sample model — mesh renders, orbit controls work.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the component is gate-agnostic and cleanly importable (same precedent as VideoTour/LayerViewer), and that the ModelDef type doesn't smuggle in scale/position fields the design discussion explicitly deferred.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/model3d.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  tech_stack:
+    "3d": "@react-three/fiber ^8.17.0 + @react-three/drei ^9.114.0 + three ^0.169.0 (all locked, unused until this story)"
+  key_files:
+    - path: .npmrc
+      purpose: "Already has legacy-peer-deps=true from the app-shell-scaffold story's @react-three/fiber-vs-React-19 workaround — re-verify it's sufficient for drei too."
+
+files_to_modify:
+  - file: components/Model3D/Model3D.tsx
+    change: "Create"
+  - file: components/Model3D/index.ts
+    change: "Create"
+  - file: public/model3d-samples/duck/model.glb
+    change: "Create — downloaded sample glTF"
+
+do_not:
+  - "Do not add scale/position/geo-anchoring fields to ModelDef in this epic — explicitly deferred to the land-overlay epic's own type, per the design discussion."
+  - "Do not implement measure tools or point-cloud rendering — CBA phases those in later."
+  - "Do not add gating logic to the component."

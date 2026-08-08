@@ -1,0 +1,83 @@
+id: land-overlay-test-suite
+epic: land-overlay
+title: Numeric placement verification + GL-state-pollution regression test
+status: pending
+complexity: high
+methodology: tdd
+depends_on: [land-overlay-layerviewer-integration, land-overlay-showcase-page]
+
+description: |
+  This epic's design discussion was explicit (after design review) that
+  qualitative "looks roughly right" verification is NOT sufficient for the
+  hardest rendering work in the project. This story is where that
+  commitment gets honored with real, numeric checks — do not water this
+  down to a screenshot-diff or a "no console errors" check.
+
+  1. **Numeric placement accuracy.** Using Playwright against the real
+     showcase page (land-overlay-showcase-page): call `map.project(lngLat)`
+     (via `page.evaluate` reaching into the live MapLibre instance, or by
+     instrumenting the model layer to expose its computed screen-space
+     centroid for the test to read — your call on mechanism) to get the
+     EXPECTED screen-pixel position of the model's anchor lat/lon. Compare
+     against the model's ACTUAL rendered position (locate the duck's
+     bounding box in a screenshot, or read back the instrumented value).
+     Assert they're within a reasonable pixel tolerance (document the
+     tolerance and why it's reasonable — e.g. a few pixels given anti-
+     aliasing/model-origin-vs-bounding-box-center differences).
+  2. **Pitch/bearing sweep.** Repeat the above check at minimum at: default
+     view (pitch=0, bearing=0), and one rotated/tilted state (e.g. pitch=45,
+     bearing=90 via `map.setPitch()`/`map.setBearing()`). A matrix bug that
+     cancels out at pitch=0/bearing=0 is a real, common failure mode this
+     sweep exists to catch — do not skip this even if the default-view check
+     passes easily.
+  3. **GL-state-pollution regression.** After the model layer has rendered
+     at least one frame, toggle the ortho layer's visibility off then back
+     on (via the existing LayerControl or direct ref-handle calls) and
+     confirm it still renders correctly — screenshot before the model
+     layer existed vs. after, comparing the ortho layer's own appearance,
+     not just "no crash."
+  4. Unit tests for lib/maplibre-model-layer.ts's pure-logic parts not
+     already covered by land-overlay-model-layer's own tests (fill gaps,
+     don't duplicate).
+
+acceptance_criteria:
+  - "Given the numeric placement check at the default camera view, when run, then the expected vs. actual screen position differ by no more than the documented pixel tolerance"
+  - "Given the same check repeated at pitch=45/bearing=90, when run, then it also passes within tolerance — proving the camera-sync math holds under rotation, not just the default view"
+  - "Given the GL-state-pollution regression test, when run, then the ortho layer renders correctly after the model layer has drawn at least one frame"
+  - "Given `npm test`, when run, then all new specs pass alongside every pre-existing test (should stay at 100% pass, ~116+ tests from prior epics)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Determine the exact mechanism for reading the model's actual rendered screen position (screenshot pixel analysis vs. an instrumented debug hook) and decide the pixel tolerance.
+    agent: researcher
+  - id: test-spec
+    description: Write the numeric placement test, the pitch/bearing sweep, and the GL-state-pollution regression test.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: If the placement test reveals any actual matrix/math bug in lib/maplibre-model-layer.ts, fix it here (this story owns fixing what its own tests find).
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm the numeric checks are real (would actually fail on a broken matrix) and not silently tolerant enough to pass regardless of correctness.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/land-overlay.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/epics/land-overlay/docs/design-discussion.md
+      purpose: "The design-review commitment this story exists to honor — re-read the verification-method section."
+
+files_to_modify:
+  - file: lib/maplibre-model-layer.placement.test.ts
+    change: "Create — numeric placement + pitch/bearing sweep + GL-state-pollution tests"
+
+do_not:
+  - "Do not water this down to a screenshot-diff or console-error check — numeric placement comparison is the actual requirement."
+  - "Do not skip the pitch/bearing sweep even if the default view passes easily."

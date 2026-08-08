@@ -1,0 +1,85 @@
+id: layer-viewer-registry-types
+epic: layer-viewer
+title: Define the typed layer registry (lib/layer-types.ts)
+status: complete
+complexity: low
+methodology: bdd
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  The typed layer registry is the architectural core of <LayerViewer> — CBA
+  calls it "the owned IP." Mirror lib/tour-types.ts's pattern (a manifest-
+  driven component family, already proven for VideoTour): typed interfaces,
+  null-fallback fields, one manifest type per "property."
+
+  Pre-made decisions from this epic's design discussion (do not re-derive,
+  do not diverge):
+  - `type` is `'raster' | 'geojson'` — matches CBA's literal spec exactly
+    (thermal-stub example: `type:'raster', legend:'ironbow', disabled:true`).
+    Do NOT split into 'raster-cog'/'raster-tiles' (an earlier draft did this
+    and was corrected during grill review for diverging from CBA without
+    justification).
+  - Raster layers additionally carry `format?: 'cog' | 'xyz'` (default
+    `'cog'`) so the renderer knows which MapLibre source builder to use.
+  - `url: string | null` — `null` is valid and REQUIRED for `disabled: true`
+    stubs (no data exists for the thermal slot).
+  - A `PropertyLayers` manifest: `{slug, title, layers: LayerDef[]}` — the
+    basemap itself is NOT a registry entry (it's the map's base, handled
+    separately in <LayerViewer>, not toggleable via LayerControl).
+
+acceptance_criteria:
+  - "Given the LayerDef interface, when type-checked, then it has {id, type: 'raster'|'geojson', url: string|null, opacity, toggle, disabled?, legend?, format?}"
+  - "Given a raster layer entry, when format is omitted, then it defaults to 'cog' (document this as a type-level default via JSDoc, actual default-application happens in the renderer, not in this types file)"
+  - "Given a disabled:true entry, when url is null, then this type-checks (url must be nullable, not required)"
+  - "Given the thermal-stub example from CBA (type:'raster', legend:'ironbow', disabled:true), when constructed as a LayerDef literal, then it type-checks with url:null"
+  - "Given PropertyLayers, when constructed, then it has {slug: string, title: string, layers: LayerDef[]} — no basemap field"
+
+steps:
+  - id: research
+    description: Re-read lib/tour-types.ts for the exact pattern/JSDoc style to mirror (field-level comments explaining null-fallback semantics).
+    agent: researcher
+  - id: behavior-spec
+    description: Write a small type-level test file (e.g. using vitest + a .test-d.ts pattern, or plain runtime construction tests asserting valid/invalid shapes) covering the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Write lib/layer-types.ts per the pre-made decisions above.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run the type/construction tests; run `npm run build` (tsc) to confirm no type errors anywhere referencing the new file (nothing should yet, but confirm it compiles standalone).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the type shape matches design-discussion.md's decisions exactly (type union, format field, nullable url, PropertyLayers shape).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/layer-viewer.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/tour-types.ts
+      purpose: "The established pattern to mirror: typed manifest, null-fallback JSDoc, one interface per concept."
+  code_examples:
+    - title: "tour-types.ts's null-fallback JSDoc pattern (mirror this style)"
+      file: lib/tour-types.ts
+      snippet: |
+        /** URL of the looping 360 "spin" clip for this room.
+         *  null → the player shows `still` with a slow Ken-Burns as placeholder. */
+        spin: string | null;
+      lines: "21-22"
+
+files_to_modify:
+  - file: lib/layer-types.ts
+    change: "Create"
+
+do_not:
+  - "Do not add a 'raster-cog'/'raster-tiles' type split — use type:'raster' + format?:'cog'|'xyz', per the corrected design decision."
+  - "Do not make url required — disabled stubs need null."
+  - "Do not add a basemap field to PropertyLayers — the basemap isn't a registry entry."
