@@ -1,0 +1,56 @@
+name: framework-docs-site
+title: "Framework docs site — table-of-contents landing page + rendered component docs"
+description: >
+  Replaces the placeholder root page with a real table-of-contents landing
+  page listing every component/tool, each linking to its live demo AND a
+  newly-rendered docs/components/*.md writeup page. Direct follow-up to
+  CLAUDE.md's 2026-08-08 scope-boundary correction ("a genuinely
+  complete, publicly-hostable documentation/showcase site") and the
+  operator's explicit ask for a main page with a table of contents
+  suitable for tools.mdostal.com to link to.
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from master (post-merge of video-tour, layer-viewer, model3d,
+    land-overlay, minecraft-content-engine, minecraft-export; post-fix of
+    the COG bounds bug).
+
+planning_team:
+  matched_tags: [documentation, routing, low-risk]
+  roster: [technical-writer, developer, reviewer]
+  confidence: "high — small, purely additive scope (two new/changed routes, one redirect, one dependency), no new sample data or viewer tech. Grill caught 2 real gaps before story-writing: (1) the redirect plan left the old /components page.tsx and its RTL test in place, which would have produced a dead route with a false-green test; (2) generateStaticParams needed a hardcoded slug array, not a readdirSync scan, since docs/components/ contains a non-.md reference/ subdirectory that would throw EISDIR at build time."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer. Found 2 real gaps
+      (dead-page/stale-test handling on the /components -> / redirect;
+      slug-enumeration-vs-reference/-dir collision) — both fixed in the
+      design doc before stories were written. 2 minor findings (remark-gfm
+      justification cited the wrong GFM feature; wrong doc named as the
+      spot-check stress-test target) also fixed. Confirmed accurate: no
+      middleware matcher collision, clean React 19/Next 15 react-markdown
+      compat, correct next.config.ts redirect mechanism, accurate
+      content-engine gated-URL and minecraft-export no-demo-page framing,
+      no scope-boundary violation.
+    sign_off: >
+      Operator's standing instruction: continuous execution, self-review,
+      commit as work completes, no per-story gate.
+
+stories:
+  - id: framework-docs-site-render-route
+    title: Render docs/components/*.md as real pages at /docs/components/[slug]
+    complexity: medium
+    depends_on: []
+  - id: framework-docs-site-landing-page
+    title: Root landing page ToC (7 entries) + retire the old /components page via redirect
+    complexity: medium
+    depends_on: [framework-docs-site-render-route]
+  - id: framework-docs-site-closeout
+    title: Full-suite verification, live spot-check, docs closeout
+    complexity: low
+    depends_on: [framework-docs-site-landing-page]

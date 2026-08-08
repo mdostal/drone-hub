@@ -1,0 +1,125 @@
+id: framework-docs-site-landing-page
+epic: framework-docs-site
+title: Root landing page ToC (7 entries) + retire the old /components page via redirect
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [framework-docs-site-render-route]
+
+description: |
+  Replace app/page.tsx's one-line placeholder with the real table-of-contents
+  landing page — the actual front door tools.mdostal.com would link to.
+  Rewrite app/page.tsx to render: a short "what this is" header (1-2
+  sentences, framework positioning per CLAUDE.md, not marketing copy — e.g.
+  "Drone Hub — plug-and-play React components for drone property
+  intelligence. Each ships with a live demo and full docs."), then a grid
+  of 7 ToC entries reusing the existing card layout/styling from
+  app/(showcase)/components/page.tsx's COMPONENTS array (5 entries) as the
+  base, extended to 7:
+
+  1. VideoTour — demo /components/video-tour, doc /docs/components/video-tour
+  2. LayerViewer — demo /components/layer-viewer, doc /docs/components/layer-viewer
+  3. Model3D — demo /components/model3d, doc /docs/components/model3d
+  4. LandOverlay — demo /components/land-overlay, doc /docs/components/land-overlay
+  5. VoxelTerrain — demo /components/voxel-terrain, doc /docs/components/voxel-terrain
+  6. ContentEngine — demo /properties/2806-prado/engine (passcode-gated —
+     card must say so explicitly via a small badge/label, e.g.
+     "passcode-gated demo", not a silent link into a login redirect),
+     doc /docs/components/content-engine
+  7. MinecraftExport — NO demo link of its own (it's a download action
+     already on the VoxelTerrain showcase page, not a page of its own —
+     do not invent a fake showcase page). Card links only to
+     doc /docs/components/minecraft-export, with a one-line note that the
+     live download action lives on the VoxelTerrain page (link there too).
+
+  Each card's two links (where both exist) must be distinct, clickable
+  targets — not one link wrapping the whole card with an ambiguous
+  destination (`/components/page.tsx`'s current pattern wraps the whole
+  card in one <Link> to only the demo; this story's cards need to
+  disambiguate demo vs. doc, e.g. two labeled links per card, or a
+  primary/secondary link pattern).
+
+  Retire the duplicate: add a redirect from /components to / in
+  next.config.ts's `redirects()` (permanent, since this is a structural
+  route consolidation, not conditional logic). Then:
+  - DELETE app/(showcase)/components/page.tsx (the redirect means this
+    route's filesystem page is never reached — leaving it in place is a
+    dead file).
+  - DELETE app/(showcase)/components/page.test.tsx (its
+    render(<ComponentsIndexPage />) assertions bypass Next.js routing
+    entirely — with the component deleted, this test can't run anyway).
+  - CREATE app/page.test.tsx with equivalent ToC-rendering coverage
+    against the new root page (render each of the 7 entries, assert
+    demo/doc links resolve to the right hrefs) — so ToC test coverage
+    isn't silently lost in the swap.
+
+acceptance_criteria:
+  - "Given a request to /, when the page renders, then all 7 ToC entries are present with working (non-404) hrefs to their demo (where applicable) and doc pages"
+  - "Given a request to /components, when the redirect fires, then the browser lands on / with a 308 (permanent redirect) status"
+  - "Given the ContentEngine card, when rendered, then it visibly indicates the demo is passcode-gated (not a silent link)"
+  - "Given the MinecraftExport card, when rendered, then it has no fabricated demo-page link — only a doc link plus a pointer to the VoxelTerrain page where the real download action lives"
+  - "Given app/(showcase)/components/page.tsx is deleted, when npm test runs, then there is no orphaned reference to the deleted ComponentsIndexPage component anywhere in the test suite"
+
+steps:
+  - id: research
+    description: Read app/(showcase)/components/page.tsx in full (the 5-entry base to extend) and next.config.ts's current content (to add redirects() without clobbering the existing distDir setting).
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above, including the redirect behavior and the two deletions.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Rewrite app/page.tsx as the 7-entry ToC, add the next.config.ts redirect, delete the old page.tsx + page.test.tsx.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Write app/page.test.tsx with equivalent coverage to the deleted test; verify the full suite passes with no orphaned references.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that every link resolves, the gated/no-demo entries are honestly labeled, and no dead file/test was left behind.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/framework-docs-site.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: app/(showcase)/components/page.tsx
+      purpose: The 5-entry base being extended to 7 and then deleted.
+    - path: next.config.ts
+      purpose: Where the /components -> / redirect is added; currently only sets distDir.
+    - path: .pHive/epics/framework-docs-site/docs/design-discussion.md
+      purpose: Full design rationale for the redirect + deletion pattern (grill finding 1).
+
+files_to_modify:
+  - file: app/page.tsx
+    change: Replace placeholder with the 7-entry ToC landing page.
+  - file: app/page.test.tsx
+    change: New file — ToC rendering coverage, replacing the deleted test.
+  - file: next.config.ts
+    change: Add redirects() with a permanent /components -> / entry.
+  - file: app/(showcase)/components/page.tsx
+    change: Delete (dead route once the redirect is live).
+  - file: app/(showcase)/components/page.test.tsx
+    change: Delete (tested a component that no longer exists).
+
+design_decisions:
+  - decision: Delete the old page + test rather than leaving them in place.
+    rationale: "Grill finding: next.config.ts redirects fire before the filesystem router, so leaving page.tsx in place creates a dead file, and its RTL test would keep passing (false-green) while testing an unreachable route."
+
+risks:
+  - severity: low
+    description: Any external link already pointing at /components (none found via repo grep) would still work via the redirect, so this is low-risk, but worth confirming no code elsewhere links to the old route's specific path expecting non-redirected behavior.
+    mitigation: Grep the full repo for "/components\"" and "'/components'" literal href references before deleting.
+
+references:
+  - path: .pHive/epics/framework-docs-site/docs/design-discussion.md
+    relevant_excerpt: |
+      Delete app/(showcase)/components/page.tsx once its ToC content moves
+      to (and is superseded by) app/page.tsx... Delete
+      app/(showcase)/components/page.test.tsx... and re-home equivalent
+      ToC-rendering coverage as app/page.test.tsx against the new root page.

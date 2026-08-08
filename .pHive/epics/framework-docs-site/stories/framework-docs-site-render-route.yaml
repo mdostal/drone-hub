@@ -1,0 +1,115 @@
+id: framework-docs-site-render-route
+epic: framework-docs-site
+title: Render docs/components/*.md as real pages at /docs/components/[slug]
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: []
+
+description: |
+  New route that renders the repo's existing docs/components/*.md files as
+  real web pages, so a ToC entry's "doc writeup" link is an actual working
+  page instead of aspirational. This story owns the rendering mechanism
+  only — the landing-page story (framework-docs-site-landing-page) wires
+  the ToC links to these routes.
+
+  Add `react-markdown` + `remark-gfm` as dependencies. Create
+  `app/(showcase)/docs/components/[slug]/page.tsx` — a Server Component
+  under the existing `(showcase)` route group (same public/ungated
+  grouping as `app/(showcase)/components/*`; the route group doesn't
+  affect the URL, so the page is reachable at `/docs/components/<slug>`).
+
+  `generateStaticParams` MUST return a hardcoded literal array of exactly
+  these 7 slugs — do NOT use `fs.readdirSync` to scan `docs/components/`:
+
+    ["video-tour", "layer-viewer", "model3d", "land-overlay", "voxel-terrain", "content-engine", "minecraft-export"]
+
+  Reason (grill finding, see design-discussion.md §2): `docs/components/`
+  also contains a `reference/` subdirectory
+  (`docs/components/reference/prado-tour.prototype.html`) that is NOT a
+  slug — an unfiltered `readdirSync` would pick it up as an entry, and a
+  subsequent `readFileSync` on a directory throws `EISDIR` at build time,
+  breaking `next build`.
+
+  The page component reads `docs/components/<slug>.md` via
+  `fs.readFileSync(path.join(process.cwd(), "docs", "components", `${slug}.md`), "utf-8")`
+  and renders it through `<ReactMarkdown remarkPlugins={[remarkGfm]}>`.
+  For any slug not in the hardcoded array, call Next's `notFound()` (from
+  `next/navigation`) rather than attempting a read — do not let an
+  arbitrary path segment reach `readFileSync`.
+
+  No syntax highlighter — code fences render as plain `<pre><code>`
+  (react-markdown's default for fenced code blocks). No raw-HTML plugin
+  (`rehype-raw`) — none of the 7 docs contain raw HTML blocks that need it
+  (grill-verified), and omitting it keeps the page from ever executing
+  arbitrary HTML even though these are trusted, repo-committed files.
+
+  Minimal chrome per design-discussion.md open-question resolution: a
+  "← Components" link back to `/` above the rendered markdown, nothing
+  else (no breadcrumb, no sidebar nav).
+
+acceptance_criteria:
+  - "Given a request to /docs/components/layer-viewer, when the page renders, then it displays the actual content of docs/components/layer-viewer.md (verified by checking a distinctive string from that file appears in the rendered output, not a hardcoded copy of the content in the test)"
+  - "Given all 7 known slugs, when `next build` runs, then all 7 /docs/components/<slug> routes prerender as static (○), not dynamic (ƒ) — verified by inspecting the build output route table"
+  - "Given a request to /docs/components/nonexistent-slug, when the page renders, then Next's not-found page renders (404), not a server error from a failed readFileSync"
+  - "Given docs/components/content-engine.md's nested numbered lists, bold+italic+inline-code mixing, ASCII directory-tree code block, and 3 fenced code blocks, when rendered, then all of it renders without visual breakage (spot-check target per design-discussion.md's grill-revised risk section)"
+  - "Given docs/components/*.md's GFM task-list checkboxes (- [x] / - [ ]), when rendered, then they render as actual checkbox glyphs, not literal bracket text — proves remark-gfm is wired correctly"
+
+steps:
+  - id: research
+    description: Read docs/components/*.md (all 7, full content) and app/(showcase)/components/*/page.tsx for the existing showcase-page chrome/styling convention to match visually.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above before implementing.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add react-markdown + remark-gfm deps; create app/(showcase)/docs/components/[slug]/page.tsx with hardcoded generateStaticParams, notFound() guard, and minimal back-link chrome.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Derive and run tests from the behavior specs; verify next build shows all 7 routes as static.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review for the EISDIR/readdirSync trap, arbitrary-slug guard, and static-prerender verification.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/framework-docs-site.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/content-engine.md
+      purpose: The grill-identified spot-check target — structurally densest doc, use it to verify rendering doesn't break.
+    - path: app/(showcase)/components/page.tsx
+      purpose: Existing showcase-page styling convention (Tailwind classes, layout) to match in the new doc-page chrome.
+    - path: .pHive/epics/framework-docs-site/docs/design-discussion.md
+      purpose: Full design rationale, including the grill findings this story's constraints derive from.
+
+files_to_modify:
+  - file: package.json
+    change: Add react-markdown + remark-gfm dependencies.
+  - file: app/(showcase)/docs/components/[slug]/page.tsx
+    change: New file — the doc-rendering route.
+
+design_decisions:
+  - decision: Hardcoded literal slug array in generateStaticParams, not a directory scan.
+    rationale: "Grill finding: docs/components/reference/ is a real subdirectory that would throw EISDIR under an unfiltered readdirSync-based enumeration."
+  - decision: No rehype-raw plugin.
+    rationale: None of the 7 docs contain raw HTML blocks (grill-verified); omitting it is both simpler and strictly safer.
+
+risks:
+  - severity: medium
+    description: fs.readFileSync against docs/ could 404 in Vercel's production serverless runtime if the build tracer doesn't include docs/** in the function's file trace.
+    mitigation: Since generateStaticParams enumerates all slugs, pages should fully prerender to static HTML at build time — verify via next build output showing ○ (Static), which sidesteps runtime fs reads entirely. This is an explicit acceptance criterion, not just a note.
+
+references:
+  - path: .pHive/epics/framework-docs-site/docs/design-discussion.md
+    relevant_excerpt: |
+      Markdown rendering: react-markdown (no plugins beyond remark-gfm for
+      task-list checkboxes...). Code fences render as plain <pre><code> —
+      no syntax highlighter.
