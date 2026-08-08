@@ -11,10 +11,7 @@ import { EnginePageClient } from "./EnginePageClient";
 // property's /engine page forever, with no distinction between "no data
 // yet" and "generic demo content" — this file is the fix).
 //
-// SERVER component, not client (unlike the sibling
-// app/properties/[slug]/page.tsx and app/tours/[slug]/page.tsx, which are
-// both "use client" + useParams purely so `next/dynamic({ssr:false})` is
-// legal to call directly in them). This page needs to synchronously check
+// SERVER component, not client. This page needs to synchronously check
 // whether real per-slug files exist under public/content-engine/<slug>/ and
 // read their contents — that's a Node `fs` operation, only legal in a
 // Server Component (or a Route Handler/Server Action), never in a Client
@@ -29,12 +26,11 @@ import { EnginePageClient } from "./EnginePageClient";
 // requires (`ssr:false` is rejected on next/dynamic calls made directly
 // inside a Server Component).
 //
-// Gating for the whole /properties/* tree (this nested route included) is
-// enforced server-side by middleware.ts's existing `/properties/:path*`
-// matcher before this page is ever reached — see middleware.ts and
-// lib/gate.ts. This file intentionally contains zero passcode/session logic
-// of its own, per this story's explicit "do NOT modify middleware.ts /
-// lib/gate.ts" instruction.
+// Public/ungated (2026-08-08 architecture change, see CLAUDE.md's "Scope
+// boundary" section): drone-hub is the framework/showcase repo only, all
+// content here is sample/placeholder, and real client-facing gating lives
+// entirely in the separate personal-drone platform. This page — and every
+// route in this repo — carries no passcode/session logic of any kind.
 
 // The actual per-slug real-vs-fallback resolution (which slug's files exist,
 // which one to fall back to, the path-traversal safety guard) lives in

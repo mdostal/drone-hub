@@ -11,20 +11,18 @@ import remarkGfm from "remark-gfm";
 // .pHive/epics/framework-docs-site/docs/design-discussion.md §2 ("Doc
 // rendering") and this story's yaml for the full rationale.
 //
-// Deliberately public: same (showcase) route group as
-// app/(showcase)/components/page.tsx, which is NOT in lib/gate.ts's
-// GATED_PATH_PREFIXES / middleware.ts's config.matcher — these are
-// framework docs, not gated property footage.
+// Public, ungated — this whole repo carries no gating of any kind (see
+// CLAUDE.md's "Scope boundary" section); these are framework docs.
 
 // Hardcoded literal array — NOT a fs.readdirSync scan of docs/components/.
-// That directory also contains a reference/ subdirectory
-// (docs/components/reference/prado-tour.prototype.html, the video-tour
-// epic's prototype-as-spec reference, unrelated to this feature) that is
-// not a slug. An unfiltered readdirSync-based enumeration would pick up
-// "reference" as an entry, and a subsequent readFileSync on it throws
-// EISDIR at build time, breaking `next build` (grill finding — see
-// design-discussion.md §2 and this story's risks block). The hardcoded
-// array sidesteps this entirely: every slug here has a matching
+// That directory used to also contain a reference/ subdirectory
+// (docs/components/reference/prado-tour.prototype.html — removed 2026-08-08,
+// it embedded real property photos as base64 image data) that wasn't a
+// slug; an unfiltered readdirSync-based enumeration would have picked it up
+// as an entry, and a subsequent readFileSync on it throws EISDIR at build
+// time, breaking `next build` (grill finding — see design-discussion.md §2
+// and this story's risks block). The hardcoded array sidesteps any such
+// non-.md entry entirely, present or not: every slug here has a matching
 // docs/components/<slug>.md file on disk.
 const KNOWN_SLUGS = [
   "video-tour",

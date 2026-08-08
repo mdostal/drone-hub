@@ -3,8 +3,15 @@
 > Drape a **georeferenced ortho / thermal** over a **satellite map base**, and let the
 > operator **toggle layers on/off with opacity** — visual ortho · thermal · LiDAR
 > hillshade/heightmap · contours · parcel boundary. **This layer toggle is the killer
-> feature** (see root `CLAUDE.md`). Plug-and-play, importable into personal-site, gated
-> on drone.mdostal.com.
+> feature** (see root `CLAUDE.md`). Plug-and-play, importable into any app.
+
+**Update (operator, 2026-08-08):** drone-hub carries no gating of any kind — every
+reference below to `middleware.ts`, `lib/gate.ts`, a passcode gate, or the real
+`drone.mdostal.com` client platform describes the separate, private `personal-drone`
+platform (which pulls this component in), not this repo. `app/properties/[slug]/page.tsx`
+(the gated route this doc originally documented) was deleted; the component itself is
+demonstrated at the public `/components/layer-viewer` showcase page. Kept as historical
+record of the design decisions below, which are otherwise unaffected.
 
 **Design discussion (RESOLVED architecture — read first):**
 `.pHive/epics/layer-viewer/docs/design-discussion.md` — this doc documents those

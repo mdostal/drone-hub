@@ -1,8 +1,13 @@
 # `<Model3D>` — glTF mesh viewer (hive spec)
 
 > Orbit a **3D mesh** (glTF/glb) rendered straight from photogrammetry output — CBA's
-> Phase-3 `Model3DViewer`. Plug-and-play, importable into personal-site, publicly
-> showcased (not gated — see "The showcase page" below).
+> Phase-3 `Model3DViewer`. Plug-and-play, importable into any app, publicly showcased.
+
+**Update (operator, 2026-08-08):** drone-hub carries no gating of any kind — every
+reference below to `middleware.ts`, `lib/gate.ts`, `GATED_PATH_PREFIXES`, or a passcode
+gate describes an architecture that no longer exists in this repo (kept as historical
+record). This component's showcase page was always public/ungated, so nothing about its
+behavior changed — the correction is that NOTHING else in this repo is gated either now.
 
 **Design discussion (RESOLVED architecture — read first):**
 `.pHive/epics/model3d/docs/design-discussion.md` — this doc documents those decisions,

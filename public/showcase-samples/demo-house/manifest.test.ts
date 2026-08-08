@@ -2,15 +2,13 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { Tour, TourEdge, TourRoom } from "@/lib/tour-types";
-import { GATED_PATH_PREFIXES } from "@/lib/gate";
 import tourJson from "./tour.json";
 
 // Verification for the model3d-videotour-demo-data story: a genuinely
-// public-safe demo tour for the public, ungated component-showcase site.
-// This must NEVER be the real public/tours/2806-prado/tour.json (real
-// photography of Mathew's actual, currently-listed property, gated for
-// exactly that reason — see CLAUDE.md's "never deploy un-released assets
-// un-gated" rule). Kept as a real test (not throwaway) so it re-runs under
+// public-safe demo tour for the public component-showcase site. This must
+// NEVER be real property photography — the real Prado tour (once
+// shot/released) lives entirely in the separate personal-drone platform,
+// not this repo. Kept as a real test (not throwaway) so it re-runs under
 // `npm run test` and catches drift.
 //
 // Same runtime-type-guard pattern as
@@ -78,8 +76,7 @@ describe("demo-house showcase manifest", () => {
     expect(tourJson.slug).toMatch(/demo/i);
     expect(tourJson.title.toLowerCase()).toContain("showcase sample");
     expect(tourJson.title.toLowerCase()).toContain("not a real property");
-    // Not the real property's slug/title/path, and not stored under the
-    // real gated tours directory.
+    // Not the real property's slug/title/path.
     expect(tourJson.slug).not.toBe("2806-prado");
     expect(sampleDir).toContain(`${path.sep}showcase-samples${path.sep}`);
     expect(sampleDir).not.toContain(`${path.sep}tours${path.sep}`);
@@ -125,13 +122,4 @@ describe("demo-house showcase manifest", () => {
     }
   });
 
-  it("public/showcase-samples/ is NOT covered by middleware.ts's GATED_PATH_PREFIXES", () => {
-    // GATED_PATH_PREFIXES is the single source of truth middleware.ts derives
-    // its matcher from (see lib/gate.ts / middleware.ts). Assert directly
-    // against it rather than duplicating the list, so this test can't drift.
-    expect(GATED_PATH_PREFIXES).toEqual(["/tours", "/properties"]);
-    for (const prefix of GATED_PATH_PREFIXES) {
-      expect(`/showcase-samples/demo-house/tour.json`.startsWith(prefix)).toBe(false);
-    }
-  });
 });

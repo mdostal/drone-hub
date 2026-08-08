@@ -9,6 +9,13 @@
 > Litematica. There is no `<MinecraftExport>` component — you hit
 > `GET /api/minecraft-export` and get a binary file back.
 
+**Update (operator, 2026-08-08):** drone-hub carries no gating of any kind — every
+reference below to `middleware.ts`, `lib/gate.ts`, or a passcode gate describes an
+architecture that no longer exists in this repo (kept as historical record). This route
+was always ungated in practice (see below); the correction is that NOTHING else in this
+repo is gated either now, so "intentionally not behind the gate" is no longer a
+distinguishing property.
+
 **Design discussion (RESOLVED architecture — read first):**
 `.pHive/epics/minecraft-export/docs/design-discussion.md` — this doc explains
 those decisions for a maintainer, it does not re-derive them.
@@ -214,9 +221,9 @@ browser's native download handling covers it):
   Download for Minecraft</a>`, placed directly under the live
   `<VoxelTerrainDemo>` viewer so it's unambiguously "download *this*
   terrain," not a generic site-wide action.
-- **`app/properties/[slug]/engine/EnginePageClient.tsx`** (gated, behind
-  `/properties/*`) — `<a href={\`/api/minecraft-export?slug=${encodeURIComponent(slug)}\`}
-  download>Download for Minecraft</a>`, placed under the page's own
+- **`app/properties/[slug]/engine/EnginePageClient.tsx`** (public, ungated) —
+  `<Link href={\`/api/minecraft-export?slug=${encodeURIComponent(slug)}\`}
+  download>Download for Minecraft</Link>`, placed under the page's own
   `<VoxelScene>` in the "The Minecraft of It" section. This uses the
   page's **real** `slug` prop, not a hardcoded sample — the API route falls
   back to `2806-prado` today only because that's the only slug with sample

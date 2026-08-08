@@ -1,11 +1,19 @@
-# Content engine — the gated `/properties/[slug]/engine` page (hive spec)
+# Content engine — the `/properties/[slug]/engine` page (hive spec)
 
-> **This is not a new plug-and-play component.** It's a gated, per-property *page* that
+> **This is not a new plug-and-play component.** It's a per-property *page* that
 > composes `<VoxelTerrain>`/`<VoxelStructure>` (see `docs/components/voxel-terrain.md`,
 > which this doc assumes) alongside two sample-content panels — "engineering" and
-> "flight log" — behind the existing `/properties/*` passcode gate. The operator's own
-> framing, verbatim: "the content engine where I let people see the engineering, the
-> minecraft of it, the flight docs."
+> "flight log." The operator's own framing, verbatim: "the content engine where I let
+> people see the engineering, the minecraft of it, the flight docs."
+
+**Update (operator, 2026-08-08):** the `/properties/*` passcode gate this doc originally
+described has been removed entirely — drone-hub carries no gating of any kind now (see
+CLAUDE.md's "Scope boundary" correction of the same date). Every reference below to
+`middleware.ts`, `lib/gate.ts`, or a passcode gate describes an architecture that no
+longer exists in this repo; kept as historical record of why this page's data flow was
+originally designed the way it was, not as a description of current behavior. This page
+was always synthetic sample data only, so removing the gate changed nothing about what's
+actually shown here — just who can reach it (now: anyone, same as every other page).
 
 **Design discussion (RESOLVED architecture — read first):**
 `.pHive/epics/minecraft-content-engine/docs/design-discussion.md`, point 5 (the

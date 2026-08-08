@@ -1,9 +1,9 @@
 "use client";
 
-// Public showcase page for <Model3D> — this route group is deliberately NOT
-// in lib/gate.ts's GATED_PATH_PREFIXES / middleware.ts's matcher, same as
-// app/(showcase)/components/page.tsx. Sample glTF (duck) is a generic,
-// public-safe placeholder asset — not property photogrammetry output.
+// Public showcase page for <Model3D>. This whole repo carries no gating of
+// any kind (see CLAUDE.md's "Scope boundary" section). Sample glTF (duck)
+// is a generic, public-safe placeholder asset — not property photogrammetry
+// output.
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
 import { withBasePath } from "@/lib/base-path";

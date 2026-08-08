@@ -11,11 +11,8 @@
 // distinct capability worth its own showcase, same reasoning Model3D got its
 // own page instead of being bolted onto LayerViewer's.
 //
-// This route group is deliberately NOT in lib/gate.ts's GATED_PATH_PREFIXES
-// (currently just "/tours" and "/properties") / middleware.ts's matcher,
-// same as every other app/(showcase)/components/* page — confirmed live via
-// Playwright (see this story's report): loading with no passcode cookie
-// renders directly, no redirect to /enter-passcode.
+// Public, ungated — this whole repo carries no gating of any kind (see
+// CLAUDE.md's "Scope boundary" section).
 //
 // public/layer-viewer-samples/2806-prado/ is already-confirmed public-safe
 // synthetic sample data (not real property photography), and

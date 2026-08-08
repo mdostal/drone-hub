@@ -34,14 +34,17 @@ nadir passes → **WebODM / OpenDroneMap** → orthomosaic (COG/GeoTIFF) + DSM +
 ## ⚠ PHASE 0 — blocks REAL Prado/Omaha data, not component-building
 His current shots are **obliques that will NOT photogrammetrically align.** Fly **ONE nadir grid pass** (camera straight down, ~75/70% overlap) over 2806 Prado or an Omaha lot → WebODM → reference **ortho + DSM + mesh**. Also open: verify Litchi/Dronelink controls the Mini 5 Pro (DJI locks Mini-class SDK); and a WebODM box (16–32GB RAM — dev machine MIA → cloud VM or WebODM Lightning ~$20–40/property). Frame all output as **visual property-intelligence, NOT survey-grade** (no RTK = 1–3m drift → `AlignControl` manual nudge is mandatory).
 
-**Correction (operator, 2026-08-07): this does NOT block building `<LayerViewer>`/`<Model3D>`.** Scaffold, build, and fully test them now against public sample data (a sample COG orthomosaic, a USGS 3DEP sample hillshade/DSM, a sample parcel boundary GeoJSON, a public-domain glTF mesh) pulled from the open internet — same pattern as `<VideoTour>` shipping against the Prado stills before real spin/transition clips existed. Real Prado/Omaha nadir data swaps in later; it should not require rework, just new manifest entries pointing at real R2 assets instead of the sample ones. The original framing above ("without this the hive builds empty viewers") was wrong and is superseded by this note.
+**Correction (operator, 2026-08-07): this does NOT block building `<LayerViewer>`/`<Model3D>`.** Scaffold, build, and fully test them now against public sample data (a sample COG orthomosaic, a USGS 3DEP sample hillshade/DSM, a sample parcel boundary GeoJSON, a public-domain glTF mesh) pulled from the open internet — same pattern as `<VideoTour>` shipping against the Prado stills before real spin/transition clips existed. The original framing above ("without this the hive builds empty viewers") was wrong and is superseded by this note.
+
+**Correction (operator, 2026-08-08): real Prado/Omaha nadir data does NOT swap into drone-hub at all.** Superseding the "swaps in later" line above — per "Scope boundary" below, real property data/imagery lives entirely in the separate **personal-drone** platform (its own real access control, its own manifest sourcing from private storage), never in this repo's `public/`. drone-hub's sample manifests stay sample manifests permanently; a real deployment points `<LayerViewer>`/`<VideoTour>`/etc. at real data from personal-drone's own app code, not by editing anything here.
 
 ## Build phases (full plan in docs/CBA.md)
 Phase 1 (MVP this week): `MapLayerViewer` + `LayerControl` + `VideoAnnotator` (port his code) + `GalleryCarousel`, tiles as PMTiles on R2, on a typed **layer registry** `{id,type,url,opacity,toggle}`. Phase 2: `MeasureTool` + `AnnotationLayer` + `CompareSwipe` + `AlignControl` + 2.5D drape. Phase 3: `Model3DViewer` (glTF → point cloud). Phase 4: thermal (stubbed slot now, flip on when a radiometric sensor is acquired).
 
 ## Rights & privacy (hard rules)
-- Property footage = shoot-permission being formalized (release forms) → **private/gated until signed**; never deploy un-released assets un-gated. Owner PII (names/addresses) never stored/shown.
-- `family-reunion-aerial` clip = group of people incl. minors → never used.
+- **drone-hub carries NO real property content and NO gating of any kind (operator, 2026-08-08).** This repo is the public framework/component-library showcase — everything in it (imagery, tours, terrain, flight logs) is synthetic/sample/placeholder data, safe for a fully public repo and a fully public deployment. Real, un-released property footage/photography never lives here, gated or otherwise — see "Scope boundary" below.
+- Real property content (once shoot-permission/release forms are signed) lives entirely in the separate **personal-drone** platform, behind its own real access control (Supabase Auth + Postgres RLS, multi-tenant). Owner PII (names/addresses) never stored/shown there either.
+- `family-reunion-aerial` clip = group of people incl. minors → never used, anywhere.
 
 ## Related / existing work (personal-site, already shipped)
 - `/drone` gated page + `<PropertyCard>` (tabbed) + `bake-property.py` (rasterio DEM baker) live on mdostal.com. Real AZ + MT LiDAR terrain baked. This repo supersedes the flat-carousel approach with the real layer viewer.
@@ -128,3 +131,25 @@ table-of-contents landing page, linking to its live demo AND its
 `docs/components/*.md` writeup, good enough that `tools.mdostal.com` can link
 straight to it and visitors can browse the whole component family. This is
 the "display OF that" the framework needs, not a client platform.
+
+## Correction (operator, 2026-08-08) — no gating in drone-hub, at all
+
+**Supersedes the "drone-hub's own gating... staying exactly that simple"
+line above.** drone-hub carries **zero** passcode/session/auth logic of any
+kind — no `middleware.ts`, no `lib/gate.ts`, no gated routes, nothing. It's
+a public component library + showcase, "like shad-cn," fully public forever.
+The old `/tours/[slug]` route (real, un-released photography of the
+operator's actual property, passcode-gated) has been deleted from this repo
+entirely — that content, and any real access control around it, belongs
+exclusively to `personal-drone` (which has its own real Supabase Auth +
+Postgres RLS multi-tenant gating already built). drone-hub's remaining
+`/properties/[slug]/engine` route stays — it only ever served synthetic
+sample data — but ungated, like everything else here.
+
+**A concrete incident that drove this correction, worth remembering:** this
+repo was briefly made public on GitHub while the real Prado tour photos
+(`public/tours/2806-prado/*.jpg`) were still committed to its history —
+caught and reverted quickly, but it's why "no real content, ever, in this
+repo" is now a hard rule here, not just a preference. Before this repo is
+ever made public again, its git history should be scrubbed of that content
+(the working tree is already clean as of this correction; history is not).

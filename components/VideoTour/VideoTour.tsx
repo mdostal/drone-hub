@@ -45,16 +45,19 @@ export function resolveTourAssetUrls(tour: Tour, manifestUrl: string): Tour {
 
 /**
  * <VideoTour> — the interactive fly-through / video-Matterport. Owns the
- * room-graph navigation state machine ported from
- * docs/components/reference/prado-tour.prototype.html's render()/go():
+ * room-graph navigation state machine ported from the original build-target
+ * prototype's render()/go() (see docs/components/video-tour.md for the
+ * design rationale; the prototype HTML itself was removed 2026-08-08 — it
+ * embedded real, un-released property photos as base64 image data):
  *
  *   go(edge): if busy, ignore. Otherwise set busy, show "flying to
  *   {label}..." (a timed wipe, or in P2 the real transition clip playing
  *   full-frame), then arrive: render the target room, clear busy shortly
  *   after.
  *
- * Gate-agnostic by design — this component has no knowledge of
- * middleware.ts / lib/gate.ts. It just renders whatever manifest it's given.
+ * Gate-agnostic by design — this component has no knowledge of any
+ * access-control layer a consuming app might add. It just renders whatever
+ * manifest it's given.
  */
 export function VideoTour({
   manifest,

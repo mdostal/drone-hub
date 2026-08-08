@@ -7,14 +7,11 @@
 // A Route Handler (not a Server Component) is the right shape here — the
 // response IS the artifact (a binary file with download headers), not HTML.
 //
-// Intentionally NOT gated by middleware.ts: the only data this route can
-// ever serve is whatever already lives under public/minecraft-samples/**,
-// which is already public (the /components/voxel-terrain showcase page
-// imports the same JSON directly). Re-deriving a schematic from public JSON
-// exposes nothing gating that JSON wouldn't already fail to protect — see
-// this story's yaml and the model3d epic's identical public-sample-data
-// reasoning. Do NOT add this path to lib/gate.ts's GATED_PATH_PREFIXES or
-// middleware.ts's matcher.
+// Public, ungated: the only data this route can ever serve is whatever
+// already lives under public/minecraft-samples/**, which is already public
+// (the /components/voxel-terrain showcase page imports the same JSON
+// directly). This whole repo carries no gating of any kind — see
+// CLAUDE.md's "Scope boundary" section.
 import fs from "node:fs";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";

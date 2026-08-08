@@ -47,7 +47,7 @@ describe("<Home> (root landing page)", () => {
     }
   });
 
-  it("gives the ContentEngine card a demo link into the gated /properties tree, a doc link, and a visible passcode-gated badge", () => {
+  it("gives the ContentEngine card a demo link into /properties and a doc link", () => {
     render(<Home />);
 
     const card = screen.getByText("ContentEngine").closest("li") as HTMLElement;
@@ -57,7 +57,6 @@ describe("<Home> (root landing page)", () => {
     expect(demoLink).toHaveAttribute("href", "/properties/2806-prado/engine");
     expect(docLink).toHaveAttribute("href", "/docs/components/content-engine");
     expect(demoLink).not.toBe(docLink);
-    expect(within(card).getByText(/passcode-gated demo/i)).toBeInTheDocument();
   });
 
   it("gives the MinecraftExport card only a doc link (no fabricated demo page) plus a pointer to the VoxelTerrain page where the real download action lives", () => {

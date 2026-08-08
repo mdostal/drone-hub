@@ -8,18 +8,15 @@ import Link from "next/link";
 // full rationale — this is the "landing page consolidation" the redirect +
 // deletion pattern exists for).
 //
-// Deliberately public: same reasoning as the old (showcase)/components
-// page — this route is NOT in lib/gate.ts's GATED_PATH_PREFIXES /
-// middleware.ts's config.matcher. A component-framework ToC is
-// documentation, not gated property footage. (The ContentEngine entry's
-// *demo* link below points into the gated /properties/* tree — the card
-// says so explicitly rather than linking silently into a login redirect.)
+// Public — this whole repo carries no gating of any kind (see CLAUDE.md's
+// "Scope boundary" section): drone-hub is the framework/component-library
+// showcase only, real client-facing access control lives entirely in the
+// separate personal-drone platform.
 interface TocEntry {
   name: string;
   description: string;
   demoHref: string | null;
   demoLabel: string;
-  demoGated?: boolean;
   docHref: string;
   note?: { text: string; href: string; label: string };
 }
@@ -65,10 +62,9 @@ const TOC: TocEntry[] = [
   {
     name: "ContentEngine",
     description:
-      "A gated, per-property page composing VoxelTerrain plus sample engineering docs and flight-log telemetry — \"the engineering, the minecraft of it, the flight docs.\"",
+      "A per-property page composing VoxelTerrain plus sample engineering docs and flight-log telemetry — \"the engineering, the minecraft of it, the flight docs.\"",
     demoHref: "/properties/2806-prado/engine",
     demoLabel: "Live demo",
-    demoGated: true,
     docHref: "/docs/components/content-engine",
   },
   {
@@ -112,11 +108,6 @@ export default function Home() {
               <Link href={entry.docHref} className="font-medium underline hover:text-neutral-600">
                 Docs
               </Link>
-              {entry.demoGated && (
-                <span className="rounded-full border border-amber-400 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
-                  passcode-gated demo
-                </span>
-              )}
             </div>
 
             {entry.note && (

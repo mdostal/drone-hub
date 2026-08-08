@@ -371,6 +371,37 @@ plus a thin gated app that showcases them — the components are the deliverable
      redirect must use `request.nextUrl.clone()`, never
      `new URL(path, request.url)`.**
 
+- **drone-hub has NO gating/passcode/auth of any kind (2026-08-08 architecture
+  correction).** `middleware.ts`, `lib/gate.ts`, `/enter-passcode`, and the
+  `/tours/[slug]` route (which served the real, un-released 2806 Prado tour
+  photos) were all deleted. Real property content and real access control
+  live entirely in the separate `personal-drone` platform repo (real
+  Supabase Auth + Postgres RLS, multi-tenant), which pulls drone-hub in as a
+  git submodule (`packages/framework`) purely for the component library —
+  never edit personal-drone from a drone-hub session without being asked;
+  it's a distinct, actively-developed repo with its own real work in
+  flight. **If a future session proposes adding gating back to drone-hub,
+  the answer is "that belongs in personal-drone," same as the existing
+  "don't build multi-tenancy here" rule this correction extends.**
+  `app/properties/[slug]/page.tsx` (redundant with `/components/layer-viewer`
+  once ungated) was also deleted; `/properties/[slug]/engine` (ContentEngine
+  — unique, synthetic-data-only) stayed, just ungated.
+- **Incident that drove the correction above, worth remembering exactly:**
+  this repo was briefly made public on GitHub (as part of the framework-docs-site
+  epic's OSS-prep work) while `public/tours/2806-prado/*.jpg` (real, un-released
+  photography of the operator's actual property, with the street number
+  visible) was still committed to its tracked working tree/history, and
+  `docs/components/reference/prado-tour.prototype.html` (the VideoTour
+  build-target prototype) separately embedded the same photos as base64
+  image data. Caught and the repo reverted to private quickly — the live
+  Vercel deployment itself never actually exposed the photos (middleware
+  correctly gated raw asset paths too, and the passcode was unset so the
+  gate failed closed, per lib/gate.ts's own "fails closed" design) — but the
+  GitHub repo itself was clonable during the public window. Both files are
+  now removed from the working tree; **git history has NOT yet been purged**
+  as of this note — do that (git-filter-repo + force-push + re-pin
+  personal-drone's submodule) before ever making this repo public again.
+
 ## Known issues
 
 - **`sanitizeNextPath`/`GATED_PATH_PREFIXES` use unanchored string-prefix matching, not

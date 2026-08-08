@@ -1,13 +1,11 @@
 "use client";
 
-// Public showcase page for <LayerViewer> + <LayerControl> — this route
-// group is deliberately NOT in lib/gate.ts's GATED_PATH_PREFIXES /
-// middleware.ts's matcher, same as app/(showcase)/components/page.tsx.
+// Public showcase page for <LayerViewer> + <LayerControl>. This whole repo
+// carries no gating of any kind (see CLAUDE.md's "Scope boundary" section).
 //
-// public/layer-viewer-samples/2806-prado/layers.json is already confirmed
-// public-safe/synthetic sample data (unlike the tours family's real Prado
-// photography) — safe to reuse directly here, same manifest
-// app/properties/[slug]/page.tsx uses behind the gate.
+// public/layer-viewer-samples/2806-prado/layers.json is synthetic sample
+// data (not real property photogrammetry) — see docs/components/layer-viewer.md's
+// "Sample data provenance" section for exactly what's real vs. synthetic in it.
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { ComponentShowcase } from "@/components/showcase";

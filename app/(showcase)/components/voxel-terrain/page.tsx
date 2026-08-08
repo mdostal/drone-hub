@@ -1,13 +1,10 @@
 "use client";
 
-// Public showcase page for <VoxelTerrain> (+ <VoxelStructure>) — this route
-// group is deliberately NOT in lib/gate.ts's GATED_PATH_PREFIXES /
-// middleware.ts's matcher, same as app/(showcase)/components/page.tsx and
-// its sibling showcase pages (model3d, layer-viewer, video-tour,
-// land-overlay). Sample data is
-// public/minecraft-samples/2806-prado/heightmap.json — already-confirmed
-// public-safe derived terrain (see VoxelTerrainDemo.tsx's header comment
-// and app/dev-preview-voxel's precedent), not raw property photogrammetry.
+// Public showcase page for <VoxelTerrain> (+ <VoxelStructure>). This whole
+// repo carries no gating of any kind (see CLAUDE.md's "Scope boundary"
+// section). Sample data is public/minecraft-samples/2806-prado/heightmap.json
+// — already-confirmed public-safe derived terrain (see VoxelTerrainDemo.tsx's
+// header comment), not raw property photogrammetry.
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ComponentShowcase } from "@/components/showcase";

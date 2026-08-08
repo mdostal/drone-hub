@@ -19,13 +19,14 @@ const DOCS_DIR = path.join(process.cwd(), "docs", "components");
 describe("generateStaticParams", () => {
   it("returns exactly the 7 hardcoded known slugs, not a directory scan", () => {
     // The hard constraint this story exists to enforce: a literal array,
-    // not fs.readdirSync(DOCS_DIR) — which would also pick up the
-    // reference/ subdirectory (docs/components/reference/) as a bogus
-    // 8th "slug" and throw EISDIR at build time the moment a page tried to
-    // readFileSync it. Asserting the exact set AND count here is what
-    // would catch a regression back to a readdirSync-based implementation:
-    // a real readdirSync scan of docs/components/ returns 8 entries
-    // (7 .md files + "reference"), not 7.
+    // not fs.readdirSync(DOCS_DIR). docs/components/ used to also contain a
+    // reference/ subdirectory (removed 2026-08-08 — it held a prototype
+    // file embedding real property photos) that a readdirSync-based
+    // enumeration would've picked up as a bogus 8th "slug" and thrown
+    // EISDIR on at build time the moment a page tried to readFileSync it.
+    // The hardcoded array protects against any such non-.md entry, present
+    // or not — asserting the exact set AND count here is what would catch
+    // a regression back to a readdirSync-based implementation.
     const params = generateStaticParams();
 
     expect(params).toEqual([
@@ -37,15 +38,6 @@ describe("generateStaticParams", () => {
       { slug: "content-engine" },
       { slug: "minecraft-export" },
     ]);
-  });
-
-  it("precondition: docs/components/ genuinely contains a non-slug reference/ subdirectory", () => {
-    // Guards the test suite itself: if this ever stops being true, the
-    // EISDIR risk generateStaticParams's hardcoded array protects against
-    // no longer applies, and the reasoning above needs revisiting.
-    const entries = fs.readdirSync(DOCS_DIR, { withFileTypes: true });
-    const referenceDir = entries.find((entry) => entry.name === "reference");
-    expect(referenceDir?.isDirectory()).toBe(true);
   });
 
   it("every returned slug has a matching docs/components/<slug>.md file on disk", () => {

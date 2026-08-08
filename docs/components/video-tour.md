@@ -2,12 +2,27 @@
 
 > A **video-Matterport**: click a room → the drone flies to it and spins → you're "in" it,
 > with clickable doorways to adjacent rooms + a floor-plan minimap. Branching video on a
-> **room graph**. Plug-and-play, importable into personal-site, gated on drone.mdostal.com.
+> **room graph**. Plug-and-play, importable into any app.
 
-**Reference build target (RUN THIS FIRST):** `docs/components/reference/prado-tour.prototype.html`
-— a working, self-contained prototype (real 2806 Prado room stills, live click-through
-navigation, floor-plan map, transition wipes). Also published: https://claude.ai/code/artifact/d6ece8ff-94d7-4ea3-bec6-2c5707ee6015
-The prototype IS the spec — match its UX, then swap stills → real clips and mocked wipes → real transition videos.
+**Update (operator, 2026-08-08):** drone-hub carries no gating of any kind, and no real
+property footage — the real `2806-prado` tour (referenced throughout this doc, including
+the prototype below) was removed from this repo entirely; that content and its access
+control now live exclusively in the separate, private `personal-drone` platform. Every
+reference below to `middleware.ts`, `lib/gate.ts`, a passcode gate, or `/tours/[slug]`
+describes an architecture that no longer exists here — kept as historical record. The
+component itself is demonstrated at the public `/components/video-tour` showcase page
+against fully synthetic sample data (`public/showcase-samples/demo-house/`).
+
+**Reference build target (historical — file removed 2026-08-08):**
+`docs/components/reference/prado-tour.prototype.html` was the original working prototype
+this component was built to match — it embedded real, un-released 2806 Prado room photos
+as base64 image data, so it was deleted along with the rest of this repo's real-content
+removal (see the Update note above). `<VideoTour>` was already fully built against it;
+nothing here depends on the file still existing. **Flagged for operator follow-up, not
+fixable from this repo:** this doc also referenced a claude.ai artifact URL
+(`https://claude.ai/code/artifact/d6ece8ff-...`) as "also published" — if that artifact
+contains the same embedded photos, it's a separate exposure surface this repo's fix
+doesn't touch; worth checking/revoking directly on claude.ai.
 
 ## Why (operator intent — honor this)
 This is Mathew's **own** cinematic layer over the space — NOT the MLS listing, NOT for-hire

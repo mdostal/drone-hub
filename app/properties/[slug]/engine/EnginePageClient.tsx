@@ -1,15 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { FlightLogEntry } from "@/lib/flight-log-types";
 import type { VoxelGrid } from "@/lib/voxel-types";
 
 // <VoxelScene> (this folder's VoxelScene.tsx) wraps <VoxelTerrain> +
 // <VoxelStructure> — a heavy client-only WebGL viewer
 // (@react-three/fiber's <Canvas>, same stack as <Model3D>) — CLAUDE.md's
-// "every heavy viewer = next/dynamic({ssr:false})" convention, same as
-// app/properties/[slug]/page.tsx does for <LayerViewer>. This is the "use
-// client" boundary page.tsx (the Server Component parent) can't provide
+// "every heavy viewer = next/dynamic({ssr:false})" convention. This is the
+// "use client" boundary page.tsx (the Server Component parent) can't provide
 // itself: Next's App Router rejects `ssr: false` on next/dynamic called
 // directly inside a Server Component, so the fs-reading data resolution
 // stays server-side in page.tsx and only the actual rendering — including
@@ -48,12 +48,11 @@ export function EnginePageClient({
       {isFallback && (
         // The story's #1 requirement: a genuinely VISIBLE banner, not a
         // small footnote — this is the fix for the rights/trust concern
-        // design-discussion.md point 5 raised: a gated page silently
-        // showing generic public demo content would misleadingly imply
-        // exclusivity. Full-width, high-contrast, top-of-page, with
-        // role="alert" for the same reason app/enter-passcode/page.tsx and
-        // components/LayerViewer/LayerViewer.tsx use it on their own
-        // user-facing status messages — assistive tech announces it
+        // design-discussion.md point 5 raised: a page silently showing
+        // generic public demo content would misleadingly imply exclusivity.
+        // Full-width, high-contrast, top-of-page, with role="alert" for the
+        // same reason components/LayerViewer/LayerViewer.tsx uses it on its
+        // own user-facing status messages — assistive tech announces it
         // immediately rather than it being silently skippable.
         <div
           role="alert"
@@ -80,14 +79,20 @@ export function EnginePageClient({
             with sample data on disk, but this link always requests the
             slug this page is actually showing so a future real
             public/minecraft-samples/<slug>/heightmap.json is picked up
-            automatically, no code change needed here. */}
-        <a
+            automatically, no code change needed here.
+            next/link, not a raw <a> — Link's href gets Next's automatic
+            basePath prefixing (see next.config.ts / lib/base-path.ts), a
+            hardcoded/template-literal href would not; `download` still
+            passes through to the rendered anchor unchanged. Same fix as
+            app/(showcase)/components/voxel-terrain/page.tsx's identical
+            download link. */}
+        <Link
           href={`/api/minecraft-export?slug=${encodeURIComponent(slug)}`}
           download
           className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
         >
           Download for Minecraft
-        </a>
+        </Link>
       </section>
 
       <section aria-labelledby="engine-engineering-heading" className="flex flex-col gap-2">

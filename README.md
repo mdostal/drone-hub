@@ -39,10 +39,12 @@ npm install
 npm run dev
 ```
 
-Some routes (`/tours/*`, `/properties/*`) are passcode-gated for un-released
-property content — set `DRONE_HUB_PASSCODE` in `.env.local` (see `.env.example`).
-Every `/components/*` showcase page and `/docs/components/*` doc page is public,
-ungated, and safe to browse without a passcode.
+Everything in this repo is public, ungated, and safe to browse — there is no
+passcode/auth layer of any kind here. All sample data (imagery, tours,
+terrain, flight logs) is synthetic/placeholder; this repo never contains
+real property content. (Real client-facing property data + access control
+live in the separate, private `personal-drone` platform, which pulls this
+repo in as its component library.)
 
 ## Testing
 
