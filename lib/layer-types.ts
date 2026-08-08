@@ -57,6 +57,30 @@ export interface LayerDef {
    *  omitted — that default is APPLIED by the renderer (a later story),
    *  not by this types file. */
   format?: "cog" | "xyz";
+  /** Optional visual-style override for `type: 'geojson'` layers, consumed
+   *  by `buildLayerMapConfig` (components/LayerViewer/LayerViewer.tsx).
+   *  Omitted → the renderer's existing default (green `#22c55e` fill+line,
+   *  unchanged) — this field is purely additive, added by the
+   *  layerviewer-sample-dataset-overhaul story so a layer like `contours`
+   *  can render as thin accent-colored lines with no fill, visually
+   *  distinct from the parcel boundary's green fill+outline treatment.
+   *  Ignored for `type: 'raster'` layers. */
+  style?: LayerStyle;
+}
+
+/** Visual-style override for a `type: 'geojson'` `LayerDef`. Every field is
+ *  optional; the renderer falls back to its own default (green fill+line)
+ *  for any field left unset — see `LayerDef.style`'s own doc comment. */
+export interface LayerStyle {
+  /** Polygon fill color (CSS color string, e.g. a hex). Ignored when
+   *  `lineOnly: true`. */
+  fillColor?: string;
+  /** Line/outline color (CSS color string, e.g. a hex). */
+  lineColor?: string;
+  /** true → render ONLY the line/outline, no fill layer at all (e.g. a
+   *  contour line, which shouldn't read as a filled area). Omitted/false →
+   *  render both a fill and a line, the existing boundary-layer treatment. */
+  lineOnly?: boolean;
 }
 
 /** A full layer manifest for one property. Ships as layers.json.

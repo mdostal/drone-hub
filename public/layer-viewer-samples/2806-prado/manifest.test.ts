@@ -33,6 +33,13 @@ function assertLayerDef(x: unknown, index: number): asserts x is LayerDef {
   if ("disabled" in l) expect(typeof l.disabled, `layers[${index}].disabled`).toBe("boolean");
   if ("legend" in l) expect(typeof l.legend, `layers[${index}].legend`).toBe("string");
   if ("format" in l) expect(["cog", "xyz"], `layers[${index}].format`).toContain(l.format);
+  if ("style" in l) {
+    expect(l.style, `layers[${index}].style`).toBeTypeOf("object");
+    const s = l.style as Record<string, unknown>;
+    if ("fillColor" in s) expect(typeof s.fillColor, `layers[${index}].style.fillColor`).toBe("string");
+    if ("lineColor" in s) expect(typeof s.lineColor, `layers[${index}].style.lineColor`).toBe("string");
+    if ("lineOnly" in s) expect(typeof s.lineOnly, `layers[${index}].style.lineOnly`).toBe("boolean");
+  }
 }
 
 function assertPropertyLayers(x: unknown): asserts x is PropertyLayers {
@@ -56,25 +63,52 @@ describe("2806-prado sample manifest", () => {
     expect(Array.isArray(manifest.layers)).toBe(true);
   });
 
-  it("has exactly the four expected layer ids", () => {
+  it("has exactly the five expected layer ids", () => {
+    // layerviewer-sample-dataset-overhaul added "contours" as a fifth
+    // layer, and flipped "thermal" from a disabled stub to a live layer
+    // (see the next test) — this assertion existed specifically to catch
+    // drift in the manifest's layer set, so it's updated to the new shape
+    // rather than dropped.
     const ids = manifestJson.layers.map((l) => l.id);
-    expect(ids).toEqual(["ortho", "hillshade", "boundary", "thermal"]);
+    expect(ids).toEqual(["ortho", "hillshade", "boundary", "thermal", "contours"]);
   });
 
-  it("matches CBA's exact thermal stub shape", () => {
+  it("thermal is now a LIVE layer (layerviewer-sample-dataset-overhaul flipped CBA's disabled stub on)", () => {
+    // Supersedes the old "matches CBA's exact thermal stub shape" spec
+    // (which asserted disabled: true, url: null) — thermal.tif now exists
+    // as a real, independently-generated ironbow-colormapped sample COG at
+    // the same extent as the other layers, so the stub shape no longer
+    // applies. Kept as a real drift-catcher for the NEW shape, not deleted.
     const thermal = manifestJson.layers.find((l) => l.id === "thermal") as LayerDef;
     expect(thermal).toEqual({
       id: "thermal",
       type: "raster",
-      url: null,
+      format: "cog",
+      url: "thermal.tif",
       opacity: 1,
       toggle: false,
-      disabled: true,
-      legend: "ironbow",
+      legend: "synthetic placeholder — not real radiometric data",
+    });
+    expect(thermal.disabled).toBeUndefined();
+  });
+
+  it("contours is a geojson layer with a lineOnly style, off by default", () => {
+    const contours = manifestJson.layers.find((l) => l.id === "contours") as LayerDef;
+    expect(contours).toEqual({
+      id: "contours",
+      type: "geojson",
+      url: "contours.geojson",
+      opacity: 1,
+      toggle: false,
+      legend: "synthetic placeholder — not real elevation data",
+      style: {
+        lineColor: "#38bdf8",
+        lineOnly: true,
+      },
     });
   });
 
-  it.each(["ortho", "hillshade", "boundary"])(
+  it.each(["ortho", "hillshade", "boundary", "thermal", "contours"])(
     "%s layer has a non-null url",
     (id) => {
       const layer = manifestJson.layers.find((l) => l.id === id) as LayerDef;
@@ -96,17 +130,17 @@ describe("2806-prado sample manifest", () => {
     }
   });
 
-  it("ortho.tif and hillshade.tif have valid little-endian TIFF magic bytes", () => {
-    for (const file of ["ortho.tif", "hillshade.tif"]) {
+  it("ortho.tif, hillshade.tif, and thermal.tif have valid little-endian TIFF magic bytes", () => {
+    for (const file of ["ortho.tif", "hillshade.tif", "thermal.tif"]) {
       const buf = readFileSync(path.join(sampleDir, file));
       // Bytes 49 49 2A 00 ("II*\0") - little-endian classic TIFF magic.
-      // Both files were produced/verified as little-endian TIFFs.
+      // All three files were produced/verified as little-endian TIFFs.
       expect(buf.subarray(0, 4).toString("hex")).toBe("49492a00");
     }
   });
 
-  it("ortho.tif and hillshade.tif pass strict COG validation (rio-cogeo), if python3+rio-cogeo is available", () => {
-    for (const file of ["ortho.tif", "hillshade.tif"]) {
+  it("ortho.tif, hillshade.tif, and thermal.tif pass strict COG validation (rio-cogeo), if python3+rio-cogeo is available", () => {
+    for (const file of ["ortho.tif", "hillshade.tif", "thermal.tif"]) {
       const script = `
 from rio_cogeo.cogeo import cog_validate
 ok, errors, warnings = cog_validate("${path.join(sampleDir, file)}")
@@ -140,4 +174,50 @@ sys.exit(0 if ok else 1)
     expect(ring[0]).toEqual(ring[ring.length - 1]);
     expect(feature.properties.placeholder).toBe(true);
   });
+
+  it("contours.geojson is a valid GeoJSON FeatureCollection of LineString contours, labeled as a placeholder", () => {
+    const geojson = JSON.parse(readFileSync(path.join(sampleDir, "contours.geojson"), "utf-8"));
+    expect(geojson.type).toBe("FeatureCollection");
+    expect(Array.isArray(geojson.features)).toBe(true);
+    // Real elevation-derived contour geometry at multiple levels, not a
+    // single decorative line.
+    expect(geojson.features.length).toBeGreaterThan(1);
+    for (const feature of geojson.features) {
+      expect(feature.type).toBe("Feature");
+      expect(["LineString", "MultiLineString"]).toContain(feature.geometry.type);
+      expect(feature.geometry.coordinates.length).toBeGreaterThanOrEqual(2);
+      expect(feature.properties.placeholder).toBe(true);
+    }
+  });
+
+  it(
+    "ortho.tif, hillshade.tif, and thermal.tif share the SAME real-world extent " +
+      "(the layerviewer-sample-dataset-overhaul story's core fix: one internally-consistent " +
+      "dataset, not mismatched-scale files), if python3+rasterio is available",
+    () => {
+      const script = `
+import json
+import rasterio
+bounds = {}
+for f in ["ortho.tif", "hillshade.tif", "thermal.tif"]:
+    with rasterio.open(f) as src:
+        bounds[f] = list(src.bounds)
+print(json.dumps(bounds))
+`;
+      let stdout: string;
+      try {
+        stdout = execFileSync("python3", ["-c", script], { cwd: sampleDir, stdio: ["ignore", "pipe", "ignore"] }).toString();
+      } catch (err: unknown) {
+        const e = err as { code?: string };
+        if (e.code === "ENOENT") return; // python3 not on PATH - skip rather than fail.
+        throw err;
+      }
+      const bounds = JSON.parse(stdout) as Record<string, number[]>;
+      const [ortho, hillshade, thermal] = [bounds["ortho.tif"], bounds["hillshade.tif"], bounds["thermal.tif"]];
+      for (let i = 0; i < 4; i++) {
+        expect(hillshade[i], `hillshade.tif bounds[${i}] should match ortho.tif`).toBeCloseTo(ortho[i], 3);
+        expect(thermal[i], `thermal.tif bounds[${i}] should match ortho.tif`).toBeCloseTo(ortho[i], 3);
+      }
+    },
+  );
 });

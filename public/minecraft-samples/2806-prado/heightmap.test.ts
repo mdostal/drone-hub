@@ -124,9 +124,17 @@ with rasterio.open("${hillshadePath}") as src:
     arr = src.read(1).astype(np.float64)
 
 size = ${heightmapJson.size}
-block = arr.shape[0] // size
-trimmed = arr[: size * block, : size * block]
-pooled = trimmed.reshape(size, block, size, block).mean(axis=(1, 3))
+# Separate row/column block sizes, NOT a single shared block derived from
+# rows alone — layerviewer-sample-dataset-overhaul's hillshade.tif is a
+# real (non-square) portrait aspect (rows > cols, matching the new sample
+# ortho's own natural extent), so a single arr.shape[0]-based block would
+# under-cover the narrower column dimension and make the reshape below
+# fail outright. This mirrors the actual generation script's own
+# block_h/block_w split.
+block_h = arr.shape[0] // size
+block_w = arr.shape[1] // size
+trimmed = arr[: size * block_h, : size * block_w]
+pooled = trimmed.reshape(size, block_h, size, block_w).mean(axis=(1, 3))
 print(json.dumps(pooled.flatten().tolist()))
 `;
       let stdout: string;

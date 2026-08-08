@@ -60,6 +60,20 @@ fix a `@geomatico/maplibre-cog-protocol` bounds bug (see
 512×512 to 549×522 and its value range from 78–216 to 0–213 as a result of bilinear
 resampling. `heightmap.json` was regenerated from the reprojected file using the same
 derivation described below, so it stays self-consistent with the committed `hillshade.tif`.
+
+**Updated again, 2026-08-08 (layerviewer-sample-dataset-overhaul):** `hillshade.tif` was
+regenerated a second time — as part of a full replacement of the `<LayerViewer>` sample
+dataset at a new real location (see `docs/components/layer-viewer.md`'s "Sample data
+provenance" section) — and is now 1268×701 (a portrait aspect matching the new sample
+ortho's own real extent, not square-ish like the two prior versions). `heightmap.json` was
+regenerated again in lockstep from this file using the same average-pool + quantize
+approach. This exposed a real bug in `heightmap.test.ts`'s independent re-derivation
+script: it computed a single pooling block size from `arr.shape[0]` (rows) alone and
+applied it to both axes, which silently assumed a square-ish source grid; against this
+portrait-aspect file the reshape failed outright (701 columns can't cover a
+`32 × (1268 // 32) = 1248`-wide block). Fixed by computing `block_h`/`block_w` separately,
+matching how the JSON is actually derived — see that file's own comment.
+
 This is deliberately **not** a client-side
 GeoTIFF-decoding dependency — a one-time offline Python/rasterio script (matching the
 pattern already used to generate the hillshade COG itself) does the conversion; only its

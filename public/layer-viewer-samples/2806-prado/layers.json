@@ -30,11 +30,23 @@
     {
       "id": "thermal",
       "type": "raster",
-      "url": null,
+      "format": "cog",
+      "url": "thermal.tif",
       "opacity": 1,
       "toggle": false,
-      "disabled": true,
-      "legend": "ironbow"
+      "legend": "synthetic placeholder — not real radiometric data"
+    },
+    {
+      "id": "contours",
+      "type": "geojson",
+      "url": "contours.geojson",
+      "opacity": 1,
+      "toggle": false,
+      "legend": "synthetic placeholder — not real elevation data",
+      "style": {
+        "lineColor": "#38bdf8",
+        "lineOnly": true
+      }
     }
   ]
 }
