@@ -1,0 +1,115 @@
+"use client";
+
+import { useMemo, type ReactNode } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Bounds, Instance, Instances, OrbitControls } from "@react-three/drei";
+import type { VoxelGrid } from "@/lib/voxel-types";
+import { BLOCK_SIZE, buildTerrainBlocks, type VoxelBlockInstance } from "./voxel-geometry";
+import { cx } from "./cx";
+
+/**
+ * <VoxelTerrain> — the minecraft-content-engine epic's blocky terrain
+ * renderer. Mirrors <Model3D>'s r3f/drei stack (Canvas + OrbitControls +
+ * Bounds auto-framing, see components/Model3D/Model3D.tsx) rather than the
+ * land-overlay epic's raw-three-in-MapLibre custom-layer approach — this is
+ * a standalone 3D scene, no map to composite into.
+ *
+ * Renders a `VoxelGrid` (lib/voxel-types.ts) as a stack of colored cubes
+ * per cell via `VoxelInstances`, which uses drei's `<Instances>`/
+ * `<Instance>` wrapper around a single `THREE.InstancedMesh` — NOT one mesh
+ * per cube. A 32x32 grid with height-stacking is several thousand cubes;
+ * see voxel-geometry.ts's buildTerrainBlocks for the block-list math and
+ * this file's VoxelInstances for the actual instanced draw call.
+ *
+ * `children` is rendered inside the SAME `<Canvas>`/`<Bounds>` as the
+ * terrain — this is how <VoxelStructure> (VoxelStructure.tsx) composes in:
+ * it's an r3f component that needs a live Canvas context, so it's meant to
+ * be passed as a child here, e.g.
+ * `<VoxelTerrain grid={grid}><VoxelStructure grid={grid} gridX={16} gridZ={16} /></VoxelTerrain>`,
+ * not mounted on its own.
+ *
+ * SSR: same as <Model3D> — no server-only API is touched at module scope,
+ * but this is still a heavy client-only WebGL viewer and should be mounted
+ * via `next/dynamic(() => import(...), { ssr: false })` by any consumer.
+ */
+export interface VoxelTerrainProps {
+  grid: VoxelGrid;
+  /** Rendered inside the same <Canvas>/<Bounds> as the terrain — the slot
+   *  <VoxelStructure> (or any other r3f content) composes into. */
+  children?: ReactNode;
+  className?: string;
+}
+
+/**
+ * Shared instanced-cube renderer: turns a flat list of {position, color}
+ * placements into ONE `THREE.InstancedMesh` draw call via drei's
+ * `<Instances>`/`<Instance>`. Both <VoxelTerrain> (via TerrainBlocks below)
+ * and <VoxelStructure> (VoxelStructure.tsx) render through this same
+ * function — "reusing the SAME cube-instancing primitive," not a separate
+ * rendering technique for the structure, per the story's design intent.
+ * Not exported from index.ts (an internal primitive, not part of the
+ * public component surface) but exported from this module so
+ * VoxelStructure.tsx can import it directly.
+ */
+export function VoxelInstances({ blocks }: { blocks: VoxelBlockInstance[] }) {
+  if (blocks.length === 0) return null;
+  return (
+    <Instances limit={blocks.length} range={blocks.length}>
+      {/* Slightly smaller than a full BLOCK_SIZE cell so adjacent cubes
+          show a hairline seam — reads as distinct blocks rather than one
+          fused slab, part of the "genuinely blocky" look. */}
+      <boxGeometry args={[BLOCK_SIZE * 0.96, BLOCK_SIZE * 0.96, BLOCK_SIZE * 0.96]} />
+      <meshStandardMaterial />
+      {blocks.map((block, i) => (
+        // Index-keyed: this is a static, one-shot list built fresh per
+        // grid/props change (see the useMemo below and in VoxelStructure),
+        // never reordered in place.
+        <Instance key={i} position={block.position} color={block.color} />
+      ))}
+    </Instances>
+  );
+}
+
+function TerrainBlocks({ grid }: { grid: VoxelGrid }) {
+  const blocks = useMemo(() => buildTerrainBlocks(grid), [grid]);
+  return <VoxelInstances blocks={blocks} />;
+}
+
+export function VoxelTerrain({ grid, children, className }: VoxelTerrainProps) {
+  // Bounds' fit/clip/observe (below) does the real auto-framing once
+  // mounted; this initial camera position just needs to be roughly
+  // proportional to the grid so the pre-fit frame isn't wildly off (same
+  // reasoning as Model3D's fixed [3,3,3] start, scaled up since a voxel
+  // grid is tens of world units across instead of ~1).
+  const cameraDistance = Math.max(grid.size * 1.5, 10);
+
+  return (
+    <div className={cx("relative h-full w-full", className)} aria-label={grid.title}>
+      <Canvas
+        camera={{
+          position: [cameraDistance, cameraDistance, cameraDistance],
+          fov: 50,
+          near: 0.1,
+          far: cameraDistance * 20,
+        }}
+      >
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[grid.size, grid.size * 2, grid.size]} intensity={1.2} />
+        <directionalLight position={[-grid.size, -grid.size * 0.5, -grid.size]} intensity={0.35} />
+        {/* fit/clip/observe/margin: same auto-framing convention as
+            <Model3D> (components/Model3D/Model3D.tsx) — fits the camera to
+            the rendered content's bounding box (terrain + any structure
+            children) on mount, pushes near/far to avoid clipping, and
+            re-fits if that content's bounds change later. */}
+        <Bounds fit clip observe margin={1.2}>
+          <TerrainBlocks grid={grid} />
+          {children}
+        </Bounds>
+        {/* makeDefault: same reasoning as Model3D — registers this as the
+            r3f store's active controls so <Bounds>'s auto-fit camera
+            animation and OrbitControls cooperate instead of fighting. */}
+        <OrbitControls makeDefault />
+      </Canvas>
+    </div>
+  );
+}
