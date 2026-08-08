@@ -10,10 +10,13 @@ import {
   buildHouseBlocks,
   buildTerrainBlocks,
   CELL_SIZE,
+  classifyHeightBand,
   gridToWorldX,
   gridToWorldZ,
   heightAt,
   heightBandColor,
+  houseCells,
+  terrainCells,
 } from "./voxel-geometry";
 
 function flatGrid(size: number, heights: number[]): VoxelGrid {
@@ -62,6 +65,140 @@ describe("heightBandColor", () => {
     expect(heightBandColor(4)).toBe(heightBandColor(5));
     expect(heightBandColor(5)).not.toBe(heightBandColor(6));
     expect(heightBandColor(6)).toBe(heightBandColor(8));
+  });
+});
+
+describe("classifyHeightBand", () => {
+  it("is the same band boundary heightBandColor keys off of", () => {
+    expect(classifyHeightBand(1)).toBe("low");
+    expect(classifyHeightBand(3)).toBe("low");
+    expect(classifyHeightBand(4)).toBe("mid");
+    expect(classifyHeightBand(5)).toBe("mid");
+    expect(classifyHeightBand(6)).toBe("high");
+    expect(classifyHeightBand(8)).toBe("high");
+  });
+
+  it("heightBandColor is derived from classifyHeightBand, not a parallel threshold check", () => {
+    for (let level = 1; level <= 10; level++) {
+      const band = classifyHeightBand(level);
+      const expectedColor = band === "low" ? "#4a8f3c" : band === "mid" ? "#8b5e3c" : "#8f9296";
+      expect(heightBandColor(level)).toBe(expectedColor);
+    }
+  });
+});
+
+// minecraft-export epic (design-discussion.md correction 3b): these raw
+// integer coordinate exports are what lib/minecraft-schematic.ts consumes
+// directly — the whole point is that they are NEVER fractional/centered,
+// unlike gridToWorldX/Z. These specs are this story's acceptance criterion
+// "exposes raw integer (col, stackLevel, row) grid coordinates with no
+// fractional/centered offset."
+describe("terrainCells", () => {
+  it("emits exactly sum(heights) cells, same count as buildTerrainBlocks", () => {
+    const grid = flatGrid(2, [1, 2, 3, 4]);
+    expect(terrainCells(grid)).toHaveLength(1 + 2 + 3 + 4);
+  });
+
+  it("uses the grid's OWN raw col/row indices — never gridToWorldX/Z's centered values", () => {
+    const grid = flatGrid(4, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const [cell] = terrainCells(grid);
+    // col 0, row 0 for a size-4 grid would be -1.5 under gridToWorldX/Z —
+    // assert the raw cell is the untransformed integer instead.
+    expect(cell.col).toBe(0);
+    expect(cell.row).toBe(0);
+    expect(Number.isInteger(cell.col)).toBe(true);
+    expect(Number.isInteger(cell.row)).toBe(true);
+  });
+
+  it("every emitted cell has non-negative integer col/row/stackLevel", () => {
+    const grid = flatGrid(5, [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+    for (const cell of terrainCells(grid)) {
+      expect(Number.isInteger(cell.col)).toBe(true);
+      expect(Number.isInteger(cell.row)).toBe(true);
+      expect(Number.isInteger(cell.stackLevel)).toBe(true);
+      expect(cell.col).toBeGreaterThanOrEqual(0);
+      expect(cell.row).toBeGreaterThanOrEqual(0);
+      expect(cell.stackLevel).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("stackLevel 1 is always the ground layer, matching the classifyHeightBand numbering", () => {
+    const grid = flatGrid(1, [3]);
+    const cells = terrainCells(grid);
+    expect(cells.map((c) => c.stackLevel)).toEqual([1, 2, 3]);
+    expect(cells.map((c) => c.band)).toEqual(["low", "low", "low"]);
+  });
+
+  it("band matches classifyHeightBand(stackLevel) — the shared classification, not a duplicate", () => {
+    const grid = flatGrid(1, [8]);
+    for (const cell of terrainCells(grid)) {
+      expect(cell.band).toBe(classifyHeightBand(cell.stackLevel));
+    }
+  });
+
+  it("buildTerrainBlocks' world positions are terrainCells' raw cells run through gridToWorldX/Z", () => {
+    const grid = flatGrid(4, [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const cells = terrainCells(grid);
+    const blocks = buildTerrainBlocks(grid);
+    expect(blocks).toHaveLength(cells.length);
+    cells.forEach((cell, i) => {
+      expect(blocks[i].position[0]).toBeCloseTo(gridToWorldX(cell.col, grid.size));
+      expect(blocks[i].position[2]).toBeCloseTo(gridToWorldZ(cell.row, grid.size));
+    });
+  });
+});
+
+describe("houseCells", () => {
+  const grid = flatGrid(9, new Array(81).fill(2));
+
+  it("every emitted cell has integer col/row/stackLevel (raw, not fractional)", () => {
+    const cells = houseCells(grid, 4, 4, 5, 5, 3);
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(Number.isInteger(cell.col)).toBe(true);
+      expect(Number.isInteger(cell.row)).toBe(true);
+      expect(Number.isInteger(cell.stackLevel)).toBe(true);
+    }
+  });
+
+  it("stacks walls starting exactly one level above the terrain's own height", () => {
+    const cells = houseCells(grid, 4, 4, 3, 3, 2);
+    const baseHeight = heightAt(grid, 4, 4);
+    const wallLevels = cells.filter((c) => c.part === "wall").map((c) => c.stackLevel);
+    expect(Math.min(...wallLevels)).toBe(baseHeight + 1);
+    expect(Math.max(...wallLevels)).toBe(baseHeight + 2);
+  });
+
+  it("centers the footprint on (gridX, gridZ) using absolute (not centered-on-origin) coordinates", () => {
+    const cells = houseCells(grid, 4, 4, 3, 3, 1);
+    const cols = cells.map((c) => c.col);
+    const rows = cells.map((c) => c.row);
+    // width/depth 3 centered on 4 -> footprint spans cols/rows 3..5.
+    expect(Math.min(...cols)).toBe(3);
+    expect(Math.max(...cols)).toBe(5);
+    expect(Math.min(...rows)).toBe(3);
+    expect(Math.max(...rows)).toBe(5);
+  });
+
+  it("rejects an even width/depth — no single integer center column/row exists", () => {
+    expect(() => houseCells(grid, 4, 4, 4, 4, 2)).toThrow(RangeError);
+  });
+
+  it("throws when centered outside the grid, same as heightAt", () => {
+    expect(() => houseCells(grid, 99, 0)).toThrow(RangeError);
+  });
+
+  it("buildHouseBlocks' world positions match houseCells' raw cells run through the centering transform", () => {
+    const cells = houseCells(grid, 4, 4, 3, 3, 2);
+    const blocks = buildHouseBlocks(grid, 4, 4, 3, 3, 2);
+    expect(blocks).toHaveLength(cells.length);
+    const baseHeight = heightAt(grid, 4, 4);
+    cells.forEach((cell, i) => {
+      expect(blocks[i].position[0]).toBeCloseTo(gridToWorldX(cell.col, grid.size));
+      expect(blocks[i].position[2]).toBeCloseTo(gridToWorldZ(cell.row, grid.size));
+      expect(blocks[i].position[1]).toBeCloseTo((cell.stackLevel - 0.5) * BLOCK_SIZE);
+      expect(baseHeight).toBeGreaterThan(0);
+    });
   });
 });
 

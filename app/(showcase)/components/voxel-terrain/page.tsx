@@ -36,8 +36,24 @@ export default function VoxelTerrainShowcasePage() {
         title="VoxelTerrain"
         description="Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes with a sample structure resting on top, orbit-controllable."
         demo={
-          <div className="h-[480px] w-full overflow-hidden rounded-md bg-neutral-900">
-            <VoxelTerrainDemo />
+          <div className="flex flex-col gap-3">
+            <div className="h-[480px] w-full overflow-hidden rounded-md bg-neutral-900">
+              <VoxelTerrainDemo />
+            </div>
+            {/* Ties the export directly to this sample terrain — the same
+                public/minecraft-samples/2806-prado/heightmap.json data
+                VoxelTerrainDemo.tsx renders above, via
+                app/api/minecraft-export/route.ts (its DEFAULT_SLUG). A plain
+                download-anchor is deliberately all this needs (per this
+                story's yaml): the browser's native download handling covers
+                it, no client state/loading-spinner required. */}
+            <a
+              href="/api/minecraft-export?slug=2806-prado"
+              download
+              className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
+            >
+              Download for Minecraft
+            </a>
           </div>
         }
         code={USAGE_CODE}

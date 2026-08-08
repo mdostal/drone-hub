@@ -1,0 +1,77 @@
+id: minecraft-export-api-route
+epic: minecraft-export
+title: Serve the schematic as a real downloadable file
+status: complete
+complexity: medium
+methodology: bdd
+depends_on: [minecraft-export-schematic-writer]
+
+description: |
+  A Next.js Route Handler that builds and streams back a real .schem file.
+  Server-side only — prismarine-nbt/zlib are Node APIs, never bundled to
+  the client.
+
+  Build `app/api/minecraft-export/route.ts`:
+  - Accepts a `slug` query param (optional — defaults to the existing
+    sample terrain, "2806-prado", same default the showcase/content-engine
+    pages already use). Validate it against the SAME SAFE_SLUG_PATTERN
+    precedent lib/content-engine-resolution.ts already established (reuse
+    or mirror that exact regex — do not invent new validation logic).
+  - Loads the corresponding VoxelGrid from public/minecraft-samples/
+    <slug>/heightmap.json (falling back to the 2806-prado sample if the
+    slug-specific file doesn't exist — mirror the real-vs-fallback
+    precedent from lib/content-engine-resolution.ts conceptually, though
+    this is simpler since there's only one sample grid today).
+  - Calls buildSchematic() from lib/minecraft-schematic.ts (optionally
+    including the sample house structure at a reasonable grid position,
+    matching the showcase page's placement).
+  - Returns the resulting Buffer with headers: Content-Type:
+    application/octet-stream (or application/gzip if you determine that's
+    more correct for a .schem), Content-Disposition: attachment;
+    filename="<slug>.schem".
+
+  This route is intentionally NOT behind middleware.ts's gating — the
+  underlying terrain data is the same already-public sample data the
+  public /components/voxel-terrain showcase page uses, so gating this
+  export endpoint would be inconsistent (same public-safe-data reasoning
+  established in the model3d epic). Do not add this path to
+  GATED_PATH_PREFIXES/middleware.ts's matcher.
+
+acceptance_criteria:
+  - "Given GET /api/minecraft-export (no slug), when requested, then it returns a valid .schem file for the default sample terrain with correct download headers"
+  - "Given GET /api/minecraft-export?slug=2806-prado, when requested, then it returns the same file as the no-slug default"
+  - "Given a malformed/unsafe slug (e.g. containing '../'), when requested, then it's rejected/falls back safely, never used in a raw filesystem path"
+  - "Given the response, when downloaded and gunzipped, then it's valid NBT with the expected top-level tags"
+
+steps:
+  - id: implement
+    description: Build the route handler per the description above.
+    agent: developer
+  - id: test
+    description: Verify the response headers, content validity (gunzip + NBT parse succeeds), and slug validation/fallback behavior.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm slug validation genuinely reuses the established SAFE_SLUG_PATTERN discipline and that this route was NOT added to middleware.ts's matcher.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feat/minecraft-export.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/minecraft-schematic.ts
+      purpose: "buildSchematic() — the function this route calls."
+    - path: lib/content-engine-resolution.ts
+      purpose: "SAFE_SLUG_PATTERN — the validation precedent to reuse."
+
+files_to_modify:
+  - file: app/api/minecraft-export/route.ts
+    change: "Create"
+
+do_not:
+  - "Do not add this route to middleware.ts's matcher — it must stay public, consistent with the public sample data it serves."
+  - "Do not invent new slug-validation logic — reuse the established SAFE_SLUG_PATTERN discipline."

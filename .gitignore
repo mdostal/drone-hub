@@ -31,3 +31,5 @@ public/property-samples/
 !.pHive/epics/land-overlay/**
 !.pHive/epics/minecraft-content-engine/
 !.pHive/epics/minecraft-content-engine/**
+!.pHive/epics/minecraft-export/
+!.pHive/epics/minecraft-export/**

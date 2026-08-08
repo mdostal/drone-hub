@@ -1,0 +1,98 @@
+id: minecraft-export-test-suite
+epic: minecraft-export
+title: Hand-verified golden-fixture spec conformance + DataVersion cross-check
+status: complete
+complexity: high
+methodology: tdd
+depends_on: [minecraft-export-schematic-writer]
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  THE critical verification story for this epic — read this epic's design
+  discussion in full, it explains exactly why a same-library round-trip
+  test (write with prismarine-nbt, read back with prismarine-nbt) is NOT
+  sufficient: it only proves the library is a fixed point of its own
+  serialization, and would pass identically whether the Sponge Schematic
+  spec was understood correctly or consistently-but-wrongly.
+
+  1. **Hand-verified golden fixture (the real check).** Construct a tiny
+     VoxelGrid by hand (e.g. 2x2, size=2, all heights=1 — as small as
+     possible while still exercising Palette + BlockData meaningfully).
+     By hand (or via a scratch calculation you show your work for, NOT by
+     running the writer and trusting its output), compute:
+     - The expected Palette (which block-state strings, in what order they
+       first appear during the Y/Z/X iteration).
+     - The expected VarInt-encoded BlockData byte sequence for that exact
+       grid.
+     - The expected PaletteMax.
+     Then call buildSchematic() on that same tiny grid, decompress +
+     parse the real NBT output, and assert the actual Palette/BlockData/
+     PaletteMax match your hand-computed expected values exactly. This is
+     the test that would catch a wrong-but-self-consistent encoding that a
+     same-library round-trip test would miss.
+  2. **DataVersion cross-reference.** The writer story picked a specific
+     DataVersion integer for a specific Minecraft version, sourced from
+     one reference (likely the Minecraft Wiki). Independently confirm that
+     value against a SECOND, different authoritative source (e.g. a
+     well-known open-source schematic library's own test fixtures/docs, or
+     the Sponge Schematic format's own published spec repository, or a
+     second Minecraft-Wiki-adjacent reference) via WebSearch/WebFetch.
+     Write this confirmation as a test assertion or, if that's not
+     practically expressible as a test, a clearly-documented verification
+     note in the test file's comments citing both sources and the
+     confirmed value — either way, this must be a genuine second check,
+     not a restatement of the first story's own lookup.
+  3. Secondary sanity check: a same-library round-trip test IS still worth
+     having (write, read back with prismarine-nbt, confirm structural
+     match) — just not as the PRIMARY verification, per the design
+     discussion's correction. Include it, but don't present it as
+     sufficient on its own.
+  4. Note explicitly in this story's own output/docs that full in-game
+     verification (actually loading the file in a real Minecraft client)
+     was NOT possible in this environment — same honesty precedent as
+     land-overlay's numeric-placement story documenting what it could and
+     couldn't verify.
+
+acceptance_criteria:
+  - "Given the hand-computed golden fixture, when buildSchematic()'s actual output is compared against it, then Palette/BlockData/PaletteMax match exactly"
+  - "Given the DataVersion value, when cross-referenced against a second independent source, then both sources agree (or the discrepancy is surfaced and resolved, not silently ignored)"
+  - "Given `npm test`, when run, then all new specs pass alongside every pre-existing test (should stay at 100% pass, ~187+ tests from prior epics)"
+  - "Given `npm run build`, when run, then it passes with no regressions"
+
+steps:
+  - id: research
+    description: Work out the golden fixture's expected Palette/BlockData/PaletteMax by hand against the documented Sponge Schematic spec (re-derive, don't just copy from the writer's own implementation). Find a second independent source for the DataVersion.
+    agent: researcher
+  - id: test-spec
+    description: Write the golden-fixture test and the DataVersion cross-reference check.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: If the golden-fixture test reveals an actual encoding bug in lib/minecraft-schematic.ts, fix it here (this story owns fixing what its own tests find).
+    agent: developer
+    depends_on: [test-spec]
+  - id: review
+    description: Confirm the golden fixture was genuinely hand-derived from the spec (not reverse-engineered from the writer's output, which would defeat the whole point) and the DataVersion check used a real second source.
+    agent: reviewer
+    depends_on: [implement]
+  - id: integrate
+    description: Commit and push to feat/minecraft-export.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/epics/minecraft-export/docs/design-discussion.md
+      purpose: "The design-review commitment this story exists to honor — re-read the verification-method corrections in full."
+    - path: lib/minecraft-schematic.ts
+      purpose: "The writer under test."
+
+files_to_modify:
+  - file: lib/minecraft-schematic.test.ts
+    change: "Create — golden fixture + DataVersion cross-check + round-trip sanity test"
+
+do_not:
+  - "Do not derive the golden fixture's expected values by running the writer and copying its output — that defeats the entire purpose of this test."
+  - "Do not treat the same-library round-trip test as sufficient on its own — it must be secondary to the hand-verified fixture."
