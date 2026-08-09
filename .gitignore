@@ -38,3 +38,5 @@ public/property-samples/
 !.pHive/epics/framework-docs-site/**
 !.pHive/epics/brand-theming-and-viewer-polish/
 !.pHive/epics/brand-theming-and-viewer-polish/**
+!.pHive/epics/nav-video-pipeline-files/
+!.pHive/epics/nav-video-pipeline-files/**

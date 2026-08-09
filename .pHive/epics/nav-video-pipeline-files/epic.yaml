@@ -1,0 +1,66 @@
+name: nav-video-pipeline-files
+title: "Persistent nav + copy buttons, real VideoTour controls, LayerViewer fullscreen + pipeline docs, generic file components"
+description: >
+  Four operator-requested streams following a scope-boundary
+  clarification (confirmed via AskUserQuestion: generic components only,
+  no backend/auth/storage): (1) a persistent nav strip across every
+  showcase/doc page plus copy-to-clipboard on code blocks, toward
+  shadcn/ui's presentation quality; (2) real user-facing video controls
+  for VideoTour's spin video (play/pause/scrub/speed) plus real sample
+  video content to actually exercise that code path for the first time;
+  (3) a LayerViewer fullscreen toggle plus a new /pipeline directory
+  documenting how real WebODM output maps onto this framework's existing
+  manifest shapes; (4) three generic, backend-free UI components
+  (FileUpload, a file viewer/download component, ProcessingStatus).
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: bdd
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+  notes: >
+    Branched from master (post brand-theming-and-viewer-polish epic +
+    the favicon/metadata/markdown/legend polish pass).
+
+planning_team:
+  matched_tags: [navigation, media, documentation, scope-boundary, medium-large-risk]
+  roster: [technical-writer, developer, reviewer]
+  confidence: "medium-high — grill found 7 real issues before any code was written, the most serious being a genuine shippable deadlock: giving a user pause/scrub control over VideoTour's transition-clip video (not just the spin video) would break the only path back to arrive(), permanently disabling every navigation control with no escape hatch. Scope was corrected to spin-only controls. Also caught: a basePath-convention violation in the original file-viewer design (would have baked withBasePath() into a portable component, explicitly prohibited by lib/base-path.ts's own header comment), a wrong assumption about needing manual map.resize() for LayerViewer fullscreen (MapLibre's own ResizeObserver already handles it) alongside a real gotcha about which DOM node must receive the Fullscreen API call, an underestimated video-sourcing risk (this repo has zero video-encoding tooling, unlike the trivial SVG-stills fallback from a prior epic), a missing static-route verification requirement for the new shared layout, and a copy-to-clipboard risk mischaracterization (HTTPS isn't actually a concern on Vercel/localhost; unhandled promise rejection is the real one)."
+  gate_decisions:
+    grill: >
+      One round, general-purpose adversarial reviewer, code-verified
+      against the actual VideoTour state machine, LayerViewer's JSX
+      structure, lib/base-path.ts's documented constraints, and
+      maplibre-gl's own source. 7 findings, all fixed in the design doc
+      before story-writing — see design-discussion.md's inline
+      "Revised/Corrected after grill" annotations for the full detail
+      per finding.
+    sign_off: >
+      Operator's standing instruction: continuous execution, self-review,
+      commit as work completes, no per-story gate. Scope-boundary
+      question (generic components vs. real backend logic for stream 4)
+      explicitly asked and confirmed via AskUserQuestion before planning.
+
+stories:
+  - id: site-nav-and-copy-buttons
+    title: Persistent nav strip across showcase/doc pages + copy-to-clipboard on code blocks
+    complexity: medium
+    depends_on: []
+  - id: videotour-real-controls-and-sample-clip
+    title: Real play/pause/scrub/speed controls for VideoTour's spin video + real sample clip
+    complexity: high
+    depends_on: []
+  - id: layerviewer-fullscreen-and-pipeline-docs
+    title: LayerViewer fullscreen toggle + new /pipeline directory with WebODM-to-manifest mapping docs
+    complexity: medium
+    depends_on: []
+  - id: generic-file-components
+    title: "<FileUpload>, a file viewer/download component, <ProcessingStatus> — generic, backend-free"
+    complexity: medium
+    depends_on: [site-nav-and-copy-buttons]
+  - id: nav-video-pipeline-files-closeout
+    title: Full-suite verification, live spot-check, docs closeout, merge + push + deploy
+    complexity: low
+    depends_on: [videotour-real-controls-and-sample-clip, layerviewer-fullscreen-and-pipeline-docs, generic-file-components]

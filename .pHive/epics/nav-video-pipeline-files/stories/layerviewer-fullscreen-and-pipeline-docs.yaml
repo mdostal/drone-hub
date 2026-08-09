@@ -1,0 +1,120 @@
+id: layerviewer-fullscreen-and-pipeline-docs
+epic: nav-video-pipeline-files
+title: LayerViewer fullscreen toggle + new /pipeline directory with WebODM-to-manifest mapping docs
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: []
+
+description: |
+  Read .pHive/epics/nav-video-pipeline-files/docs/design-discussion.md §3c
+  in full before starting, including the grill-verified implementation
+  specifics below.
+
+  Two independent pieces:
+
+  1. **LayerViewer fullscreen toggle.** A fullscreen expand/collapse
+     control for <LayerViewer> (expand the map to fill the viewport,
+     collapse back). Two implementation specifics, confirmed against the
+     real code and maplibre-gl's own source — do not deviate:
+     - **No explicit map.resize() call is needed.** maplibre-gl's `Map`
+       constructor wires up a real ResizeObserver on its container
+       (trackResize defaults to true) that calls resize() automatically on
+       any box-size change — a CSS-driven or Fullscreen-API-driven
+       container resize self-corrects with zero extra code. Do not add a
+       manual resize() call; it's redundant.
+     - **Fullscreen MUST target LayerViewer's outer wrapper div, not the
+       inner containerRef div the map mounts into.** LayerViewer.tsx's
+       returned JSX has three sibling divs in one wrapper: the map
+       container, the showLoading overlay, and the loadError overlay.
+       Calling requestFullscreen() on containerRef would put the
+       loading/error overlays outside the browser's fullscreen top-layer
+       as non-descendant siblings — they'd silently stop rendering while
+       fullscreen is active. Target the outer wrapper.
+     - Decide and document the toggle's API shape before implementing:
+       matching the existing ref+callback composition pattern
+       (LayerViewerHandle's toggleLayer/setOpacity), expose fullscreen
+       control on the handle, as a self-contained internal button, or
+       both — read LayerViewer.tsx's existing handle/prop structure first
+       and pick whichever is more consistent with it.
+
+  2. **Create /pipeline** at the repo root: a README.md (no docker image
+     build in this story — that's separately-scoped, bigger work) that:
+     - Documents the target WebODM/GDAL/rio-*/PDAL/tippecanoe toolchain
+       CLAUDE.md's "Stack / plugins — FINALIZED" section already
+       specifies, as the intended location for that tooling (scripts +
+       docker), matching CLAUDE.md's own stated architecture.
+     - **The concrete, actionable deliverable**: a written mapping from
+       real WebODM/ODM output files to this framework's EXISTING manifest
+       shapes (LayerDef in lib/layer-types.ts, ModelDef in
+       components/Model3D/Model3D.tsx) — e.g. odm_orthophoto.tif -> a
+       LayerDef raster/cog entry (including the rio warp/rio cogeo
+       reprojection step already established as required by this
+       session's COG-bounds-bug fix — cite docs/components/land-overlay.md's
+       "Fixed" section for the exact commands), odm_dem/dsm.tif -> the
+       hillshade-generation pattern already used for sample data,
+       odm_texturing's textured mesh -> a ModelDef entry. Documentation
+       only — do NOT build a working conversion script. CLAUDE.md is
+       explicit that real pipeline tooling is gated on the Phase-0 nadir
+       pass (real hardware/flight, not a coding task) — there's no real
+       WebODM output to test a script against yet, so a working script
+       would be speculative, untestable work. A clear mapping doc is the
+       actually-actionable deliverable.
+
+acceptance_criteria:
+  - "Given the LayerViewer showcase page, when the fullscreen toggle is activated, then the map expands to fill the viewport and the loading/error overlays (if triggered) remain visible within the fullscreen element"
+  - "Given the map is in fullscreen and its container resizes, when observed, then MapLibre's own tiles/rendering correctly fill the new size with no manual resize() call in the implementation"
+  - "Given /pipeline/README.md, when read, then it contains a concrete, file-by-file mapping from real WebODM/ODM output to LayerDef/ModelDef shapes, not just a restatement of CLAUDE.md's toolchain list"
+  - "Given the full test suite and a real npm run build, when run after this story, then both pass cleanly"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3c in full; read LayerViewer.tsx's full JSX structure and LayerViewerHandle's existing API shape; confirm the ResizeObserver behavior directly in maplibre-gl's source.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the fullscreen toggle targeting the correct DOM node; write /pipeline/README.md's WebODM-to-manifest mapping.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify fullscreen behavior via Playwright including that overlays remain visible while fullscreen is active.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the fullscreen target is the outer wrapper (not containerRef) and the /pipeline docs are genuinely concrete, not a restatement of CLAUDE.md.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/nav-video-pipeline-files.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: The three-sibling-div JSX structure the fullscreen target decision depends on directly.
+    - path: docs/components/land-overlay.md
+      purpose: "Fixed" section — the exact rio warp/rio cogeo commands to cite in the pipeline mapping doc.
+
+files_to_modify:
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: Add the fullscreen toggle targeting the outer wrapper div.
+  - file: /pipeline/README.md
+    change: New file — toolchain documentation + WebODM-to-manifest mapping.
+
+design_decisions:
+  - decision: No manual map.resize() call.
+    rationale: "Grill-verified directly against maplibre-gl's source: trackResize defaults true, a real ResizeObserver already handles container resizes automatically."
+  - decision: Fullscreen targets the outer wrapper, not containerRef.
+    rationale: "Grill finding #3: the loading/error overlays are siblings of containerRef, not descendants — targeting containerRef would hide them during fullscreen."
+  - decision: /pipeline is documentation-only in this story, no working conversion script.
+    rationale: CLAUDE.md's Phase-0 nadir-pass gate means there's no real WebODM output to test a script against yet.
+
+risks:
+  - severity: low
+    description: A tempting scope expansion is to also build a real conversion script.
+    mitigation: Explicitly out of scope per this story's acceptance criteria — flag and stop if an implementing agent starts building one.
