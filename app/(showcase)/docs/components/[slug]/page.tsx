@@ -31,6 +31,9 @@ const KNOWN_SLUGS = [
   "voxel-terrain",
   "content-engine",
   "minecraft-export",
+  "file-upload",
+  "file-list",
+  "processing-status",
 ] as const;
 
 type KnownSlug = (typeof KNOWN_SLUGS)[number];

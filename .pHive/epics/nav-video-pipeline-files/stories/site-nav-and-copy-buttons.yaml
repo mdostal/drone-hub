@@ -1,0 +1,113 @@
+id: site-nav-and-copy-buttons
+epic: nav-video-pipeline-files
+title: Persistent nav strip across showcase/doc pages + copy-to-clipboard on code blocks
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: []
+
+description: |
+  Read .pHive/epics/nav-video-pipeline-files/docs/design-discussion.md §3a
+  in full before starting (including the grill-corrected specifics on
+  static-route verification and the clipboard promise-rejection framing).
+
+  Two additive UI improvements toward shadcn/ui's presentation quality:
+
+  1. **Persistent nav strip.** Add a shared layout for the showcase + doc
+     route groups (app/(showcase)/) — a slim, always-present strip listing
+     all 7 components/tools by name, each linking to its live demo, visible
+     on every /components/* and /docs/components/* page. This does NOT
+     replace the root / landing page (which stays the fuller
+     table-of-contents with descriptions) — it's a thin wayfinding strip so
+     a visitor doesn't have to backtrack to / to jump between components.
+     A horizontal scrollable strip is enough at 7 items — no
+     category-grouped sidebar needed at this scale.
+
+     CRITICAL constraints (grill-verified):
+     - app/(showcase)/docs/components/[slug]/page.tsx is fully statically
+       prerendered today (generateStaticParams, all 7 slugs render to
+       static HTML). The new shared layout MUST NOT call any dynamic API
+       (cookies(), headers(), searchParams) or it forces that route back to
+       dynamic (ƒ) rendering. Verify via `next build`'s route table
+       showing all 7 doc routes still as ○ (Static) — this is a required
+       acceptance check, not optional.
+     - If the nav strip shows active-route highlighting, that needs
+       usePathname(), which needs a client boundary. Do NOT make the whole
+       shared layout.tsx "use client" for this — isolate active-route
+       logic in a small nested client component, keep layout.tsx itself a
+       Server Component.
+
+  2. **Copy-to-clipboard on code blocks**, both `<ComponentShowcase
+     code={...}>`'s usage-snippet block and components/Markdown.tsx's
+     `pre` renderer (used by doc pages and the ContentEngine page). Build
+     a small shared `<CopyButton text={...}>` component using
+     `navigator.clipboard.writeText`. This app is always HTTPS on Vercel
+     and localhost is a secure context in every major browser, so
+     `navigator.clipboard` existing is not actually in question — the real
+     defensive need is different: `writeText()` returns a Promise that can
+     still reject in a secure context (e.g. NotAllowedError from
+     document-focus loss). Add a `.catch()` on that promise (e.g. silently
+     ignore, or show a brief "couldn't copy" state) rather than a bare
+     feature-detection guard.
+
+acceptance_criteria:
+  - "Given any /components/* or /docs/components/* page, when rendered, then a persistent nav strip listing all 7 components is visible, each linking to its live demo"
+  - "Given `next build`, when run after this story, then all 7 /docs/components/<slug> routes still show as ○ (Static) in the route table, not ƒ (Dynamic)"
+  - "Given a usage-snippet code block or a doc-page code block, when the copy button is clicked, then the code text is copied to the clipboard (verified via a real Playwright clipboard-permission grant + readText check, not just a click-doesn't-crash check)"
+  - "Given the CopyButton component, when `navigator.clipboard.writeText` rejects (simulate via a mock), then no unhandled promise rejection occurs"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3a in full; confirm the current app/(showcase) structure has no shared layout; check how ComponentShowcase and Markdown.tsx currently render code blocks.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Add the shared layout with the nav strip (Server Component + isolated client active-route piece), and the CopyButton component wired into both code-block renderers.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify the nav strip across multiple pages and the copy button's actual clipboard behavior via Playwright.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the static-route requirement holds (next build route table) and the client-boundary isolation is genuinely minimal, not the whole layout.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/nav-video-pipeline-files.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/(showcase)/docs/components/[slug]/page.tsx"
+      purpose: The fully-static doc route the new shared layout must not force dynamic.
+    - path: components/showcase/ComponentShowcase.tsx
+      purpose: One of two code-block renderers needing the CopyButton.
+    - path: components/Markdown.tsx
+      purpose: The other code-block renderer (pre element) needing the CopyButton.
+
+files_to_modify:
+  - file: "app/(showcase)/layout.tsx"
+    change: New file — shared layout with the persistent nav strip, Server Component.
+  - file: components/CopyButton.tsx
+    change: New file — shared copy-to-clipboard button.
+  - file: components/showcase/ComponentShowcase.tsx
+    change: Wire in CopyButton for the usage-snippet block.
+  - file: components/Markdown.tsx
+    change: Wire in CopyButton for the pre renderer.
+
+design_decisions:
+  - decision: Nav strip is additive to, not a replacement for, the root ToC.
+    rationale: The root / page stays the fuller table-of-contents with descriptions; the strip is a thin always-present wayfinding aid.
+  - decision: Active-route highlighting isolated to a small client component, not a client layout.
+    rationale: Grill finding #5 — usePathname() needs a client boundary, but making the whole shared layout "use client" needlessly widens it for the entire subtree.
+
+risks:
+  - severity: medium
+    description: The shared layout could accidentally force the static doc routes to dynamic rendering.
+    mitigation: next build route-table verification is a named, required acceptance criterion, not left implicit.

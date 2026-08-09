@@ -1,0 +1,125 @@
+id: videotour-real-controls-and-sample-clip
+epic: nav-video-pipeline-files
+title: Real play/pause/scrub/speed controls for VideoTour's spin video + real sample clip
+status: pending
+complexity: high
+methodology: bdd
+depends_on: []
+
+description: |
+  READ .pHive/epics/nav-video-pipeline-files/docs/design-discussion.md §3b
+  IN FULL before starting, including the grill-revision preamble. This is
+  NOT "add controls to VideoTour's video elements" generically — it is
+  SPECIFICALLY scoped to the `spin` video only.
+
+  **Why the scope line is load-bearing, not a style choice (do not
+  expand it):** `VideoTour.go()`'s only path to `arrive()` (which clears
+  `busyRef`/`busy` — and `busy=true` disables every `DoorwayControls`/
+  `FloorPlanMap` button in the whole component) is `TourStage`'s `onEnded`
+  handler firing when a transition `clip` video finishes playing. If a
+  user pauses that clip, or scrubs backward off the end, `'ended'` never
+  fires, `arrive()` never runs, and the tour permanently locks up with
+  NO escape hatch anywhere in the current code. The `spin` video has no
+  such dependency (nothing waits on it) — safe to control freely. DO NOT
+  add pause/scrub controls to the transition-clip `<video>` element in this
+  story. It stays exactly as-is: autoplay, muted, no controls, `onEnded`
+  the only path to `arrive()`.
+
+  Implementation:
+  1. **Controls bar for the `spin` video only** (components/VideoTour/TourStage.tsx):
+     a themed, on-video control overlay — play/pause button, a scrub/seek
+     bar (`<input type="range">` bound to `currentTime`/`duration`), and a
+     playback-speed selector (buttons for 0.5x/1x/1.5x/2x, bound to
+     `video.playbackRate`). The video should still autoplay muted on
+     arrival (existing silent-loop behavior unregressed for anyone who
+     doesn't touch the controls), but a visitor can now pause, scrub,
+     unmute, and change speed. Use this epic's design tokens (or the prior
+     epic's, if this lands after — check app/globals.css) for the overlay
+     styling.
+  2. **Real sample video content is required** — right now every room's
+     `spin` field is `null` in both `public/showcase-samples/demo-house/tour.json`
+     and any other tracked manifest, so this code path has never actually
+     rendered. Source or generate a short (a few seconds), small,
+     genuinely public-safe LOOPING sample clip for at least one room's
+     `spin` field in the public demo-house manifest (never the real
+     property tour, which doesn't exist in this repo per the
+     gating-removal epic).
+
+     TWO DISTINCT RISKS here, treat separately, don't conflate:
+     (a) the licensing/rights search itself — a real search for a small,
+     genuinely public-domain/permissively-licensed clip, not a given.
+     (b) THIS REPO HAS ZERO VIDEO-ENCODING TOOLING — no ffmpeg, no video
+     script/dependency anywhere. Unlike a prior epic's trivial
+     hand-authored-SVG-stills fallback, "generate a synthetic clip" is NOT
+     an already-available fallback here. If the licensing search comes up
+     empty, standing up even minimal video-encoding capability (enough to
+     produce one small, clearly-labeled synthetic MP4/WebM — e.g. a
+     solid-color or simple-pattern loop with a baked-in "DEMO" label,
+     matching the SVG-stills' own disclaimer convention) is itself real
+     work — budget for it, don't assume it's cheap.
+  3. Update docs/components/video-tour.md — its current text frames P2
+     spin/clip playback as smoke-tested-only/unexercised. Correct that
+     framing for the now-real, now-exercised `spin` controls specifically
+     (leave the transition-clip framing as still-accurate — it remains
+     unexercised/uncontrolled by design, per this story's scope line).
+
+acceptance_criteria:
+  - "Given a room with a real spin video, when the VideoTour showcase page renders that room, then a controls bar (play/pause, scrub, speed) is visible and functional on the spin video"
+  - "Given the spin video is playing, when the user changes the speed selector, then video.playbackRate actually changes to the selected value"
+  - "Given the transition-clip video, when a navigation is in flight, then it renders with NO user controls, exactly as before this story — no regression, no scope creep onto the clip element"
+  - "Given the new sample spin clip, when inspected, then it is either a real, correctly-licensed public clip (license documented in docs/components/video-tour.md's provenance section, matching the established documentation pattern) or a clearly-labeled synthetic placeholder (matching the SVG-stills' disclaimer convention)"
+  - "Given the full test suite and a real npm run build, when run after this story, then both pass cleanly"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3b in full; read VideoTour.tsx's go()/arrive()/busyRef logic directly to confirm the deadlock risk before starting; survey candidate real small looping video sources.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above, explicitly including a spec that asserts the transition-clip video has NO controls (a regression guard, not just a positive spec for the spin controls).
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build the spin-only controls bar, source/generate the sample clip, update the demo-house manifest and video-tour.md.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify via Playwright that controls work on the spin video and are absent on the transition clip, and that the tour's navigation never locks up.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the scope line was actually honored in the implementation (not just the plan), and the sample clip's licensing/placeholder status is clearly documented.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/nav-video-pipeline-files.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VideoTour/VideoTour.tsx
+      purpose: go()/arrive()/busyRef — the state machine whose deadlock risk defines this story's scope line.
+    - path: components/VideoTour/TourStage.tsx
+      purpose: Where the spin/clip <video> elements render; the controls bar goes on the spin branch only.
+    - path: public/showcase-samples/demo-house/tour.json
+      purpose: The public demo manifest getting its first real (non-null) spin field.
+
+files_to_modify:
+  - file: components/VideoTour/TourStage.tsx
+    change: Add the controls bar to the spin video branch only.
+  - file: public/showcase-samples/demo-house/tour.json
+    change: Set at least one room's spin field to the new sample clip's URL.
+  - file: public/showcase-samples/demo-house/
+    change: Add the new sample clip file.
+  - file: docs/components/video-tour.md
+    change: Correct the "unexercised" framing for spin specifically; document the clip's source/license or synthetic-placeholder status.
+
+design_decisions:
+  - decision: Controls apply to the spin video only, never the transition clip, in this epic.
+    rationale: "Grill finding #1 (code-verified): the transition clip's 'ended' event is the only path to arrive(); user pause/scrub control there without a real fallback path is a genuine, shippable deadlock."
+
+risks:
+  - severity: high
+    description: This repo has no video-encoding tooling; if no licensed real clip is found, producing even a synthetic fallback is real, unbudgeted work.
+    mitigation: Named explicitly as a distinct risk from the licensing search itself — budget time for both possibilities, don't assume the fallback is cheap.

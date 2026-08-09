@@ -17,7 +17,7 @@ import DocPage, { generateStaticParams } from "./page";
 const DOCS_DIR = path.join(process.cwd(), "docs", "components");
 
 describe("generateStaticParams", () => {
-  it("returns exactly the 7 hardcoded known slugs, not a directory scan", () => {
+  it("returns exactly the 10 hardcoded known slugs, not a directory scan", () => {
     // The hard constraint this story exists to enforce: a literal array,
     // not fs.readdirSync(DOCS_DIR). docs/components/ used to also contain a
     // reference/ subdirectory (removed 2026-08-08 — it held a prototype
@@ -27,6 +27,9 @@ describe("generateStaticParams", () => {
     // The hardcoded array protects against any such non-.md entry, present
     // or not — asserting the exact set AND count here is what would catch
     // a regression back to a readdirSync-based implementation.
+    //
+    // file-upload/file-list/processing-status added by the
+    // generic-file-components story (nav-video-pipeline-files epic).
     const params = generateStaticParams();
 
     expect(params).toEqual([
@@ -37,6 +40,9 @@ describe("generateStaticParams", () => {
       { slug: "voxel-terrain" },
       { slug: "content-engine" },
       { slug: "minecraft-export" },
+      { slug: "file-upload" },
+      { slug: "file-list" },
+      { slug: "processing-status" },
     ]);
   });
 

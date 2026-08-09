@@ -1,0 +1,89 @@
+id: nav-video-pipeline-files-closeout
+epic: nav-video-pipeline-files
+title: Full-suite verification, live spot-check, docs closeout, merge + push + deploy
+status: pending
+complexity: low
+methodology: classic
+depends_on: [videotour-real-controls-and-sample-clip, layerviewer-fullscreen-and-pipeline-docs, generic-file-components]
+
+description: |
+  Closeout pass: independently re-verify everything the four feature
+  stories claim (not trusting prior stories' self-reports), live-verify
+  the full result via Playwright against a real dev server, update
+  .pHive/CONTEXT.md, merge to master, push, and redeploy to Vercel.
+
+  Specific checks:
+  - `npm test` / `npm run build` / `npm run test:e2e` — all pass fresh
+    from a clean state (rm -rf .next .next-e2e first).
+  - `next build`'s route table: confirm all 7 /docs/components/<slug>
+    routes are still ○ (Static) — the site-nav story's own acceptance
+    criterion, re-verified independently here.
+  - Live Playwright pass against a real dev server: the nav strip appears
+    on every showcase + doc page; copy-to-clipboard actually copies real
+    text; VideoTour's spin video has working controls (play/pause/scrub/
+    speed) while the transition clip has none (the deadlock-prevention
+    regression guard — exercise an actual room-to-room navigation and
+    confirm it completes normally, not just that the clip lacks a visible
+    control bar); LayerViewer's fullscreen toggle works and the loading/
+    error overlays remain visible while fullscreen is active; all 3 new
+    file components render correctly on their showcase pages with
+    unmistakably-inert demo interactions; the 3 new components appear in
+    both app/page.tsx's ToC and the nav strip.
+  - Re-verify the scope-boundary discipline on the 3 new file components
+    yourself, directly against the code — grep for anything resembling a
+    fetch()/XHR call, a database/storage SDK import, or auth logic in
+    components/FileUpload/, components/FileList/ (or whatever it was
+    named), and components/ProcessingStatus/. This should find nothing.
+    Treat a positive finding here as a blocking defect requiring a fix
+    before merge, not a note for later.
+  - Update .pHive/CONTEXT.md with new conventions from this epic: the
+    shared showcase/doc layout pattern (and its static-route constraint),
+    the CopyButton component, the VideoTour spin-vs-transition-clip
+    controls scope line (record this clearly — it's a real constraint a
+    future session could easily violate by "just adding controls to the
+    other video too"), the file-viewer's already-resolved-URLs +
+    showcase-page-owns-basePath pattern, and the /pipeline directory's
+    existence + documentation-only scope.
+  - Take a fresh screenshot of the root landing page (now with 3 more
+    components + the nav strip visible on sub-pages) and refresh it at
+    ~/Code/mdostal-tools-hub/public/screenshots/drone-hub.png if the
+    landing page's visual content changed meaningfully — check first
+    before assuming; commit + push there only if actually needed.
+
+acceptance_criteria:
+  - "Given the full repo, when npm test / npm run build / npm run test:e2e all run fresh, then all three pass with zero failures"
+  - "Given a grep of the 3 new file components' source, when checked for network/storage/auth code, then nothing is found"
+  - "Given a live VideoTour room-to-room navigation exercised via Playwright, when a transition clip plays to completion, then the tour arrives normally with no lock-up (the deadlock-prevention guard actually holds live, not just in a unit test)"
+  - "Given .pHive/CONTEXT.md, when read after this story, then it documents all 5 new conventions listed above"
+
+steps:
+  - id: implement
+    description: Run the full verification suite fresh; fix any real defect surfaced; re-verify scope-boundary discipline directly against code; refresh the tools-hub screenshot if warranted.
+    agent: developer
+  - id: test
+    description: Live Playwright verification across all listed surfaces, especially the VideoTour deadlock-prevention regression guard and the fullscreen overlay-visibility check.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm CONTEXT.md accurately describes what shipped and the scope-boundary re-verification was genuinely independent, not a rubber stamp.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Final commit on feat/nav-video-pipeline-files; merge to master --no-ff; push origin master; redeploy to Vercel; verify the live production URL.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: .pHive/CONTEXT.md
+      purpose: Accumulated cross-epic conventions — this story adds 5 new entries.
+
+files_to_modify:
+  - file: .pHive/CONTEXT.md
+    change: Document the 5 new conventions from this epic.
+
+risks:
+  - severity: high
+    description: The scope-boundary discipline on stream 4 and the VideoTour deadlock-prevention guard are both the kind of thing that can look fine in isolated story review but only actually break/violate when checked against the full merged picture.
+    mitigation: This story's acceptance criteria name both explicitly and require live, independent re-verification, not trust in prior stories' self-reports.

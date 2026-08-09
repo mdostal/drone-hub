@@ -305,6 +305,16 @@ export async function resolveManifest(manifest: PropertyLayers | string): Promis
   return manifest;
 }
 
+/** Pure check: is `wrapper` the document's current fullscreen element?
+ *  Extracted out of the component so it's unit-testable without a real
+ *  Fullscreen API (jsdom doesn't implement `document.fullscreenElement`/
+ *  `requestFullscreen`) — same "pull pure logic out of the browser-API-
+ *  dependent shell" precedent as `buildLayerMapConfig`/`resolveManifest`
+ *  above. */
+export function isWrapperFullscreen(wrapper: Element | null, fullscreenElement: Element | null): boolean {
+  return wrapper !== null && wrapper === fullscreenElement;
+}
+
 export interface LayerViewerHandle {
   /** Set (or toggle, if `toggle` omitted) a layer's visibility. No-op for
    *  unknown or disabled ids. */
@@ -322,6 +332,28 @@ export interface LayerViewerHandle {
    *  since re-exposing a subset of MapLibre's own API on this handle would
    *  just be a worse, harder-to-maintain copy of the same surface. */
   getMap: () => MapLibreMap | null;
+  /** Enter fullscreen (targeting this component's OUTER wrapper — the
+   *  element that contains the map container AND the loading/error overlay
+   *  siblings, not just the map container itself) if not currently
+   *  fullscreen; exit fullscreen if it is. Same "handle method, no forced
+   *  internal chrome" composition pattern as toggleLayer/setOpacity above —
+   *  see this file's header comment for why <LayerViewer> deliberately
+   *  exposes control via ref rather than rendering its own button (a map
+   *  surface and its controls are independently-placeable regions a
+   *  consumer may want to lay out differently). No explicit
+   *  `map.resize()` call is needed anywhere in this path: maplibre-gl's
+   *  `Map` constructor wires up a real `ResizeObserver` on `containerRef`
+   *  (`trackResize` defaults `true`), which calls `resize()` automatically
+   *  the moment the Fullscreen-API-driven container resize happens. A
+   *  no-op if the browser has no Fullscreen API, if a fullscreen request
+   *  is rejected (e.g. not triggered by a user gesture), or before the
+   *  wrapper has mounted. */
+  toggleFullscreen: () => void;
+  /** Current fullscreen state (whether this component's outer wrapper is
+   *  the document's fullscreen element). Read from a ref (same "avoid
+   *  stale closures" reasoning as getLayers() above), kept in sync by the
+   *  wrapper's own `fullscreenchange` listener — see the effect below. */
+  isFullscreen: () => boolean;
 }
 
 export interface LayerViewerProps {
@@ -335,6 +367,12 @@ export interface LayerViewerProps {
   onLayersChange?: (layers: LayerDef[]) => void;
   /** Fired if the manifest fails to load. */
   onLoadError?: (message: string) => void;
+  /** Fired whenever fullscreen state changes (user-initiated via the
+   *  handle's `toggleFullscreen()`, OR externally — e.g. the browser's own
+   *  "Esc to exit fullscreen" affordance, which bypasses the handle
+   *  entirely). Mirrors `onLayersChange`'s "state notification via
+   *  callback, control via handle" composition. */
+  onFullscreenChange?: (isFullscreen: boolean) => void;
   /** Optional geo-anchored 3D models (lib/geo-model-types.ts) to drape onto
    *  the map via lib/maplibre-model-layer.ts's `createModelLayer()` — the
    *  land-overlay epic's custom-layer 3D-model engine. Diffed by `id`
@@ -349,13 +387,21 @@ export interface LayerViewerProps {
 }
 
 export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(function LayerViewer(
-  { manifest, models, onLayersChange, onLoadError, className },
+  { manifest, models, onLayersChange, onLoadError, onFullscreenChange, className },
   ref,
 ) {
   const [propertyLayers, setPropertyLayers] = useState<PropertyLayers | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [layers, setLayers] = useState<LayerDef[]>([]);
 
+  // The OUTER wrapper — contains the map container (containerRef, below)
+  // AND its showLoading/loadError overlay siblings (see the returned JSX).
+  // Fullscreen targets THIS node, never containerRef: requestFullscreen()
+  // promotes only its target (+ descendants) into the browser's fullscreen
+  // top-layer, and the overlays are containerRef's SIBLINGS, not its
+  // descendants — targeting containerRef would silently drop them out of
+  // the fullscreen view while active.
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const mapReadyRef = useRef(false);
@@ -391,6 +437,35 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   useEffect(() => {
     onLoadErrorRef.current = onLoadError;
   }, [onLoadError]);
+  const onFullscreenChangeRef = useRef(onFullscreenChange);
+  useEffect(() => {
+    onFullscreenChangeRef.current = onFullscreenChange;
+  }, [onFullscreenChange]);
+
+  // Read by the handle's isFullscreen() — a ref (not just the `document`
+  // global directly) so it stays consistent with getLayers()'s "read
+  // latest value via ref, not a stale render-time closure" precedent, and
+  // so isFullscreen() has a well-defined answer even outside a browser
+  // fullscreen-capable environment.
+  const isFullscreenRef = useRef(false);
+
+  // Keep isFullscreenRef + fire onFullscreenChange whenever fullscreen
+  // state changes for ANY reason — not just the handle's toggleFullscreen()
+  // below, but also the browser's own "Esc exits fullscreen" affordance,
+  // which never calls back into this component's code at all. Listening
+  // on `document` (not the wrapper element) is deliberate: `fullscreenchange`
+  // is the correct event for this regardless of which element is/was
+  // fullscreen, and it's the only reliable way to observe an Esc-triggered
+  // exit.
+  useEffect(() => {
+    function handleFullscreenChange() {
+      const active = isWrapperFullscreen(wrapperRef.current, document.fullscreenElement);
+      isFullscreenRef.current = active;
+      onFullscreenChangeRef.current?.(active);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   // Resolve the manifest: fetch if given a URL, use as-is if given a
   // PropertyLayers object. Mirrors VideoTour.tsx's manifest-resolution effect.
@@ -577,6 +652,29 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       getMap() {
         return mapRef.current;
       },
+      toggleFullscreen() {
+        // No manual map.resize() anywhere in this path, deliberately: see
+        // this handle method's own doc comment above for why maplibre-gl's
+        // ResizeObserver already handles it.
+        if (typeof document === "undefined") return;
+        if (document.fullscreenElement) {
+          void document.exitFullscreen().catch(() => {
+            // Nothing meaningful to recover into — exit failing just
+            // leaves fullscreen state as-is, no need to disrupt the
+            // consumer with an unhandled rejection.
+          });
+          return;
+        }
+        // requestFullscreen() can reject even in a secure context (e.g. no
+        // user-gesture, or a Permissions-Policy restriction) — swallow
+        // rather than let a normal click produce an unhandled promise
+        // rejection (same defensive shape the copy-to-clipboard button
+        // uses for writeText()'s promise).
+        wrapperRef.current?.requestFullscreen().catch(() => {});
+      },
+      isFullscreen() {
+        return isFullscreenRef.current;
+      },
     }),
     [],
   );
@@ -584,7 +682,13 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   const showLoading = !propertyLayers && !loadError;
 
   return (
-    <div className={cx("relative h-full w-full", className)}>
+    <div ref={wrapperRef} className={cx("relative h-full w-full", className)}>
+      {/* wrapperRef (this div), not containerRef below, is the fullscreen
+          target — see LayerViewerHandle.toggleFullscreen's doc comment and
+          isWrapperFullscreen above. This div is the real outer wrapper: it
+          contains containerRef AND the showLoading/loadError overlay
+          siblings below, so fullscreen-ing it keeps all three inside the
+          browser's fullscreen top-layer together. */}
       {/* h-full/w-full, not just `absolute inset-0` — maplibre-gl.css's own
           `.maplibregl-map { position: relative }` rule (added by MapLibre
           to this exact element once it becomes the map container) beats

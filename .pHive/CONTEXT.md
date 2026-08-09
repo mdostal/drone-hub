@@ -124,8 +124,24 @@ plus a thin gated app that showcases them — the components are the deliverable
   `VoxelTerrain/`, plus the shared `showcase/` layout. See each component's
   `docs/components/<name>.md`.
 - `scripts/` — reserved for pipeline-adjacent tooling. Currently empty.
-- `/pipeline` (planned, not yet created) — WebODM/GDAL/PDAL/tippecanoe scripts +
-  docker; heavy geospatial processing that never ships in the Vercel bundle.
+- `/pipeline` — WebODM/GDAL/PDAL/tippecanoe **documentation**, created by the
+  `nav-video-pipeline-files` epic's `layerviewer-fullscreen-and-pipeline-docs`
+  story. See the Conventions entry below — it's a real directory now, but
+  documentation-only (no scripts, no docker), and stays that way until a real
+  WebODM run exists to validate a conversion script against.
+- `app/(showcase)/layout.tsx` + `components/showcase/NavStrip.tsx` — the
+  persistent showcase/docs nav strip, added by the `nav-video-pipeline-files`
+  epic's `site-nav-and-copy-buttons` story. See the Conventions entry below.
+- `components/CopyButton.tsx` — shared copy-to-clipboard control for code
+  blocks, added by the same story. See the Conventions entry below.
+- `lib/file-types.ts` — `FileEntry` (`{name, url, sizeBytes, contentType}`),
+  the typed registry `<FileList>` renders — same "typed registry" convention
+  as `LayerDef`/`ModelDef`. Added by the `generic-file-components` story. See
+  the Conventions entry below for the already-resolved-URL contract.
+- `components/FileUpload/`, `components/FileList/`, `components/ProcessingStatus/`
+  — the three generic, backend-free file/job UI components added by the
+  `generic-file-components` story. See `docs/components/file-upload.md`,
+  `file-list.md`, `processing-status.md`, and the Conventions entry below.
 
 ## Conventions
 
@@ -486,6 +502,128 @@ plus a thin gated app that showcases them — the components are the deliverable
   that exactly reproduces today's hardcoded behavior when omitted, and prove the
   existing suites still pass unmodified rather than just asserting the type change looks
   additive on paper.
+
+- **Shared showcase/docs nav-strip layout** (`app/(showcase)/layout.tsx` +
+  `components/showcase/NavStrip.tsx`, added by the `nav-video-pipeline-files`
+  epic's `site-nav-and-copy-buttons` story): every page under
+  `app/(showcase)/components/**` and `app/(showcase)/docs/components/**`
+  gets a persistent, horizontal-scrollable strip linking to all current
+  components/tools' live demos, so a visitor can jump directly between them
+  without backtracking to `/` each time. **This does NOT apply to the root
+  `/` landing page** (`app/page.tsx` lives outside the `(showcase)` route
+  group entirely) — that page keeps its own fuller table-of-contents (with
+  descriptions), untouched. `NAV_ITEMS` in `layout.tsx` is a small,
+  hand-mirrored copy of `app/page.tsx`'s TOC (name + live-demo href only,
+  not the TOC's extra description/docHref fields) — update both when adding
+  a new component, there's no shared import between them by design (the TOC
+  needs richer per-entry fields the nav strip doesn't).
+  **Static-route constraint (load-bearing, not incidental):**
+  `app/(showcase)/docs/components/[slug]/page.tsx` is fully statically
+  prerendered (`generateStaticParams`, all slugs render to static HTML at
+  build time) — `layout.tsx` itself MUST stay a plain, synchronous Server
+  Component with no dynamic API (`cookies()`, `headers()`, `searchParams`),
+  or it forces every doc route back to dynamic (ƒ) rendering. Active-route
+  highlighting needs `usePathname()`, which needs a client boundary — that
+  logic is isolated inside `NavStrip.tsx` (`"use client"`), never inlined
+  into `layout.tsx`. **Verify this by reading `next build`'s own route
+  table after touching either file** — all `/docs/components/*` /
+  `/components/*` routes must stay `○ (Static)`/`● (SSG)`, never flip to
+  `ƒ (Dynamic)`. Re-confirmed clean by the `nav-video-pipeline-files-closeout`
+  story's own fresh `npm run build` (2026-08-09): all 10 `/components/*`
+  routes `○`, `/docs/components/[slug]` `●` with all 10 slugs listed.
+- **`<CopyButton>` (`components/CopyButton.tsx`)** — shared copy-to-clipboard
+  control used by both `<ComponentShowcase>`'s usage-snippet block and
+  `components/Markdown.tsx`'s `pre` renderer (doc pages + the ContentEngine
+  page). **Deliberately NOT feature-detection-gated** on
+  `"clipboard" in navigator` — this app is always HTTPS on Vercel, and
+  localhost is a secure context in every major browser, so
+  `navigator.clipboard` existing was never actually in question in either
+  of this app's real contexts; a feature-detection guard would defend
+  against a non-problem. The real defensive need: `writeText()` returns a
+  Promise that can still reject even in a secure context (e.g. a
+  `NotAllowedError` from document-focus loss) — the button's `.catch()` on
+  that promise is what stops a normal click from producing an unhandled
+  promise rejection, which is the actual failure mode it guards against. If
+  a future session is tempted to add a `"clipboard" in navigator` guard
+  here, that's solving the wrong problem — don't.
+- **VideoTour spin-vs-transition-clip controls scope line — read this
+  before touching `components/VideoTour/TourStage.tsx` or its sample
+  manifests.** `<SpinVideo>` (the `room.spin` looping video) has real,
+  user-facing play/pause/scrub/speed controls, added by
+  `videotour-real-controls-and-sample-clip`. The transition-`clip` `<video>`
+  (played full-frame during doorway navigation) does **NOT**, and must
+  never get them without also building a real `'ended'`-independent arrival
+  fallback as its own separate, tested feature. Reason, load-bearing not
+  stylistic: `VideoTour.go()`'s ONLY path to `arrive()` — which clears
+  `busyRef`/`busy` and re-enables every `DoorwayControls`/`FloorPlanMap`
+  button — is the transition clip's `'ended'` event firing
+  (`onTransitionClipEnded` in `TourStage.tsx`). If a visitor could pause
+  that element, or scrub it backward off the end, `'ended'` would never
+  fire, `arrive()` would never run, and the tour would permanently lock up
+  with no escape hatch anywhere in the current code. The spin video has no
+  such dependency (nothing in the navigation state machine waits on it), so
+  it's safe to control freely — this asymmetry is the whole point, not an
+  oversight to "fix" by symmetrizing the two players. Guarded by a
+  regression test in `TourStage.test.tsx` (asserts zero controls render for
+  the transition clip, including when a spin room's controls are present in
+  the same tree) and enforced on the sample data itself by
+  `public/showcase-samples/demo-house/manifest.test.ts` ("every edge has
+  clip:null"). **Re-verified live by `nav-video-pipeline-files-closeout`
+  (2026-08-09):** no manifest edge in this repo sets a real `clip` today, so
+  the only live-exercisable navigation path in the showcase is the P1 timed
+  "flying to X…" wipe fallback (`WIPE_MS`) — confirmed via Playwright
+  against a real dev server that mid-navigation all doorway/minimap buttons
+  disable, and after the wipe completes the target room renders and every
+  button re-enables (no hang). The `'ended'`-driven `arrive()` path itself
+  (for when a real transition clip eventually exists) is covered only by
+  `TourStage.test.tsx`'s real-DOM-`'ended'`-event test and
+  `VideoTour.test.tsx`'s smoke test — not live-exercisable today because no
+  showcase edge wires a real clip file, by design (see the scope line
+  above), not a gap this closeout introduced or is required to close.
+- **File-viewer pattern: `<FileList>` takes already-resolved URLs; basePath
+  resolution is the call site's job, never the component's** (added by
+  `generic-file-components`, mirroring the precedent
+  `lib/base-path.ts`'s own header comment already set for
+  `components/LayerViewer`/`components/VideoTour`). `lib/file-types.ts`'s
+  `FileEntry.url` is documented as an ALREADY-RESOLVED URL —
+  `components/FileList/FileList.tsx` performs NO basePath resolution of its
+  own (no `withBasePath()` call) and renders a plain `<a href={url}
+  download>`, **never `next/link`** (built for client-side route
+  navigation; it has no `download` attribute support, and would try to
+  intercept a download as an in-app route change). Resolving a root-relative
+  sample path against this deployment's basePath is
+  `app/(showcase)/components/file-list/page.tsx`'s job (it calls
+  `withBasePath()` on each sample file's `url` before handing the array to
+  `<FileList>`), exactly mirroring how the LayerViewer/VideoTour showcase
+  pages already resolve their own `manifest` prop. Keeps `<FileList>` — like
+  every other portable library component in this repo — genuinely
+  basePath-agnostic, so it drops into any consuming app regardless of that
+  app's own basePath/mount prefix. Re-verified live by
+  `nav-video-pipeline-files-closeout` (2026-08-09): both sample downloads
+  resolve to real `200`s, and the rendered anchors carry only
+  `href`/`download`/`class` attributes — no Next.js router hydration
+  markers, confirming they're plain anchors, not `next/link`.
+- **`/pipeline` exists now, but is documentation-only — no scripts, no
+  Dockerfile, no runtime code** (created by
+  `layerviewer-fullscreen-and-pipeline-docs`; see `/pipeline/README.md`).
+  It documents the target WebODM/GDAL/PDAL/tippecanoe toolchain CLAUDE.md's
+  "Stack / plugins" section already named, and — the actually-actionable
+  part — a precise, worked mapping from real WebODM/ODM output files to
+  this framework's EXISTING manifest shapes: `odm_orthophoto.tif` → a
+  `LayerDef` `raster`/`cog` entry (via the same `rio warp --dst-crs
+  EPSG:3857` → `rio cogeo create` → `rio cogeo validate` sequence this
+  repo's own COG-bounds-bug fix already established, see the "Known issues"
+  entry below), `odm_dem/dsm.tif` → the hillshade-generation pattern (same
+  azimuth 315°/altitude 45° convention as the synthetic sample hillshade),
+  `odm_texturing/odm_textured_model_geo.obj` → a `ModelDef` (or
+  `GeoAnchoredModel`, for land-overlay draping) entry via `obj2gltf`.
+  **Deliberately gated on CLAUDE.md's Phase-0 nadir pass** — there is no
+  real ODM output anywhere to validate a working conversion script against
+  yet, so writing one now would encode unverifiable guesses about real ODM
+  output shape. **This must stay documentation-only until a real WebODM run
+  exists** — if a future session is tempted to write `/pipeline` scripts
+  against synthetic/assumed ODM output, don't; extend the mapping doc
+  instead, or wait for real hardware output to validate against.
 
 ## Known issues
 

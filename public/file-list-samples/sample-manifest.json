@@ -1,0 +1,5 @@
+{
+  "note": "Tiny, non-sensitive sample JSON file used only to demonstrate <FileList>'s download link against a real, working URL.",
+  "slug": "sample",
+  "values": [1, 2, 3]
+}

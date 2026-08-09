@@ -1,0 +1,145 @@
+id: generic-file-components
+epic: nav-video-pipeline-files
+title: "<FileUpload>, a file viewer/download component, <ProcessingStatus> — generic, backend-free"
+status: pending
+complexity: medium
+methodology: bdd
+depends_on: [site-nav-and-copy-buttons]
+
+description: |
+  READ .pHive/epics/nav-video-pipeline-files/docs/design-discussion.md §3d
+  IN FULL before starting, including its grill-corrected specifics below.
+
+  **SCOPE-BOUNDARY DISCIPLINE — the single highest-stakes constraint in
+  this entire epic, read this before writing any code.** This stream
+  exists because the operator's original request ("files, contracts, back
+  and forth, viewing and downloading, uploading, processing") was
+  explicitly clarified via an AskUserQuestion: GENERIC REUSABLE COMPONENTS
+  ONLY. No backend, no auth, no storage, no real contract/business logic
+  of any kind. That logic belongs entirely to the separate personal-drone
+  platform (CLAUDE.md's own "Scope boundary" section — this exact
+  ambiguity already triggered a real scope correction earlier in this
+  project's history). If you find yourself writing an API route, a
+  database call, an auth check, or anything that isn't presentational
+  UI + a typed props contract demoed against sample/mock data — STOP. That
+  is out of bounds for this story.
+
+  Three components, each in its own top-level components/ directory
+  (matching this repo's one-directory-per-component convention —
+  components/LayerViewer/, components/Model3D/, etc. — not a shared
+  components/Files/ grouping):
+
+  1. **`<FileUpload>`** (components/FileUpload/): a drag-and-drop +
+     click-to-browse target. A typed `onFilesSelected(files: File[])`
+     callback prop — no upload logic of its own; the consuming app owns
+     any actual network call. Demoed on its own showcase page against a
+     no-op handler that just lists selected filenames in the UI (this
+     demo behavior must be visually unmistakable as inert — a label like
+     "Selected (demo only, nothing is uploaded):" or similar, not a bare
+     filename list that could be mistaken for a real upload confirmation).
+
+  2. **A file viewer/download component** (name it clearly, e.g.
+     components/FileList/ or components/FileViewer/ — avoid colliding
+     with the "FileUpload" name): given a typed manifest prop
+     (`{name, url, sizeBytes, contentType}[]` — same "typed registry"
+     shape convention as LayerDef/ModelDef), renders a list with an
+     icon/label by content type and a download link per file.
+
+     CRITICAL, grill-corrected implementation constraint: this component
+     takes ALREADY-RESOLVED URLs in its manifest prop and renders a plain
+     `<a href={url} download>` — NOT next/link (built for client-side
+     route navigation, has no `download` attribute support) and NOT any
+     internal `withBasePath()` call. Read lib/base-path.ts's header
+     comment directly: it explicitly prohibits using withBasePath() "inside
+     components/LayerViewer or components/VideoTour themselves — those
+     are the portable, plug-and-play library components and must stay
+     basePath-agnostic." This new component is the same kind of portable
+     component. basePath resolution is the showcase page's job — call
+     withBasePath() on the sample manifest's URLs before passing them to
+     the component, exactly mirroring how the LayerViewer and VideoTour
+     showcase pages already call withBasePath() on their manifest prop
+     today (read app/(showcase)/components/layer-viewer/page.tsx for the
+     exact precedent). No real file storage — demo against a small sample
+     manifest pointing at a couple of public/-hosted sample files.
+
+  3. **`<ProcessingStatus>`** (components/ProcessingStatus/): a typed
+     `status: "queued" | "processing" | "done" | "error"` (+ optional
+     `progress: number` 0-1) indicator — presentational only, no
+     polling/websocket logic of its own; the consuming app owns how status
+     updates arrive. Demoed with a showcase-page control that cycles
+     through the states — this demo control must also be visually
+     unmistakable as inert/manual (e.g. explicit "Cycle demo state" button
+     a visitor clicks themselves, not an auto-advancing simulated job that
+     could read as a real pipeline run to a first-time visitor).
+
+  All three get their own showcase page (added to the root ToC in
+  app/page.tsx, and to the persistent nav strip from
+  site-nav-and-copy-buttons — this story depends on that one landing
+  first specifically so you can extend its nav data with these 3 new
+  entries) and a docs/components/*.md writeup, matching every existing
+  component's pattern exactly (see docs/components/voxel-terrain.md or
+  similar for the expected structure/tone).
+
+acceptance_criteria:
+  - "Given each of the 3 new components, when reviewed, then none of them contain any network call, storage access, or auth check of any kind — verified by reading the actual implementation, not just the story's own claim"
+  - "Given the FileUpload demo, when files are selected, then the UI clearly labels the resulting filename list as a non-functional demo, not an upload confirmation"
+  - "Given the file-viewer component, when given a manifest of already-resolved URLs, then it renders plain <a href download> elements, not next/link, and performs no basePath resolution internally"
+  - "Given the ProcessingStatus demo, when the state-cycling control is used, then it requires an explicit user action per state change (or is otherwise unmistakably a manual demo control), not an automatic simulated job"
+  - "Given app/page.tsx's ToC and the nav strip from site-nav-and-copy-buttons, when rendered, then all 3 new components appear in both"
+  - "Given the full test suite and a real npm run build, when run after this story, then both pass cleanly"
+
+steps:
+  - id: research
+    description: Read design-discussion.md §3d in full; read lib/base-path.ts's header comment directly; read an existing showcase page (layer-viewer) for the withBasePath() precedent to mirror.
+    agent: researcher
+  - id: behavior-spec
+    description: Write Given-When-Then specs for the acceptance criteria above, including an explicit spec asserting no network/storage/auth code exists in any of the 3 components.
+    agent: tester
+    depends_on: [research]
+  - id: implement
+    description: Build all 3 components + their showcase pages + docs; extend app/page.tsx's ToC and the nav strip.
+    agent: developer
+    depends_on: [behavior-spec]
+  - id: test
+    description: Run/derive tests; live-verify each showcase page and the demo interactions are unmistakably inert.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Re-verify the scope-boundary discipline directly against the actual code (not the story's claims) — this is the single most important check in this story.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on feat/nav-video-pipeline-files.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/base-path.ts
+      purpose: The header comment explicitly prohibiting withBasePath() inside portable library components — the exact rule the file-viewer component must follow.
+    - path: "app/(showcase)/components/layer-viewer/page.tsx"
+      purpose: The precedent for calling withBasePath() at the showcase-page call site, not inside the component.
+    - path: lib/layer-types.ts
+      purpose: The "typed registry" shape convention (LayerDef) the file-viewer's manifest shape should mirror.
+
+files_to_modify:
+  - file: components/FileUpload/
+    change: New component + showcase page + doc.
+  - file: components/FileList/
+    change: New component (or FileViewer/ — final name decided during implementation) + showcase page + doc.
+  - file: components/ProcessingStatus/
+    change: New component + showcase page + doc.
+  - file: app/page.tsx
+    change: Add 3 new ToC entries.
+
+design_decisions:
+  - decision: One top-level directory per component, matching existing convention.
+    rationale: This repo has no precedent for a shared components/Files/ grouping directory; matching the existing pattern (components/LayerViewer/, components/Model3D/) is more consistent than introducing a new one.
+  - decision: File-viewer takes already-resolved URLs, no internal basePath awareness.
+    rationale: "Grill finding #2: lib/base-path.ts explicitly prohibits this inside portable components; basePath resolution belongs at the showcase-page call site."
+
+risks:
+  - severity: high
+    description: This is the epic's single highest scope-boundary risk, given this exact ambiguity already triggered a real correction earlier in this project.
+    mitigation: Explicit, repeated scope-boundary language throughout this story; the review step's #1 job is re-verifying it against actual code, not trusting the implementer's self-report.

@@ -4,3 +4,5 @@
 // page later too (see ComponentShowcase.tsx's header comment).
 export { ComponentShowcase } from "./ComponentShowcase";
 export type { ComponentShowcaseProps } from "./ComponentShowcase";
+export { NavStrip } from "./NavStrip";
+export type { NavStripItem, NavStripProps } from "./NavStrip";

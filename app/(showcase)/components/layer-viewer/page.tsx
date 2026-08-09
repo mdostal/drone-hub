@@ -25,17 +25,22 @@ import type { LayerDef, LayerViewerHandle } from "@/components/LayerViewer";
 
 const viewerRef = useRef<LayerViewerHandle>(null);
 const [layers, setLayers] = useState<LayerDef[]>([]);
+const [isFullscreen, setIsFullscreen] = useState(false);
 
 <LayerViewer
   ref={viewerRef}
   manifest="/layer-viewer-samples/2806-prado/layers.json"
   onLayersChange={setLayers}
+  onFullscreenChange={setIsFullscreen}
 />
 <LayerControl
   layers={layers}
   onToggle={(id, toggle) => viewerRef.current?.toggleLayer(id, toggle)}
   onOpacityChange={(id, opacity) => viewerRef.current?.setOpacity(id, opacity)}
-/>`;
+/>
+<button onClick={() => viewerRef.current?.toggleFullscreen()}>
+  {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+</button>`;
 
 // Mirrors the ref-handle wiring pattern from app/properties/[slug]/page.tsx:
 // LayerViewer and LayerControl are independent siblings, wired together by
@@ -44,6 +49,7 @@ const [layers, setLayers] = useState<LayerDef[]>([]);
 export default function LayerViewerShowcasePage() {
   const viewerRef = useRef<LayerViewerHandle>(null);
   const [layers, setLayers] = useState<LayerDef[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Dev-only test hook, same pattern/rationale as
   // app/(showcase)/components/land-overlay/page.tsx's own copy of this
@@ -69,8 +75,17 @@ export default function LayerViewerShowcasePage() {
               ref={viewerRef}
               manifest={withBasePath("/layer-viewer-samples/2806-prado/layers.json")}
               onLayersChange={setLayers}
+              onFullscreenChange={setIsFullscreen}
             />
-            <div className="pointer-events-auto absolute right-3 top-3">
+            <div className="pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={() => viewerRef.current?.toggleFullscreen()}
+                aria-pressed={isFullscreen}
+                className="rounded-lg border border-border bg-surface/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur transition-colors hover:border-accent hover:text-accent"
+              >
+                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              </button>
               <LayerControl
                 layers={layers}
                 onToggle={(id, toggle) => viewerRef.current?.toggleLayer(id, toggle)}

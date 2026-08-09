@@ -42,6 +42,60 @@ See `lib/tour-types.ts`. A tour is `nodes` (rooms) + `edges` (doorways):
 
 Authoring a new property = write one `tour.json` manifest + drop the clips on R2. No code.
 
+### Real spin-video controls + sample clip provenance (`videotour-real-controls-and-sample-clip`, 2026-08-09)
+
+**Spin video only, never the transition clip — the scope line is load-bearing, not a
+style choice.** `VideoTour.go()`'s only path to `arrive()` (which clears `busyRef`/
+`busy`, un-disabling every `DoorwayControls`/`FloorPlanMap` button) is `TourStage`'s
+`onTransitionClipEnded` firing on the transition clip's `'ended'` event. If a visitor
+could pause that clip, or scrub it backward off the end, `'ended'` would never fire,
+`arrive()` would never run, and the tour would permanently lock up with no escape
+hatch anywhere in the current code. The `spin` video has no such dependency — nothing
+in the navigation state machine waits on it — so it's safe to give real controls.
+`TourStage.tsx`'s `<SpinVideo>` now renders a themed on-video controls bar (play/pause,
+a scrub/seek `<input type="range">` bound to `currentTime`/`duration` via a
+`timeupdate`/`loadedmetadata` listener, a mute/unmute toggle, and 0.5x/1x/1.5x/2x
+speed buttons bound to `video.playbackRate`) — styled with this repo's design tokens
+(`bg-surface`/`border-border`/`text-accent`/`text-foreground` from `app/globals.css`),
+matching `Model3D`'s/`VoxelTerrain`'s on-canvas legend-panel visual language. The video
+still autoplays muted on arrival by default (unregressed silent-loop behavior for
+anyone who doesn't touch the controls) — the controls only add the *ability* to pause,
+scrub, unmute, and change speed, they don't change the default. The transition-clip
+`<video>` (see the behavior list below) is deliberately untouched: still autoplay,
+muted, no controls, `onEnded` the only path to `arrive()`.
+
+**Sample clip provenance (`public/showcase-samples/demo-house/living-spin.mp4`):**
+every room's `spin` field was `null` in this manifest before this story — the spin
+code path had never actually rendered. A real, correctly-licensed public clip was
+sourced (same category of research as `layer-viewer.md`'s ortho-sourcing search) —
+this repo had zero video-encoding tooling before this story (`ffmpeg` not a project
+dependency; confirmed via `grep -i ffmpeg package.json` returning nothing), so the
+synthetic-fallback path was budgeted for but not needed once a suitable clip turned
+up. Source: [**"Slow motion ceiling fan"**](https://commons.wikimedia.org/wiki/File:Slow_motion_ceiling_fan.webm)
+by GolhaMedia, via Wikimedia Commons, licensed
+[**CC BY-SA 4.0**](https://creativecommons.org/licenses/by-sa/4.0/) — a real, static-camera
+interior shot of a ceiling fan spinning, genuinely plausible as an ambient "room spin"
+placeholder (unlike a thematically-unrelated clip, which was the other real PD
+candidate found during the search — a NASA/SVS eclipse-glasses demonstration video,
+public domain but with no interior/room framing at all). **Derivative work, shipped
+under the same license**, per CC BY-SA's share-alike term: the original 49s/800×450
+WebM was trimmed to a 5-second static-camera segment (`ffmpeg -ss 6 -t 5`, installed
+locally via `brew install ffmpeg` for this one-time edit — not a project dependency,
+same "pipeline tools live outside the bundle" convention as `layer-viewer.md`'s
+`scikit-image` note), downscaled to 640×360, re-encoded to H.264 baseline MP4 (silent —
+the audio track was dropped; the player is muted by default regardless), and a
+burned-in caption ("DEMO — stock footage, not the actual room") was composited on top
+via `ffmpeg`'s `overlay` filter (this build of `ffmpeg` has no `drawtext`/`libfreetype`
+support, so the caption was rendered as a transparent PNG with Pillow and overlaid as a
+video filter instead) — both because it's genuinely unrelated content standing in for
+a room (unlike the ortho photo, which is real aerial imagery of *an* outdoor space),
+and to match the demo-house SVG stills' own "DEMO — fictional room, not a real
+property" disclaimer convention. Final file: ~109 KiB, assigned to the Living Room
+(`rooms[1].spin` in `tour.json`) — the only room with a non-null `spin` value; every
+other room, and every edge's `clip`, remains `null`. Re-distributing or further
+modifying `living-spin.mp4` must keep the CC BY-SA 4.0 license + attribution to
+GolhaMedia intact, per the license's own terms.
+
 > **Implementation note (deviation from this section's wording):** the shipped
 > `Tour` type (`lib/tour-types.ts`) doesn't have a top-level `edges` array — it's
 > an adjacency list: `Tour.rooms: TourRoom[]`, and each room carries its own
@@ -80,9 +134,9 @@ Authoring a new property = write one `tour.json` manifest + drop the clips on R2
 
 ## Acceptance criteria
 - [x] Loads a `Tour` manifest; renders nodes with spin-clip OR still fallback.
-  Verified: `VideoTour.tsx` fetches a manifest URL (or accepts a `Tour` object directly); `TourStage.tsx` renders `room.spin` as a looping muted video when set, else `room.still` with the Ken-Burns treatment. Covered by `VideoTour.test.tsx` ("initial render") and `TourStage.test.tsx`.
+  Verified: `VideoTour.tsx` fetches a manifest URL (or accepts a `Tour` object directly); `TourStage.tsx` renders `room.spin` as a looping muted video (with a real, themed play/pause/scrub/speed controls bar — `<SpinVideo>`, added by `videotour-real-controls-and-sample-clip`) when set, else `room.still` with the Ken-Burns treatment. Covered by `VideoTour.test.tsx` ("initial render") and `TourStage.test.tsx`. **Update, 2026-08-09:** this branch is no longer smoke-tested-only for `spin` — `public/showcase-samples/demo-house/tour.json`'s Living Room now sets a real `spin` clip (`living-spin.mp4`, provenance above), and the controls bar is unit-tested (play/pause toggling on real `'play'`/`'pause'` events, mute toggling, seek-slider → `currentTime`, speed buttons → `playbackRate`) plus live-Playwright-verified against a real `next build && next start` server.
 - [x] Doorway + minimap navigation with transition-clip OR wipe fallback; no double-fire (`busy`).
-  Verified: `VideoTour.tsx`'s `go()` plays `edge.clip` full-frame when set, else the timed "flying to X…" wipe; a `busyRef` (not just React state, to catch same-tick re-clicks) blocks re-entrant navigation until the wipe/clip finishes plus a cooldown. Covered by `VideoTour.test.tsx`'s "doorway navigation" busy-guard test, `DoorwayControls.test.tsx`, and `FloorPlanMap.test.tsx`. Note: the transition-clip branch itself is P2-structural — no manifest edge sets a real `clip` yet, so it's exercised only by "doesn't throw" smoke tests, not real clip playback.
+  Verified: `VideoTour.tsx`'s `go()` plays `edge.clip` full-frame when set, else the timed "flying to X…" wipe; a `busyRef` (not just React state, to catch same-tick re-clicks) blocks re-entrant navigation until the wipe/clip finishes plus a cooldown. Covered by `VideoTour.test.tsx`'s "doorway navigation" busy-guard test, `DoorwayControls.test.tsx`, and `FloorPlanMap.test.tsx`. **Still accurate as of 2026-08-09 — unchanged by `videotour-real-controls-and-sample-clip`, by design:** the transition-clip branch remains P2-structural and uncontrolled — no manifest edge sets a real `clip` yet, so it's exercised only by "doesn't throw" smoke tests, not real clip playback, and it deliberately received NO user controls (see the "Real spin-video controls" section above for the deadlock-risk reasoning: the transition clip's `'ended'` event is the only path to `arrive()`, so pause/scrub control there without a real `'ended'`-independent fallback is a genuine, shippable deadlock — out of scope for that story, not an oversight here).
 - [ ] Neighbor preloading; smooth on mobile (Mathew reviews on his phone).
   Preloading is implemented and thoroughly tested: `useNeighborPreload.ts` preloads direct (1-hop) neighbors' media on every arrival, priority `edge.clip → neighbor.spin → neighbor.still`, no recursive/2-hop preloading (`useNeighborPreload.test.ts`, 9 specs). Left unchecked because the "smooth on mobile" half of this criterion is literally an on-device pass on Mathew's phone — that hasn't happened, and there's no automated substitute for it in this verification pass.
 - [x] Floor-plan minimap: positions, edges, current-room highlight, clickable.

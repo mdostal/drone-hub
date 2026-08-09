@@ -80,6 +80,28 @@ const TOC: TocEntry[] = [
       label: "VoxelTerrain demo page",
     },
   },
+  {
+    name: "FileUpload",
+    description: "A generic drag-and-drop + click-to-browse target — hands the caller a File[], no upload logic of its own.",
+    demoHref: "/components/file-upload",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/file-upload",
+  },
+  {
+    name: "FileList",
+    description:
+      "Given a typed manifest of already-resolved file URLs, renders an icon/label-by-content-type list with a real download link per file.",
+    demoHref: "/components/file-list",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/file-list",
+  },
+  {
+    name: "ProcessingStatus",
+    description: "A typed queued/processing/done/error indicator — presentational only, no polling or websocket logic of its own.",
+    demoHref: "/components/processing-status",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/processing-status",
+  },
 ];
 
 export default function Home() {
