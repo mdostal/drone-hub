@@ -14,11 +14,12 @@
 // Public, ungated — this whole repo carries no gating of any kind (see
 // CLAUDE.md's "Scope boundary" section).
 //
-// public/layer-viewer-samples/2806-prado/ is already-confirmed public-safe
-// synthetic sample data (not real property photography), and
+// public/layer-viewer-samples/2806-prado/ is real photogrammetry from the
+// operator's own property, released for public use by the operator (see
+// the UPDATE comment below SAMPLE_MODEL_SCALE for the full provenance).
 // public/model3d-samples/duck/model.glb is the same generic sample glTF
-// <Model3D>'s showcase page already uses — no new asset sourcing, no rights
-// concern.
+// <Model3D>'s showcase page previously used exclusively — no new asset
+// sourcing, no rights concern for the duck itself.
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { ComponentShowcase } from "@/components/showcase";
@@ -52,26 +53,31 @@ const LayerViewer = dynamic(() => import("@/components/LayerViewer").then((mod) 
 // ortho.tif was fully replaced — the old file was a single-band uint16
 // rio-tiler test fixture (near-solid-black when rendered) at ~73.47°N in
 // the high Arctic. It's now a real 3-band RGB drone orthophoto (cropped
-// from an OpenAerialMap CC-BY 4.0 image, see
-// docs/components/layer-viewer.md's "Sample data provenance" section for
-// the full source/license writeup), which naturally sits at a real small
-// extent in South Carolina, ~33.35°N/-81.27°W. hillshade.tif/thermal.tif/
-// parcel.geojson/contours.geojson were all regenerated together at this
-// SAME new extent so every layer (and this duck anchor) stays registered
-// to one consistent grid — CLAUDE.md's "#1 registration gate." The lat/lon
-// below is the new parcel's centroid.
+// from an OpenAerialMap CC-BY 4.0 image), which naturally sits at a real
+// small extent in South Carolina, ~33.35°N/-81.27°W.
 //
-// `scale` — originally live-tuned via Playwright (see the history below)
-// against the OLD parcel's ~120m x 100m footprint. RE-VERIFIED live for
-// this story's much smaller new parcel (~29m x 53m — see the UPDATE
-// comment above): rather than assume the old absolute value (`10`) still
-// works, it was re-measured directly against the new imagery via the same
-// pixel-readback method (a live R-B>100 duck-colored-pixel scan — see
-// lib/maplibre-model-layer.placement.test.ts's own header comment for the
-// mask's full derivation) — the duck renders as a clearly-visible,
-// non-degenerate silhouette comfortably inside the new parcel at the SAME
-// `scale: 10`, so it was kept unchanged rather than re-tuned to a new
-// number. `scale` (lib/geo-model-types.ts) is a multiplier on top of
+// UPDATE (real georeferenced-fix story): the sample ortho/hillshade/
+// parcel/contours were replaced AGAIN — this time with the operator's own
+// real 2806 Prado St photogrammetry (real nadir-grid flight, real
+// OpenDroneMap reconstruction, real GPS georeferencing after fixing the
+// prior run's missing EXIF-GPS-on-extracted-frames bug — see
+// docs/components/layer-viewer.md's provenance section for the full
+// writeup). The property's own owner explicitly cleared this real data for
+// use in this public framework repo (full release rights — distinct from
+// the separate professional real-estate-shoot photos CLAUDE.md's stricter
+// release-forms rule still covers). New real extent: ~30.262°N/-97.708°W
+// (Austin, TX), the new parcel's centroid, below.
+//
+// `scale` — kept at the same `10` empirically verified against the prior
+// (smaller, ~29m x 53m) parcel rather than the duck being swapped for the
+// real reconstructed mesh here: the real textured mesh (
+// public/model3d-samples/prado/model.glb, now used by <Model3D>'s own
+// showcase) is Z-up in its raw ODM/OBJ export, not glTF's standard Y-up —
+// createModelLayer's fixed Y-up -> Mercator-Z-up correction would rotate
+// it onto its side without a real axis-correction pass this story didn't
+// budget for. The duck is already correctly Y-up and pre-verified, so it
+// stays the LandOverlay demo model; only its anchor moved to the new real
+// location. `scale` (lib/geo-model-types.ts) is a multiplier on top of
 // createModelLayer's meters-per-glTF-unit conversion. The sample duck glTF
 // (public/model3d-samples/duck/model.glb, the classic Khronos "Duck"
 // sample) is authored in oversized raw units — its glTF position accessor's
@@ -102,8 +108,8 @@ const SAMPLE_MODELS: GeoAnchoredModel[] = [
     id: "duck",
     url: withBasePath("/model3d-samples/duck/model.glb"),
     title: "Duck (sample glTF)",
-    lat: 33.350613554313604,
-    lon: -81.2681617934123,
+    lat: 30.2618978800391,
+    lon: -97.7081778061722,
     altitudeMeters: 0,
     scale: SAMPLE_MODEL_SCALE,
   },
@@ -121,8 +127,8 @@ const models: GeoAnchoredModel[] = [
     id: "duck",
     url: "/model3d-samples/duck/model.glb",
     title: "Duck (sample glTF)",
-    lat: 33.350613554313604,
-    lon: -81.2681617934123,
+    lat: 30.2618978800391,
+    lon: -97.7081778061722,
     altitudeMeters: 0,
     scale: ${SAMPLE_MODEL_SCALE},
   },

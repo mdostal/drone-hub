@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
-import path from "node:path";
 import type { VoxelGrid } from "@/lib/voxel-types";
 import heightmapJson from "./heightmap.json";
 
@@ -30,15 +28,13 @@ function assertVoxelGrid(x: unknown): asserts x is VoxelGrid {
   }
 }
 
-const sampleDir = path.dirname(new URL(import.meta.url).pathname);
-
 describe("2806-prado sample heightmap", () => {
   it("runtime-validates and type-checks as a valid VoxelGrid", () => {
     const raw: unknown = heightmapJson;
     assertVoxelGrid(raw);
     const grid: VoxelGrid = raw; // narrowed by the assertion above, no cast needed
     expect(grid.slug).toBe("2806-prado");
-    expect(grid.title).toMatch(/derived sample terrain/i);
+    expect(grid.title).toMatch(/derived terrain/i);
   });
 
   it("has no color/material/rendering fields (data shape only)", () => {
@@ -107,70 +103,25 @@ describe("2806-prado sample heightmap", () => {
     expect(correlation).toBeGreaterThan(0.5);
   });
 
-  it(
-    "is correlated with the actual source hillshade pixel gradient " +
-      "(re-derived independently via python3+rasterio), if available",
-    () => {
-      const hillshadePath = path.join(
-        process.cwd(),
-        "public/layer-viewer-samples/2806-prado/hillshade.tif",
-      );
-      const script = `
-import json
-import numpy as np
-import rasterio
-
-with rasterio.open("${hillshadePath}") as src:
-    arr = src.read(1).astype(np.float64)
-
-size = ${heightmapJson.size}
-# Separate row/column block sizes, NOT a single shared block derived from
-# rows alone — layerviewer-sample-dataset-overhaul's hillshade.tif is a
-# real (non-square) portrait aspect (rows > cols, matching the new sample
-# ortho's own natural extent), so a single arr.shape[0]-based block would
-# under-cover the narrower column dimension and make the reshape below
-# fail outright. This mirrors the actual generation script's own
-# block_h/block_w split.
-block_h = arr.shape[0] // size
-block_w = arr.shape[1] // size
-trimmed = arr[: size * block_h, : size * block_w]
-pooled = trimmed.reshape(size, block_h, size, block_w).mean(axis=(1, 3))
-print(json.dumps(pooled.flatten().tolist()))
-`;
-      let stdout: string;
-      try {
-        stdout = execFileSync("python3", ["-c", script], {
-          stdio: ["ignore", "pipe", "ignore"],
-        }).toString();
-      } catch (err: unknown) {
-        const e = err as { code?: string };
-        if (e.code === "ENOENT") {
-          // python3 not on PATH in this environment - skip rather than fail,
-          // matching manifest.test.ts's rio-cogeo skip pattern.
-          return;
-        }
-        throw new Error("failed to re-derive pooled hillshade values via python3+rasterio");
-      }
-      const pooled: number[] = JSON.parse(stdout);
-      const heights = heightmapJson.heights;
-      expect(pooled.length).toBe(heights.length);
-
-      const mean = (arr: number[]) => arr.reduce((x, y) => x + y, 0) / arr.length;
-      const mp = mean(pooled);
-      const mh = mean(heights);
-      let num = 0;
-      let dp = 0;
-      let dh = 0;
-      for (let i = 0; i < pooled.length; i++) {
-        num += (pooled[i] - mp) * (heights[i] - mh);
-        dp += (pooled[i] - mp) ** 2;
-        dh += (heights[i] - mh) ** 2;
-      }
-      const correlation = num / Math.sqrt(dp * dh);
-      // Quantization is a monotonic (rounded-linear) map of the pooled
-      // pixel average, so it should correlate very strongly with the raw
-      // pooled hillshade values it was derived from.
-      expect(correlation).toBeGreaterThan(0.95);
-    },
-  );
+  // A previous version of this file cross-checked the heightmap against
+  // public/layer-viewer-samples/2806-prado/hillshade.tif's own pixel
+  // gradient (re-derived live via python3+rasterio), because at the time
+  // heights were themselves quantized FROM hillshade pixel intensity — a
+  // shading proxy for terrain, not real elevation.
+  //
+  // The real georeferenced-fix story replaced that lineage: this
+  // heightmap.json is now block-pooled and quantized DIRECTLY from the
+  // real DSM (dsm.tif, from the operator's actual ODM reconstruction of
+  // 2806 Prado St), not from hillshade. That cross-check no longer applies
+  // and would likely be actively misleading if kept — hillshade encodes
+  // local slope+aspect shading relative to a sun angle, which has no
+  // reliable monotonic relationship to absolute elevation (a flat rooftop
+  // at high elevation and flat ground at low elevation can produce similar
+  // hillshade values), so testing heights-vs-hillshade correlation would
+  // be testing the wrong thing now. The DSM itself isn't duplicated into
+  // this repo as a second copy for a test to re-derive from (it's a 2.8MB
+  // raster and hillshade.tif already carries its derived, committable
+  // form) — the statistical checks above (range, real variation, spatial
+  // correlation) remain real, meaningful validation of the shipped data
+  // independent of which raster it was pooled from.
 });

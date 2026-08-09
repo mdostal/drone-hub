@@ -387,3 +387,30 @@ story. See "Measure tool + controls legend" above for the full behavior descript
 - **Later (per the operator's 2026-08-07 vision expansion, `CLAUDE.md`):** `<Model3D>` is
   the confirmed foundation for the 3D-on-land overlay, the Minecraft voxelizer/content
   engine, and telemetry-driven video overlay work queued after it.
+
+## Real data update (2806 Prado, real georeferenced-fix story)
+
+The showcase's primary sample swapped from the Khronos duck to a REAL textured mesh:
+`public/model3d-samples/prado/model.glb`, the operator's own 2806 Prado St nadir-grid
+photogrammetry (OpenDroneMap `odm_texturing_25d` output). Pipeline: `obj2gltf` (raw OBJ →
+glTF) → `@gltf-transform/cli resize` (textures to 512px) → a small custom axis-correction
+script (rotates the raw ODM export's Z-up convention to glTF's standard Y-up — needed
+because `useGLTF`/`OrbitControls` assume Y-up; without it the mesh rendered edge-on by
+default, confirmed live via Playwright) → `@gltf-transform/cli draco` (mesh compression).
+Net: ~29MB raw export → ~2MB committed asset, geometry/vertex counts unchanged
+(gltf-transform inspect confirmed before/after).
+
+**Read this before assuming the default view looks "broken":** the mesh is REAL, low
+`--pc-quality`/`--feature-quality` ODM output from a NADIR-ONLY flight (no oblique/
+side-facing passes) — solid, coherent surface data when viewed top-down, but no
+reconstructed vertical walls, so a 3/4 diagonal angle (the fixed default camera at
+`Canvas`'s `camera={{position:[3,3,3]}}`) shows sparse, jagged fragments where you're
+seeing through gaps between disconnected patches. Drag to orbit toward a top-down angle for
+the real, coherent view. This is an honest characteristic of the source capture
+(CLAUDE.md's own "visual property-intelligence, NOT survey-grade" framing made visible),
+not a rendering bug — verified by comparing `gltf-transform inspect`'s vertex/face counts
+before and after compression (identical) and by live-orbiting the actual showcase page.
+
+The original `public/model3d-samples/duck/model.glb` stays in the repo — `<LandOverlay>`'s
+showcase still uses it (see that component's own doc for why the real mesh wasn't swapped
+in there too).

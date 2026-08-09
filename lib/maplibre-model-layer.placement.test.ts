@@ -69,12 +69,15 @@ const CLEAN_REFERENCE_URL = "/components/layer-viewer";
 
 // Mirrors app/(showcase)/components/land-overlay/page.tsx's SAMPLE_MODELS
 // duck anchor exactly (the sample parcel's centroid — see that file for
-// full provenance). Updated by layerviewer-sample-dataset-overhaul: the
-// sample ortho/hillshade/thermal/contours/parcel were all regenerated
-// together at a new real location (a cropped OpenAerialMap drone
-// orthophoto near 33.35°N/-81.27°W), so the duck anchor moved too.
-const DUCK_LAT = 33.350613554313604;
-const DUCK_LON = -81.2681617934123;
+// full provenance). Updated AGAIN by the real georeferenced-fix story: the
+// sample ortho/hillshade/parcel/contours were replaced with the operator's
+// own real, rights-cleared 2806 Prado St photogrammetry (~30.262°N/
+// -97.708°W, Austin TX), so the duck anchor moved to that new parcel's
+// centroid. Zoom/golden-centroid/mask-threshold below were all re-verified
+// live against the new ortho (see each constant's own comment) — this is a
+// real re-calibration, not a blind coordinate swap.
+const DUCK_LAT = 30.2618978800391;
+const DUCK_LON = -97.7081778061722;
 // Live-tuned against the real showcase page (RE-TUNED by
 // layerviewer-sample-dataset-overhaul for the new, much smaller parcel —
 // see DUCK_LAT/DUCK_LON's own comment): at this zoom the duck renders as a
@@ -349,12 +352,13 @@ test.describe("numeric placement accuracy (map.project() vs actual rendered posi
     expect(m.projected.y).toBeGreaterThanOrEqual(m.bbox!.minY - margin);
     expect(m.projected.y).toBeLessThanOrEqual(m.bbox!.maxY + margin);
 
-    // RE-DERIVED by layerviewer-sample-dataset-overhaul (new duck anchor,
-    // new DUCK_ZOOM, new R-B>100 mask — see this file's header comment and
-    // DUCK_LAT/DUCK_LON/DUCK_ZOOM's own comments). Two independent live
-    // measurements against the current, correct code reproduced this value
-    // to sub-pixel precision (deterministic static scene).
-    const golden = { x: 345.25, y: 235.82 };
+    // RE-DERIVED AGAIN by the real georeferenced-fix story (new duck
+    // anchor at the real Prado parcel's centroid — same DUCK_ZOOM/mask,
+    // both re-confirmed live: containment + mask-count assertions above
+    // still pass unchanged against the new ortho). Two independent live
+    // runs against the current, correct code reproduced this value to
+    // sub-pixel precision (deterministic static scene).
+    const golden = { x: 363.3190767141887, y: 221.81805838424984 };
     const dist = Math.hypot(m.centroid!.x - golden.x, m.centroid!.y - golden.y);
     expect(dist, `centroid=${JSON.stringify(m.centroid)} golden=${JSON.stringify(golden)}`).toBeLessThanOrEqual(15);
   });

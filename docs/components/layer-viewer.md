@@ -385,3 +385,21 @@ holds.
   here.
 - **P4 (per CBA):** thermal activation — flip `disabled: false` on the existing stub once
   a radiometric sensor is acquired; zero component rework required, by design.
+
+## Real data update (2806 Prado, real georeferenced-fix story)
+
+The sample ortho/hillshade/contours are no longer synthetic placeholders — they're the
+operator's own real 2806 Prado St nadir-grid photogrammetry: a real OpenDroneMap
+reconstruction (99% frame alignment) reprojected to EPSG:3857 (`rio warp` + `rio cogeo
+create`/`validate`, the same pipeline `/pipeline/README.md` documents), with hillshade and
+2.5m contours derived directly from the real reconstructed DSM. Released for public use by
+the property's owner (full release rights) — distinct from the separate professional
+real-estate-shoot photos CLAUDE.md's stricter release-forms rule still covers. `parcel.geojson`
+stays an approximate reconstruction-footprint placeholder (not a real recorded parcel), and
+`thermal` reverted to a `disabled: true` stub (no radiometric sensor exists) — see
+`public/layer-viewer-samples/2806-prado/manifest.test.ts` for the exact assertions. A real,
+important bug was found and fixed getting here: the first ODM run had `has_gps: false`
+(frame extraction via `ffmpeg -vf fps=1` didn't carry GPS EXIF into the extracted JPGs), so
+it reconstructed correctly relatively but anchored at a bogus location. Fixed by injecting
+real per-frame GPS (from `exiftool -ee -G3 -json -n`) into the extracted frames before
+re-running ODM.

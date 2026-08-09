@@ -313,3 +313,23 @@ standing showcase-site pattern (see `.pHive/CONTEXT.md`). The one gated consumer
   overlay epic is queued after this one; it does not extend `<VoxelTerrain>` or
   `VoxelGrid` — see `docs/components/content-engine.md`'s note on `FlightLogEntry`'s
   scope for the same anti-speculation precedent applied to that epic's own future type.
+
+## Real data update (2806 Prado, real georeferenced-fix story)
+
+The "Deferred, not this epic's scope" note above is now resolved for 2806-prado
+specifically: `public/minecraft-samples/2806-prado/heightmap.json` is no longer derived
+from a synthetic hillshade — it's block-pooled (32×32, mean per cell) and quantized
+directly from the operator's real, ODM-reconstructed DSM (`dsm.tif`, real elevation in
+meters, not a shading proxy). The DSM raster itself isn't duplicated into this repo as a
+second committed copy (it's a real 2.8MB geospatial file and `hillshade.tif` already
+carries its committable derived form in `public/layer-viewer-samples/2806-prado/`) — see
+`public/minecraft-samples/2806-prado/heightmap.test.ts`'s own comment for why its previous
+hillshade-correlation cross-check was removed rather than pointed at a duplicate file: that
+check no longer applies to elevation-derived heights anyway (hillshade encodes local
+slope+aspect shading, not absolute elevation — no longer the right thing to compare
+against). The statistical validations (range, real variation, spatial correlation) remain
+real, meaningful checks independent of source raster.
+
+Every OTHER slug on the gated content-engine page still shares this same sample grid — the
+per-slug real-vs-fallback resolution pattern this note used to flag as fully deferred is
+now proven for one real property, not yet generalized to arbitrary slugs.

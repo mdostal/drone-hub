@@ -415,3 +415,21 @@ accordingly rather than assuming "900913" unconditionally.
   its likely need for its own MapLibre custom layer should follow this
   module's `resetState()`/ready-guard/cancelled-guard pattern rather than
   rediscovering it.
+
+## Real data update (2806 Prado, real georeferenced-fix story)
+
+The underlying `<LayerViewer>` sample data (ortho/hillshade/parcel/contours) was replaced
+with the operator's real, rights-cleared 2806 Prado St photogrammetry — see
+`docs/components/layer-viewer.md`'s own "Real data update" section for the full
+provenance/GPS-bug writeup. The sample duck's anchor moved to the new real parcel's
+centroid (~30.262°N/-97.708°W) and `scale`/`DUCK_ZOOM`/the golden-centroid values in
+`lib/maplibre-model-layer.placement.test.ts` were all re-verified LIVE against the new
+ortho (not blindly copied) — the default-camera golden centroid changed (from
+`{345.25, 235.82}` to `{363.32, 221.82}`, deterministic across two independent live runs);
+the rotated-camera golden and the R-B>100 duck-color mask both still held unchanged.
+
+The demo model deliberately stayed the duck, not the real reconstructed Prado mesh now
+used by `<Model3D>`'s own showcase (`public/model3d-samples/prado/model.glb`): that mesh
+is Z-up in its raw ODM/OBJ export, and this component's absolute map-alignment requirement
+needs a real axis-correction pass (verified live, same as everything else in this file) —
+budget for that as its own follow-up, don't guess at it.

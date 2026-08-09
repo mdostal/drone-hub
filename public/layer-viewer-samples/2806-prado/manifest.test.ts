@@ -59,40 +59,29 @@ describe("2806-prado sample manifest", () => {
     assertPropertyLayers(raw);
     const manifest: PropertyLayers = raw; // narrowed by the assertion above, no cast needed
     expect(manifest.slug).toBe("2806-prado");
-    expect(manifest.title).toBe("2806 Prado (sample data)");
+    expect(manifest.title).toBe("2806 Prado (real photogrammetry sample)");
     expect(Array.isArray(manifest.layers)).toBe(true);
   });
 
   it("has exactly the five expected layer ids", () => {
-    // layerviewer-sample-dataset-overhaul added "contours" as a fifth
-    // layer, and flipped "thermal" from a disabled stub to a live layer
-    // (see the next test) — this assertion existed specifically to catch
-    // drift in the manifest's layer set, so it's updated to the new shape
-    // rather than dropped.
     const ids = manifestJson.layers.map((l) => l.id);
     expect(ids).toEqual(["ortho", "hillshade", "boundary", "thermal", "contours"]);
   });
 
-  it("thermal is now a LIVE layer (layerviewer-sample-dataset-overhaul flipped CBA's disabled stub on)", () => {
-    // Supersedes the old "matches CBA's exact thermal stub shape" spec
-    // (which asserted disabled: true, url: null) — thermal.tif now exists
-    // as a real, independently-generated ironbow-colormapped sample COG at
-    // the same extent as the other layers, so the stub shape no longer
-    // applies. Kept as a real drift-catcher for the NEW shape, not deleted.
+  it("thermal is a disabled stub again (real georeferenced-fix story: no radiometric sensor exists, so a fake same-extent thermal raster was replaced with CBA's original disabled-stub shape rather than kept as a mismatched-location file)", () => {
     const thermal = manifestJson.layers.find((l) => l.id === "thermal") as LayerDef;
     expect(thermal).toEqual({
       id: "thermal",
       type: "raster",
-      format: "cog",
-      url: "thermal.tif",
+      url: null,
       opacity: 1,
       toggle: false,
-      legend: "synthetic placeholder — not real radiometric data",
+      disabled: true,
+      legend: "ironbow — stub until a radiometric sensor is acquired",
     });
-    expect(thermal.disabled).toBeUndefined();
   });
 
-  it("contours is a geojson layer with a lineOnly style, off by default", () => {
+  it("contours is a geojson layer with a lineOnly style, off by default, now real DSM-derived data", () => {
     const contours = manifestJson.layers.find((l) => l.id === "contours") as LayerDef;
     expect(contours).toEqual({
       id: "contours",
@@ -100,7 +89,7 @@ describe("2806-prado sample manifest", () => {
       url: "contours.geojson",
       opacity: 1,
       toggle: false,
-      legend: "synthetic placeholder — not real elevation data",
+      legend: "real 2.5m elevation contours derived from the ODM-reconstructed DSM",
       style: {
         lineColor: "#38bdf8",
         lineOnly: true,
@@ -108,13 +97,10 @@ describe("2806-prado sample manifest", () => {
     });
   });
 
-  it.each(["ortho", "hillshade", "boundary", "thermal", "contours"])(
-    "%s layer has a non-null url",
-    (id) => {
-      const layer = manifestJson.layers.find((l) => l.id === id) as LayerDef;
-      expect(typeof layer.url).toBe("string");
-    },
-  );
+  it.each(["ortho", "hillshade", "boundary", "contours"])("%s layer has a non-null url", (id) => {
+    const layer = manifestJson.layers.find((l) => l.id === id) as LayerDef;
+    expect(typeof layer.url).toBe("string");
+  });
 
   it("every raster/geojson url resolves to a real file under public/", () => {
     for (const layer of manifestJson.layers) {
@@ -130,8 +116,8 @@ describe("2806-prado sample manifest", () => {
     }
   });
 
-  it("ortho.tif, hillshade.tif, and thermal.tif have valid little-endian TIFF magic bytes", () => {
-    for (const file of ["ortho.tif", "hillshade.tif", "thermal.tif"]) {
+  it("ortho.tif and hillshade.tif have valid little-endian TIFF magic bytes", () => {
+    for (const file of ["ortho.tif", "hillshade.tif"]) {
       const buf = readFileSync(path.join(sampleDir, file));
       // Bytes 49 49 2A 00 ("II*\0") - little-endian classic TIFF magic.
       // All three files were produced/verified as little-endian TIFFs.
@@ -139,8 +125,8 @@ describe("2806-prado sample manifest", () => {
     }
   });
 
-  it("ortho.tif, hillshade.tif, and thermal.tif pass strict COG validation (rio-cogeo), if python3+rio-cogeo is available", () => {
-    for (const file of ["ortho.tif", "hillshade.tif", "thermal.tif"]) {
+  it("ortho.tif and hillshade.tif pass strict COG validation (rio-cogeo), if python3+rio-cogeo is available", () => {
+    for (const file of ["ortho.tif", "hillshade.tif"]) {
       const script = `
 from rio_cogeo.cogeo import cog_validate
 ok, errors, warnings = cog_validate("${path.join(sampleDir, file)}")
@@ -191,15 +177,15 @@ sys.exit(0 if ok else 1)
   });
 
   it(
-    "ortho.tif, hillshade.tif, and thermal.tif share the SAME real-world extent " +
-      "(the layerviewer-sample-dataset-overhaul story's core fix: one internally-consistent " +
+    "ortho.tif and hillshade.tif share the SAME real-world extent " +
+      "(both derived from the same real ODM reconstruction — one internally-consistent " +
       "dataset, not mismatched-scale files), if python3+rasterio is available",
     () => {
       const script = `
 import json
 import rasterio
 bounds = {}
-for f in ["ortho.tif", "hillshade.tif", "thermal.tif"]:
+for f in ["ortho.tif", "hillshade.tif"]:
     with rasterio.open(f) as src:
         bounds[f] = list(src.bounds)
 print(json.dumps(bounds))
@@ -213,10 +199,20 @@ print(json.dumps(bounds))
         throw err;
       }
       const bounds = JSON.parse(stdout) as Record<string, number[]>;
-      const [ortho, hillshade, thermal] = [bounds["ortho.tif"], bounds["hillshade.tif"], bounds["thermal.tif"]];
+      const [ortho, hillshade] = [bounds["ortho.tif"], bounds["hillshade.tif"]];
+      // 1m tolerance (not sub-millimeter): ortho.tif and hillshade.tif are
+      // two INDEPENDENTLY reprojected real rasters (one from
+      // odm_orthophoto.tif, one derived from dsm.tif) from the same real
+      // ODM reconstruction — a few cm of difference between their computed
+      // extents is expected rounding, not a bug. What this test guards
+      // against is the actual historical failure mode (a wrong/degenerate
+      // CRS placing one raster kilometers from the other), which 1m easily
+      // still catches.
       for (let i = 0; i < 4; i++) {
-        expect(hillshade[i], `hillshade.tif bounds[${i}] should match ortho.tif`).toBeCloseTo(ortho[i], 3);
-        expect(thermal[i], `thermal.tif bounds[${i}] should match ortho.tif`).toBeCloseTo(ortho[i], 3);
+        expect(
+          Math.abs(hillshade[i] - ortho[i]),
+          `hillshade.tif bounds[${i}] should be within 1m of ortho.tif`,
+        ).toBeLessThan(1);
       }
     },
   );

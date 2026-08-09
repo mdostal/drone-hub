@@ -1,6 +1,6 @@
 {
   "slug": "2806-prado",
-  "title": "2806 Prado (sample data)",
+  "title": "2806 Prado (real photogrammetry sample)",
   "layers": [
     {
       "id": "ortho",
@@ -8,7 +8,8 @@
       "format": "cog",
       "url": "ortho.tif",
       "opacity": 1,
-      "toggle": true
+      "toggle": true,
+      "legend": "real orthomosaic reconstructed by OpenDroneMap from the nadir grid flight"
     },
     {
       "id": "hillshade",
@@ -17,7 +18,7 @@
       "url": "hillshade.tif",
       "opacity": 0.6,
       "toggle": false,
-      "legend": "synthetic placeholder — not real elevation data"
+      "legend": "real hillshade derived from the ODM-reconstructed DSM"
     },
     {
       "id": "boundary",
@@ -25,16 +26,16 @@
       "url": "parcel.geojson",
       "opacity": 1,
       "toggle": true,
-      "legend": "synthetic placeholder — not a real parcel"
+      "legend": "approximate reconstruction footprint — not a real recorded parcel boundary"
     },
     {
       "id": "thermal",
       "type": "raster",
-      "format": "cog",
-      "url": "thermal.tif",
+      "url": null,
       "opacity": 1,
       "toggle": false,
-      "legend": "synthetic placeholder — not real radiometric data"
+      "disabled": true,
+      "legend": "ironbow — stub until a radiometric sensor is acquired"
     },
     {
       "id": "contours",
@@ -42,7 +43,7 @@
       "url": "contours.geojson",
       "opacity": 1,
       "toggle": false,
-      "legend": "synthetic placeholder — not real elevation data",
+      "legend": "real 2.5m elevation contours derived from the ODM-reconstructed DSM",
       "style": {
         "lineColor": "#38bdf8",
         "lineOnly": true
