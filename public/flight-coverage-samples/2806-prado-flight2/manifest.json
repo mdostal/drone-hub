@@ -1,0 +1,11 @@
+{
+  "property": "2806 Prado St",
+  "flightDate": "2026-08-08",
+  "drone": "DJI Mini 5 Pro",
+  "groundRefMeters": 136.35,
+  "passes": [
+    "low-pass.json",
+    "high-pass.json"
+  ],
+  "provenance": "Real flight telemetry from the operator's own property (2806 Prado St), extracted via exiftool -ee -n -AbsoluteAltitude -GPSLatitude -GPSLongitude from the DJI Mini 5 Pro's embedded djmd MP4 track. Subsampled from the full-resolution track.csv. Used with the operator's explicit permission (owns full release rights to this property's data)."
+}

@@ -1,0 +1,1530 @@
+{
+  "id": "0022",
+  "label": "High pass -- whole-block context (~159 ft AGL)",
+  "points": [
+    {
+      "timestampMs": 0,
+      "lat": 30.2618625,
+      "lon": -97.70821617,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 100,
+      "lat": 30.26186253,
+      "lon": -97.70821612,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 200,
+      "lat": 30.2618626,
+      "lon": -97.70821606,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 300,
+      "lat": 30.26186263,
+      "lon": -97.70821599,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 400,
+      "lat": 30.26186264,
+      "lon": -97.70821595,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 500,
+      "lat": 30.26186278,
+      "lon": -97.70821585,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 600,
+      "lat": 30.26186319,
+      "lon": -97.7082156,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 700,
+      "lat": 30.26186347,
+      "lon": -97.70821541,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 800,
+      "lat": 30.26186425,
+      "lon": -97.708215,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 900,
+      "lat": 30.26186547,
+      "lon": -97.70821445,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1000,
+      "lat": 30.26186627,
+      "lon": -97.70821411,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1100,
+      "lat": 30.26186836,
+      "lon": -97.70821316,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1200,
+      "lat": 30.26187097,
+      "lon": -97.70821202,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1300,
+      "lat": 30.26187259,
+      "lon": -97.70821137,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1400,
+      "lat": 30.2618759,
+      "lon": -97.70821008,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1500,
+      "lat": 30.2618792,
+      "lon": -97.70820847,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 1600,
+      "lat": 30.26188081,
+      "lon": -97.70820762,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 1700,
+      "lat": 30.26188398,
+      "lon": -97.70820598,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 1800,
+      "lat": 30.26188713,
+      "lon": -97.70820465,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 1900,
+      "lat": 30.26188873,
+      "lon": -97.70820418,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2000,
+      "lat": 30.2618921,
+      "lon": -97.70820359,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2100,
+      "lat": 30.26189553,
+      "lon": -97.70820323,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2200,
+      "lat": 30.26189732,
+      "lon": -97.70820302,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2300,
+      "lat": 30.26190077,
+      "lon": -97.70820253,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2400,
+      "lat": 30.26190425,
+      "lon": -97.70820194,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2500,
+      "lat": 30.26190613,
+      "lon": -97.70820156,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2600,
+      "lat": 30.26190939,
+      "lon": -97.70820081,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2700,
+      "lat": 30.26191268,
+      "lon": -97.70819987,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2800,
+      "lat": 30.2619143,
+      "lon": -97.70819943,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 2900,
+      "lat": 30.26191759,
+      "lon": -97.70819867,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3000,
+      "lat": 30.26192105,
+      "lon": -97.70819771,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3100,
+      "lat": 30.26192271,
+      "lon": -97.70819721,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3200,
+      "lat": 30.26192624,
+      "lon": -97.70819616,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3300,
+      "lat": 30.26192974,
+      "lon": -97.70819509,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3400,
+      "lat": 30.26193134,
+      "lon": -97.70819457,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3500,
+      "lat": 30.26193455,
+      "lon": -97.70819372,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3600,
+      "lat": 30.26193807,
+      "lon": -97.70819294,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3700,
+      "lat": 30.26193978,
+      "lon": -97.70819263,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3800,
+      "lat": 30.26194355,
+      "lon": -97.70819204,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 3900,
+      "lat": 30.26194736,
+      "lon": -97.70819135,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4000,
+      "lat": 30.26194898,
+      "lon": -97.70819099,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4100,
+      "lat": 30.26195252,
+      "lon": -97.70819021,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4200,
+      "lat": 30.26195587,
+      "lon": -97.70818942,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4300,
+      "lat": 30.26195773,
+      "lon": -97.70818899,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4400,
+      "lat": 30.26196126,
+      "lon": -97.70818821,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4500,
+      "lat": 30.26196483,
+      "lon": -97.70818743,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4600,
+      "lat": 30.26196661,
+      "lon": -97.70818708,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4700,
+      "lat": 30.26197017,
+      "lon": -97.70818651,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4800,
+      "lat": 30.26197378,
+      "lon": -97.70818592,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 4900,
+      "lat": 30.26197574,
+      "lon": -97.70818559,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5000,
+      "lat": 30.26197906,
+      "lon": -97.70818502,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5100,
+      "lat": 30.26198253,
+      "lon": -97.70818437,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5200,
+      "lat": 30.2619842,
+      "lon": -97.70818397,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5300,
+      "lat": 30.26198785,
+      "lon": -97.70818296,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5400,
+      "lat": 30.26199142,
+      "lon": -97.70818188,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5500,
+      "lat": 30.26199331,
+      "lon": -97.70818126,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5600,
+      "lat": 30.26199649,
+      "lon": -97.7081802,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5700,
+      "lat": 30.26199986,
+      "lon": -97.70817925,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5800,
+      "lat": 30.26200164,
+      "lon": -97.7081788,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 5900,
+      "lat": 30.26200522,
+      "lon": -97.70817798,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6000,
+      "lat": 30.26200893,
+      "lon": -97.70817719,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6100,
+      "lat": 30.26201085,
+      "lon": -97.70817674,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6200,
+      "lat": 30.26201448,
+      "lon": -97.70817575,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6300,
+      "lat": 30.26201798,
+      "lon": -97.70817469,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6400,
+      "lat": 30.26201986,
+      "lon": -97.70817408,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6500,
+      "lat": 30.26202337,
+      "lon": -97.70817285,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 6600,
+      "lat": 30.26202667,
+      "lon": -97.70817153,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 6700,
+      "lat": 30.26202844,
+      "lon": -97.70817082,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 6800,
+      "lat": 30.26203178,
+      "lon": -97.70816958,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 6900,
+      "lat": 30.26203524,
+      "lon": -97.70816829,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7000,
+      "lat": 30.26203689,
+      "lon": -97.70816762,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7100,
+      "lat": 30.26204043,
+      "lon": -97.7081664,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7200,
+      "lat": 30.26204405,
+      "lon": -97.70816523,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7300,
+      "lat": 30.26204601,
+      "lon": -97.70816449,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7400,
+      "lat": 30.2620493,
+      "lon": -97.70816316,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7500,
+      "lat": 30.2620529,
+      "lon": -97.70816163,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7600,
+      "lat": 30.26205476,
+      "lon": -97.70816078,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7700,
+      "lat": 30.26205811,
+      "lon": -97.70815918,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7800,
+      "lat": 30.26206155,
+      "lon": -97.70815747,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 7900,
+      "lat": 30.26206333,
+      "lon": -97.70815649,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8000,
+      "lat": 30.26206648,
+      "lon": -97.70815461,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8100,
+      "lat": 30.2620698,
+      "lon": -97.70815251,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8200,
+      "lat": 30.26207143,
+      "lon": -97.70815137,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8300,
+      "lat": 30.26207467,
+      "lon": -97.70814929,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8400,
+      "lat": 30.26207786,
+      "lon": -97.70814701,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8500,
+      "lat": 30.26207953,
+      "lon": -97.70814564,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8600,
+      "lat": 30.26208238,
+      "lon": -97.70814321,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8700,
+      "lat": 30.2620854,
+      "lon": -97.70814048,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8800,
+      "lat": 30.26208684,
+      "lon": -97.70813911,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 8900,
+      "lat": 30.26208968,
+      "lon": -97.70813643,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9000,
+      "lat": 30.26209258,
+      "lon": -97.70813348,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9100,
+      "lat": 30.26209389,
+      "lon": -97.70813209,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9200,
+      "lat": 30.26209666,
+      "lon": -97.70812918,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9300,
+      "lat": 30.26209923,
+      "lon": -97.70812622,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9400,
+      "lat": 30.26210052,
+      "lon": -97.70812465,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9500,
+      "lat": 30.26210294,
+      "lon": -97.70812145,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9600,
+      "lat": 30.26210526,
+      "lon": -97.70811811,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9700,
+      "lat": 30.26210646,
+      "lon": -97.70811624,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9800,
+      "lat": 30.26210845,
+      "lon": -97.70811288,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 9900,
+      "lat": 30.26211052,
+      "lon": -97.70810939,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10000,
+      "lat": 30.26211151,
+      "lon": -97.70810775,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10100,
+      "lat": 30.26211343,
+      "lon": -97.70810433,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10200,
+      "lat": 30.26211509,
+      "lon": -97.70810074,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10300,
+      "lat": 30.26211579,
+      "lon": -97.70809889,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10400,
+      "lat": 30.26211697,
+      "lon": -97.70809503,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10500,
+      "lat": 30.26211788,
+      "lon": -97.70809109,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10600,
+      "lat": 30.26211862,
+      "lon": -97.70808699,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10700,
+      "lat": 30.26211891,
+      "lon": -97.70808491,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10800,
+      "lat": 30.26211922,
+      "lon": -97.70808084,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 10900,
+      "lat": 30.26211935,
+      "lon": -97.70807674,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11000,
+      "lat": 30.26211932,
+      "lon": -97.70807477,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11100,
+      "lat": 30.26211911,
+      "lon": -97.70807091,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11200,
+      "lat": 30.26211893,
+      "lon": -97.70806715,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11300,
+      "lat": 30.26211881,
+      "lon": -97.70806517,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11400,
+      "lat": 30.26211826,
+      "lon": -97.70806154,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11500,
+      "lat": 30.26211751,
+      "lon": -97.70805788,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11600,
+      "lat": 30.26211706,
+      "lon": -97.70805605,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11700,
+      "lat": 30.26211617,
+      "lon": -97.70805252,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11800,
+      "lat": 30.26211484,
+      "lon": -97.70804902,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 11900,
+      "lat": 30.26211416,
+      "lon": -97.70804726,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12000,
+      "lat": 30.26211236,
+      "lon": -97.70804394,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12100,
+      "lat": 30.26211051,
+      "lon": -97.70804089,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12200,
+      "lat": 30.26210956,
+      "lon": -97.7080394,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12300,
+      "lat": 30.26210777,
+      "lon": -97.70803638,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12400,
+      "lat": 30.26210584,
+      "lon": -97.70803357,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12500,
+      "lat": 30.26210484,
+      "lon": -97.70803222,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12600,
+      "lat": 30.26210264,
+      "lon": -97.70802999,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12700,
+      "lat": 30.26210001,
+      "lon": -97.70802782,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12800,
+      "lat": 30.26209871,
+      "lon": -97.7080269,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 12900,
+      "lat": 30.26209626,
+      "lon": -97.70802486,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 13000,
+      "lat": 30.26209367,
+      "lon": -97.70802336,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13100,
+      "lat": 30.26209229,
+      "lon": -97.70802283,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13200,
+      "lat": 30.26208934,
+      "lon": -97.7080219,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13300,
+      "lat": 30.26208628,
+      "lon": -97.70802089,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13400,
+      "lat": 30.2620847,
+      "lon": -97.70802029,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13500,
+      "lat": 30.26208174,
+      "lon": -97.70801912,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13600,
+      "lat": 30.2620787,
+      "lon": -97.70801801,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13700,
+      "lat": 30.26207729,
+      "lon": -97.70801741,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13800,
+      "lat": 30.26207437,
+      "lon": -97.70801625,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 13900,
+      "lat": 30.26207151,
+      "lon": -97.70801524,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14000,
+      "lat": 30.26207002,
+      "lon": -97.7080148,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14100,
+      "lat": 30.26206699,
+      "lon": -97.70801427,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14200,
+      "lat": 30.26206406,
+      "lon": -97.70801411,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14300,
+      "lat": 30.26206239,
+      "lon": -97.70801409,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14400,
+      "lat": 30.26205924,
+      "lon": -97.70801408,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14500,
+      "lat": 30.26205616,
+      "lon": -97.70801388,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14600,
+      "lat": 30.26205464,
+      "lon": -97.70801373,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14700,
+      "lat": 30.26205168,
+      "lon": -97.7080134,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14800,
+      "lat": 30.26204866,
+      "lon": -97.70801314,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 14900,
+      "lat": 30.2620472,
+      "lon": -97.70801328,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15000,
+      "lat": 30.2620441,
+      "lon": -97.70801326,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15100,
+      "lat": 30.26204083,
+      "lon": -97.70801325,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15200,
+      "lat": 30.26203933,
+      "lon": -97.70801331,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15300,
+      "lat": 30.26203631,
+      "lon": -97.70801356,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15400,
+      "lat": 30.26203324,
+      "lon": -97.70801402,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15500,
+      "lat": 30.26203176,
+      "lon": -97.70801433,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15600,
+      "lat": 30.2620287,
+      "lon": -97.70801504,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15700,
+      "lat": 30.26202547,
+      "lon": -97.70801577,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15800,
+      "lat": 30.26202381,
+      "lon": -97.70801617,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 15900,
+      "lat": 30.2620209,
+      "lon": -97.70801687,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16000,
+      "lat": 30.26201789,
+      "lon": -97.70801765,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16100,
+      "lat": 30.26201649,
+      "lon": -97.70801808,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16200,
+      "lat": 30.26201342,
+      "lon": -97.70801906,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16300,
+      "lat": 30.26201039,
+      "lon": -97.70802,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16400,
+      "lat": 30.26200876,
+      "lon": -97.70802051,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16500,
+      "lat": 30.26200565,
+      "lon": -97.70802161,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16600,
+      "lat": 30.26200245,
+      "lon": -97.70802284,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16700,
+      "lat": 30.2620008,
+      "lon": -97.70802345,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16800,
+      "lat": 30.26199772,
+      "lon": -97.7080247,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 16900,
+      "lat": 30.26199456,
+      "lon": -97.70802605,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17000,
+      "lat": 30.26199338,
+      "lon": -97.70802752,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17100,
+      "lat": 30.26199019,
+      "lon": -97.70802891,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17200,
+      "lat": 30.26198714,
+      "lon": -97.70803034,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17300,
+      "lat": 30.26198559,
+      "lon": -97.70803108,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17400,
+      "lat": 30.26198251,
+      "lon": -97.70803266,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17500,
+      "lat": 30.26197947,
+      "lon": -97.70803423,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17600,
+      "lat": 30.26197792,
+      "lon": -97.70803502,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17700,
+      "lat": 30.26197479,
+      "lon": -97.70803657,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17800,
+      "lat": 30.26197189,
+      "lon": -97.7080382,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 17900,
+      "lat": 30.26197044,
+      "lon": -97.70803901,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18000,
+      "lat": 30.26196748,
+      "lon": -97.70804053,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18100,
+      "lat": 30.2619643,
+      "lon": -97.7080423,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18200,
+      "lat": 30.26196279,
+      "lon": -97.7080432,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18300,
+      "lat": 30.26195953,
+      "lon": -97.70804517,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18400,
+      "lat": 30.26195626,
+      "lon": -97.70804724,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18500,
+      "lat": 30.26195485,
+      "lon": -97.70804822,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18600,
+      "lat": 30.2619517,
+      "lon": -97.70805038,
+      "altitudeMeters": 184.819
+    },
+    {
+      "timestampMs": 18700,
+      "lat": 30.26194867,
+      "lon": -97.70805242,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 18800,
+      "lat": 30.26194714,
+      "lon": -97.70805343,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 18900,
+      "lat": 30.26194412,
+      "lon": -97.7080554,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19000,
+      "lat": 30.26194122,
+      "lon": -97.7080573,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19100,
+      "lat": 30.26193965,
+      "lon": -97.70805833,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19200,
+      "lat": 30.26193663,
+      "lon": -97.70806026,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19300,
+      "lat": 30.26193352,
+      "lon": -97.70806213,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19400,
+      "lat": 30.26193199,
+      "lon": -97.70806313,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19500,
+      "lat": 30.26192897,
+      "lon": -97.70806528,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19600,
+      "lat": 30.261926,
+      "lon": -97.70806754,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19700,
+      "lat": 30.26192447,
+      "lon": -97.70806872,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19800,
+      "lat": 30.26192147,
+      "lon": -97.7080709,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 19900,
+      "lat": 30.26191845,
+      "lon": -97.70807313,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20000,
+      "lat": 30.26191695,
+      "lon": -97.70807417,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20100,
+      "lat": 30.26191398,
+      "lon": -97.70807617,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20200,
+      "lat": 30.26191083,
+      "lon": -97.70807836,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20300,
+      "lat": 30.26190926,
+      "lon": -97.70807952,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20400,
+      "lat": 30.26190616,
+      "lon": -97.7080819,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20500,
+      "lat": 30.26190321,
+      "lon": -97.70808429,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20600,
+      "lat": 30.26190174,
+      "lon": -97.70808555,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20700,
+      "lat": 30.26189878,
+      "lon": -97.70808813,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20800,
+      "lat": 30.26189575,
+      "lon": -97.70809057,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 20900,
+      "lat": 30.26189422,
+      "lon": -97.70809165,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21000,
+      "lat": 30.261891,
+      "lon": -97.70809379,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21100,
+      "lat": 30.26188777,
+      "lon": -97.70809593,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21200,
+      "lat": 30.2618862,
+      "lon": -97.70809695,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21300,
+      "lat": 30.26188308,
+      "lon": -97.70809901,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21400,
+      "lat": 30.26187996,
+      "lon": -97.70810106,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21500,
+      "lat": 30.26187838,
+      "lon": -97.70810212,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21600,
+      "lat": 30.26187525,
+      "lon": -97.7081042,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21700,
+      "lat": 30.26187214,
+      "lon": -97.7081064,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21800,
+      "lat": 30.26187051,
+      "lon": -97.70810763,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 21900,
+      "lat": 30.26186751,
+      "lon": -97.70811,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22000,
+      "lat": 30.26186455,
+      "lon": -97.70811238,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22100,
+      "lat": 30.26186293,
+      "lon": -97.70811368,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22200,
+      "lat": 30.26185973,
+      "lon": -97.7081161,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22300,
+      "lat": 30.26185642,
+      "lon": -97.70811842,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22400,
+      "lat": 30.26185486,
+      "lon": -97.70811952,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22500,
+      "lat": 30.26185188,
+      "lon": -97.7081217,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22600,
+      "lat": 30.26184874,
+      "lon": -97.70812398,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22700,
+      "lat": 30.26184709,
+      "lon": -97.70812515,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22800,
+      "lat": 30.26184395,
+      "lon": -97.70812733,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 22900,
+      "lat": 30.26184092,
+      "lon": -97.70812941,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23000,
+      "lat": 30.26183938,
+      "lon": -97.7081304,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23100,
+      "lat": 30.2618363,
+      "lon": -97.70813232,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23200,
+      "lat": 30.2618331,
+      "lon": -97.70813431,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23300,
+      "lat": 30.26183142,
+      "lon": -97.70813535,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23400,
+      "lat": 30.26182813,
+      "lon": -97.70813703,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23500,
+      "lat": 30.26182472,
+      "lon": -97.70813869,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23600,
+      "lat": 30.26182305,
+      "lon": -97.70813952,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23700,
+      "lat": 30.26181976,
+      "lon": -97.70814116,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23800,
+      "lat": 30.26181659,
+      "lon": -97.70814298,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 23900,
+      "lat": 30.26181514,
+      "lon": -97.70814384,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24000,
+      "lat": 30.26181217,
+      "lon": -97.7081457,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24100,
+      "lat": 30.26180948,
+      "lon": -97.70814745,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 24200,
+      "lat": 30.26180829,
+      "lon": -97.70814819,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 24300,
+      "lat": 30.26180623,
+      "lon": -97.70814939,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 24400,
+      "lat": 30.26180435,
+      "lon": -97.70815029,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 24500,
+      "lat": 30.26180347,
+      "lon": -97.70815069,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24600,
+      "lat": 30.26180189,
+      "lon": -97.70815128,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24700,
+      "lat": 30.26180046,
+      "lon": -97.70815183,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24800,
+      "lat": 30.26179979,
+      "lon": -97.7081521,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 24900,
+      "lat": 30.2617985,
+      "lon": -97.70815268,
+      "altitudeMeters": 184.719
+    },
+    {
+      "timestampMs": 25000,
+      "lat": 30.26179748,
+      "lon": -97.70815327,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 25100,
+      "lat": 30.26179701,
+      "lon": -97.7081536,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 25200,
+      "lat": 30.26179626,
+      "lon": -97.70815413,
+      "altitudeMeters": 184.619
+    },
+    {
+      "timestampMs": 25300,
+      "lat": 30.26179563,
+      "lon": -97.70815458,
+      "altitudeMeters": 184.619
+    }
+  ]
+}

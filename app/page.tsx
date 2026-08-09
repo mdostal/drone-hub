@@ -102,6 +102,14 @@ const TOC: TocEntry[] = [
     demoLabel: "Live demo",
     docHref: "/docs/components/processing-status",
   },
+  {
+    name: "FlightCoverageAnalyzer",
+    description:
+      "Judges nadir drone passes for photogrammetric grid validity — green/amber/red verdict on side overlap and coverage, demoed against real flight telemetry.",
+    demoHref: "/components/flight-coverage-analyzer",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/flight-coverage-analyzer",
+  },
 ];
 
 export default function Home() {
