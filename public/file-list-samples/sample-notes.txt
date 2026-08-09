@@ -1,0 +1,5 @@
+Drone Hub — <FileList> sample download
+
+This is a tiny, non-sensitive plain-text file used only to demonstrate
+<FileList>'s download link against a real, working URL. It is not property
+data, not a contract, and contains no PII.

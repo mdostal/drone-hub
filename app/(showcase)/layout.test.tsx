@@ -1,7 +1,7 @@
 // BDD spec for the shared app/(showcase)/layout.tsx — covers
 // site-nav-and-copy-buttons.yaml's "Given any /components/* or
 // /docs/components/* page, when rendered, then a persistent nav strip
-// listing all 7 components is visible, each linking to its live demo"
+// listing all current components is visible, each linking to its live demo"
 // acceptance criterion, plus that it renders its `children` prop
 // unmodified (proving it's additive, not a replacement page).
 //
@@ -9,8 +9,11 @@
 // headers()/searchParams) — the actual "stays static" guarantee is verified
 // via `next build`'s route table (see this story's commit/PR notes), which
 // a jsdom-based vitest render can't observe directly. This spec instead
-// pins down the render-time contract: renders NavStrip with all 7 items +
-// whatever children it's given.
+// pins down the render-time contract: renders NavStrip with all current
+// items + whatever children it's given.
+//
+// FileUpload/FileList/ProcessingStatus added by the generic-file-components
+// story (nav-video-pipeline-files epic).
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import ShowcaseLayout from "./layout";
@@ -19,10 +22,21 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/components/video-tour",
 }));
 
-const EXPECTED_NAMES = ["VideoTour", "LayerViewer", "Model3D", "LandOverlay", "VoxelTerrain", "ContentEngine", "MinecraftExport"];
+const EXPECTED_NAMES = [
+  "VideoTour",
+  "LayerViewer",
+  "Model3D",
+  "LandOverlay",
+  "VoxelTerrain",
+  "ContentEngine",
+  "MinecraftExport",
+  "FileUpload",
+  "FileList",
+  "ProcessingStatus",
+];
 
 describe("<ShowcaseLayout>", () => {
-  it("renders a nav link for all 7 current components/tools", () => {
+  it("renders a nav link for all 10 current components/tools", () => {
     render(
       <ShowcaseLayout>
         <div>page content</div>
@@ -65,5 +79,11 @@ describe("<ShowcaseLayout>", () => {
     // .schem download action actually lives (matches app/page.tsx TOC's own
     // note for this entry).
     expect(screen.getByRole("link", { name: "MinecraftExport" })).toHaveAttribute("href", "/components/voxel-terrain");
+    expect(screen.getByRole("link", { name: "FileUpload" })).toHaveAttribute("href", "/components/file-upload");
+    expect(screen.getByRole("link", { name: "FileList" })).toHaveAttribute("href", "/components/file-list");
+    expect(screen.getByRole("link", { name: "ProcessingStatus" })).toHaveAttribute(
+      "href",
+      "/components/processing-status",
+    );
   });
 });

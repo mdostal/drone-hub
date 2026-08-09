@@ -1,15 +1,17 @@
 // BDD specs for the root landing page — the real front door tools.mdostal.com
 // would link to. Re-homes equivalent ToC-rendering coverage from the deleted
 // app/(showcase)/components/page.test.tsx (which rendered the old 5-entry
-// ComponentsIndexPage in isolation) now extended to all 7 components/tools,
+// ComponentsIndexPage in isolation) now extended to all 10 components/tools,
 // per .pHive/epics/framework-docs-site/stories/framework-docs-site-landing-page.yaml
-// and design-discussion.md §2 ("Landing page consolidation").
+// and design-discussion.md §2 ("Landing page consolidation"). FileUpload/
+// FileList/ProcessingStatus added by the generic-file-components story
+// (nav-video-pipeline-files epic).
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import Home from "./page";
 
 describe("<Home> (root landing page)", () => {
-  it("lists all 7 components/tools as ToC entries", () => {
+  it("lists all 10 components/tools as ToC entries", () => {
     render(<Home />);
 
     for (const name of [
@@ -20,12 +22,15 @@ describe("<Home> (root landing page)", () => {
       "VoxelTerrain",
       "ContentEngine",
       "MinecraftExport",
+      "FileUpload",
+      "FileList",
+      "ProcessingStatus",
     ]) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
   });
 
-  it("links each of the 5 original components to distinct demo and doc pages", () => {
+  it("links each of these components to distinct demo and doc pages", () => {
     render(<Home />);
 
     const cases: Array<[name: string, demoHref: string, docHref: string]> = [
@@ -34,6 +39,9 @@ describe("<Home> (root landing page)", () => {
       ["Model3D", "/components/model3d", "/docs/components/model3d"],
       ["LandOverlay", "/components/land-overlay", "/docs/components/land-overlay"],
       ["VoxelTerrain", "/components/voxel-terrain", "/docs/components/voxel-terrain"],
+      ["FileUpload", "/components/file-upload", "/docs/components/file-upload"],
+      ["FileList", "/components/file-list", "/docs/components/file-list"],
+      ["ProcessingStatus", "/components/processing-status", "/docs/components/processing-status"],
     ];
 
     for (const [name, demoHref, docHref] of cases) {

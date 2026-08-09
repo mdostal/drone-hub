@@ -23,14 +23,17 @@ import { NavStrip } from "@/components/showcase";
 // ("use client"), not here, so this file itself stays server-rendered and
 // the static doc routes are unaffected.
 //
-// Mirrors app/page.tsx's TOC array's name + live-demo href for all 7
+// Mirrors app/page.tsx's TOC array's name + live-demo href for all 10
 // current components/tools (verified against that file directly, not
 // re-derived) — a small, low-churn, hand-mirrored list rather than an
 // import, since page.tsx's TOC carries additional fields (description,
 // docHref, release note) this strip doesn't need. MinecraftExport has no
 // demo page of its own; its live action (the .schem download button) lives
 // on the VoxelTerrain demo page, so it points there too — same choice
-// page.tsx's own TOC entry note already makes.
+// page.tsx's own TOC entry note already makes. FileUpload/FileList/
+// ProcessingStatus were added by the generic-file-components story
+// (nav-video-pipeline-files epic) — see docs/components/file-upload.md,
+// file-list.md, processing-status.md.
 const NAV_ITEMS = [
   { name: "VideoTour", href: "/components/video-tour" },
   { name: "LayerViewer", href: "/components/layer-viewer" },
@@ -39,6 +42,9 @@ const NAV_ITEMS = [
   { name: "VoxelTerrain", href: "/components/voxel-terrain" },
   { name: "ContentEngine", href: "/properties/2806-prado/engine" },
   { name: "MinecraftExport", href: "/components/voxel-terrain" },
+  { name: "FileUpload", href: "/components/file-upload" },
+  { name: "FileList", href: "/components/file-list" },
+  { name: "ProcessingStatus", href: "/components/processing-status" },
 ] as const;
 
 export default function ShowcaseLayout({ children }: { children: ReactNode }) {
