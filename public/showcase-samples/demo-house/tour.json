@@ -16,7 +16,7 @@
     {
       "id": "living",
       "label": "Living Room",
-      "spin": null,
+      "spin": "living-spin.mp4",
       "still": "living.svg",
       "pos": [50, 62],
       "neighbors": [

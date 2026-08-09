@@ -94,13 +94,38 @@ describe("demo-house showcase manifest", () => {
     }
   });
 
-  it("every room has spin:null and every edge has clip:null (P1 stills + wipes only)", () => {
+  it("every edge has clip:null — the transition clip stays out of scope for videotour-real-controls-and-sample-clip (deadlock-risk scope line)", () => {
     for (const room of tourJson.rooms) {
-      expect(room.spin, `${room.id}.spin`).toBeNull();
       for (const edge of room.neighbors) {
         expect(edge.clip, `${room.id} -> ${edge.to}.clip`).toBeNull();
       }
     }
+  });
+
+  it("exactly one room (living) has a real spin clip; every other room still has spin:null (P2 spin content, added by videotour-real-controls-and-sample-clip)", () => {
+    const withSpin = tourJson.rooms.filter((r) => r.spin !== null);
+    expect(withSpin.map((r) => r.id)).toEqual(["living"]);
+    for (const room of tourJson.rooms) {
+      if (room.id === "living") {
+        expect(room.spin).toBe("living-spin.mp4");
+      } else {
+        expect(room.spin, `${room.id}.spin`).toBeNull();
+      }
+    }
+  });
+
+  it("living-spin.mp4 exists as a real, small MP4 file (magic bytes, size budget)", () => {
+    const filePath = path.join(sampleDir, "living-spin.mp4");
+    expect(existsSync(filePath), `${filePath} should exist`).toBe(true);
+    const buf = readFileSync(filePath);
+    // MP4/ISO-BMFF: bytes 4-7 of the leading box are always "ftyp".
+    expect(buf.subarray(4, 8).toString("ascii"), "should be a well-formed MP4 (ftyp box)").toBe(
+      "ftyp",
+    );
+    // "small" per the story's own requirement — budget generously (a few
+    // seconds of 640x360 h264 should land well under 1MB; this repo has no
+    // CDN/R2 wiring yet, so sample assets ship straight from public/).
+    expect(buf.byteLength, "living-spin.mp4 should be small").toBeLessThan(2 * 1024 * 1024);
   });
 
   it("every room's still resolves to a real, locally-generated placeholder file under public/showcase-samples/demo-house/", () => {
