@@ -67,3 +67,17 @@ describe("<Markdown>", () => {
     expect(container.querySelectorAll("[node]").length).toBe(0);
   });
 });
+
+describe("<Markdown> — copy-to-clipboard on fenced code blocks", () => {
+  it("renders a copy button alongside each `pre` block, wired to that block's exact code text", () => {
+    const source = ["```ts", "const x = 1;", "```"].join("\n");
+    const { container } = render(<Markdown>{source}</Markdown>);
+
+    const button = screen.getByRole("button", { name: "Copy" });
+    expect(container.querySelector("pre")).not.toBeNull();
+    // The button lives alongside the <pre>, not nested inside it (so it
+    // doesn't get selected/copied along with the code text itself).
+    const pre = container.querySelector("pre") as HTMLElement;
+    expect(pre.contains(button)).toBe(false);
+  });
+});

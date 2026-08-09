@@ -1,7 +1,9 @@
 "use client";
 
+import { isValidElement, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CopyButton } from "@/components/CopyButton";
 
 // Shared themed markdown renderer — extracted from
 // app/(showcase)/docs/components/[slug]/page.tsx (the original call site)
@@ -27,6 +29,19 @@ import remarkGfm from "remark-gfm";
 // page.test.tsx's "react-markdown's extra `node` prop does not leak into
 // DOM attributes" describe block). Do not reintroduce it here.
 type WithNode<T> = T & { node?: unknown };
+
+// Recursively flattens a `pre` renderer's `children` (react-markdown hands
+// it a `<code>` element wrapping one or more text nodes) down to the raw
+// code string, for handing to <CopyButton>. Walks arrays and nested
+// elements rather than assuming a single string child, so it stays correct
+// even if a future remark/rehype plugin (e.g. syntax highlighting) splits
+// the code content across multiple nested `<span>`s.
+function extractText(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return extractText(node.props.children);
+  return "";
+}
 
 export const MARKDOWN_COMPONENTS = {
   h1: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"h1">>) => (
@@ -56,11 +71,16 @@ export const MARKDOWN_COMPONENTS = {
   code: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"code">>) => (
     <code className="rounded bg-surface px-1 py-0.5 font-mono text-sm text-foreground" {...rest} />
   ),
-  pre: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"pre">>) => (
-    <pre
-      className="mt-4 overflow-x-auto rounded-xl border border-border bg-surface p-4 font-mono text-sm text-foreground [&>code]:bg-transparent [&>code]:p-0"
-      {...rest}
-    />
+  pre: ({ node: _node, children, ...rest }: WithNode<React.ComponentPropsWithoutRef<"pre">>) => (
+    <div className="group relative mt-4">
+      <pre
+        className="overflow-x-auto rounded-xl border border-border bg-surface p-4 font-mono text-sm text-foreground [&>code]:bg-transparent [&>code]:p-0"
+        {...rest}
+      >
+        {children}
+      </pre>
+      <CopyButton text={extractText(children)} className="absolute right-2 top-2" />
+    </div>
   ),
   a: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"a">>) => (
     <a className="text-accent underline hover:text-accent-dark" {...rest} />

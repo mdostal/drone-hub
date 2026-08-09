@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CopyButton } from "@/components/CopyButton";
 import { cx } from "./cx";
 
 /**
@@ -42,7 +43,10 @@ export function ComponentShowcase({ title, description, demo, code, className }:
       </section>
 
       <section aria-label={`${title} usage`} className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-muted">Usage</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted">Usage</h2>
+          <CopyButton text={code} />
+        </div>
         <pre className="overflow-x-auto rounded-xl border border-border bg-surface p-4 text-sm text-foreground">
           <code>{code}</code>
         </pre>
