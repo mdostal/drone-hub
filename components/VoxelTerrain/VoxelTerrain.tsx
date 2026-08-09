@@ -31,6 +31,15 @@ import { cx } from "./cx";
  * SSR: same as <Model3D> — no server-only API is touched at module scope,
  * but this is still a heavy client-only WebGL viewer and should be mounted
  * via `next/dynamic(() => import(...), { ssr: false })` by any consumer.
+ *
+ * Controls legend: ships the same fixed-corner HTML legend panel
+ * <Model3D> got in the brand-theming-and-viewer-polish epic (see
+ * components/Model3D/Model3D.tsx's own legend doc comment) — same r3f/drei
+ * stack, same "bare canvas with no UI chrome" gap, same fix. No Measure
+ * toggle here (VoxelTerrain has no measure tool), so the panel is just a
+ * static "Controls" header plus the orbit/zoom hints, styled identically
+ * for cross-component consistency between /components/model3d and
+ * /components/voxel-terrain.
  */
 export interface VoxelTerrainProps {
   grid: VoxelGrid;
@@ -110,6 +119,24 @@ export function VoxelTerrain({ grid, children, className }: VoxelTerrainProps) {
             animation and OrbitControls cooperate instead of fighting. */}
         <OrbitControls makeDefault />
       </Canvas>
+
+      {/* Controls legend — same fixed-corner HTML overlay panel/treatment as
+          <Model3D>'s (components/Model3D/Model3D.tsx): absolutely positioned
+          within this component's own container, themed via this repo's
+          design tokens (bg-surface/border-border/text-foreground from
+          app/globals.css). Outer layer is pointer-events-none so it only
+          intercepts clicks over the panel itself, leaving the rest of the
+          canvas free for orbit gestures. No Measure toggle — VoxelTerrain
+          has no measure tool, so this is just the static orbit/zoom hints. */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute top-3 right-3 flex w-56 flex-col gap-2 rounded-xl border border-border bg-surface/90 p-3 text-xs text-foreground shadow-lg backdrop-blur">
+          <span className="font-medium">Controls</span>
+          <ul className="flex flex-col gap-1 text-muted">
+            <li>Drag to orbit</li>
+            <li>Scroll to zoom</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
