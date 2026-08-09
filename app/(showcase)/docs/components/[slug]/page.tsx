@@ -35,6 +35,7 @@ const KNOWN_SLUGS = [
   "file-list",
   "processing-status",
   "flight-coverage-analyzer",
+  "tour-builder",
 ] as const;
 
 type KnownSlug = (typeof KNOWN_SLUGS)[number];

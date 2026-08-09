@@ -110,6 +110,14 @@ const TOC: TocEntry[] = [
     demoLabel: "Live demo",
     docHref: "/docs/components/flight-coverage-analyzer",
   },
+  {
+    name: "TourBuilder",
+    description:
+      "Visual authoring tool for VideoTour manifests — upload a floorplan, click to place rooms, wire up doorways, export a real, validated tour.json.",
+    demoHref: "/components/tour-builder",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/tour-builder",
+  },
 ];
 
 export default function Home() {

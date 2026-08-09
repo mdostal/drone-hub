@@ -48,6 +48,7 @@ const NAV_ITEMS = [
   { name: "FileList", href: "/components/file-list" },
   { name: "ProcessingStatus", href: "/components/processing-status" },
   { name: "FlightCoverageAnalyzer", href: "/components/flight-coverage-analyzer" },
+  { name: "TourBuilder", href: "/components/tour-builder" },
 ] as const;
 
 export default function ShowcaseLayout({ children }: { children: ReactNode }) {
