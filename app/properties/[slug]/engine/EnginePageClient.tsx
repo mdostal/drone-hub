@@ -40,8 +40,8 @@ export function EnginePageClient({
   return (
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 p-6 md:p-8">
       <header>
-        <h1 className="text-2xl font-semibold">Content Engine — {slug}</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-foreground">Content Engine — {slug}</h1>
+        <p className="mt-1 text-sm text-muted">
           The engineering, the Minecraft of it, the flight docs.
         </p>
       </header>
@@ -64,14 +64,14 @@ export function EnginePageClient({
       )}
 
       <section aria-labelledby="engine-terrain-heading" className="flex flex-col gap-2">
-        <h2 id="engine-terrain-heading" className="text-lg font-medium">
+        <h2 id="engine-terrain-heading" className="text-lg font-medium text-foreground">
           The Minecraft of It
         </h2>
         {/* Sample terrain is shared regardless of slug — see page.tsx's
             TERRAIN_SAMPLE_SLUG comment: this is a separate concern from the
             engineering/flight-log fallback above, not itself driven by
             `isFallback`. */}
-        <div className="h-[420px] w-full overflow-hidden rounded-md bg-neutral-900">
+        <div className="h-[420px] w-full overflow-hidden rounded-xl bg-background">
           <VoxelScene grid={grid} />
         </div>
         {/* Uses this page's own real `slug` prop, not a hardcoded sample —
@@ -90,14 +90,14 @@ export function EnginePageClient({
         <Link
           href={`/api/minecraft-export?slug=${encodeURIComponent(slug)}`}
           download
-          className="inline-flex w-fit items-center gap-2 rounded-md border border-neutral-300 bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:border-neutral-700"
+          className="inline-flex w-fit items-center gap-2 rounded-xl border border-accent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:border-accent-dark hover:bg-accent-dark"
         >
           Download for Minecraft
         </Link>
       </section>
 
       <section aria-labelledby="engine-engineering-heading" className="flex flex-col gap-2">
-        <h2 id="engine-engineering-heading" className="text-lg font-medium">
+        <h2 id="engine-engineering-heading" className="text-lg font-medium text-foreground">
           Engineering
         </h2>
         {/* Rendered through the shared <Markdown> component (components/
@@ -108,19 +108,19 @@ export function EnginePageClient({
             (`# Engineering Notes`, `**bold**`, `| Component | Material |`)
             as literal escaped text instead of formatted prose — this is the
             fix for that. */}
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-xl border border-border bg-surface p-4">
           <Markdown>{engineeringMarkdown}</Markdown>
         </div>
       </section>
 
       <section aria-labelledby="engine-flight-log-heading" className="flex flex-col gap-2">
-        <h2 id="engine-flight-log-heading" className="text-lg font-medium">
+        <h2 id="engine-flight-log-heading" className="text-lg font-medium text-foreground">
           Flight Log
         </h2>
-        <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-800">
-          <table className="w-full min-w-[480px] text-left text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[480px] text-left text-sm text-foreground">
             <thead>
-              <tr className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
+              <tr className="border-b border-border bg-surface">
                 <th scope="col" className="p-2 font-medium">
                   Time
                 </th>
@@ -140,7 +140,7 @@ export function EnginePageClient({
                 // timestampMs is monotonic and unique per FlightLogEntry
                 // (one row per telemetry sample) — a stable, meaningful key,
                 // not an index.
-                <tr key={entry.timestampMs} className="border-b border-neutral-100 last:border-0 dark:border-neutral-900">
+                <tr key={entry.timestampMs} className="border-b border-border last:border-0">
                   <td className="p-2 tabular-nums">{(entry.timestampMs / 1000).toFixed(1)}s</td>
                   <td className="p-2 tabular-nums">{entry.lat.toFixed(5)}</td>
                   <td className="p-2 tabular-nums">{entry.lon.toFixed(5)}</td>
