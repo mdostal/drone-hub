@@ -16,7 +16,7 @@
 // final report for the full breakdown.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LayerDef, PropertyLayers } from "@/lib/layer-types";
-import { buildLayerMapConfig, resolveManifest } from "./LayerViewer";
+import { buildLayerMapConfig, isWrapperFullscreen, resolveManifest } from "./LayerViewer";
 
 function makeLayer(overrides: Partial<LayerDef> & Pick<LayerDef, "id" | "type">): LayerDef {
   return {
@@ -127,6 +127,32 @@ describe("buildLayerMapConfig", () => {
   it("a live (non-disabled) entry with no url also produces no config — nothing to add", () => {
     const layer = makeLayer({ id: "broken", type: "raster", url: null });
     expect(buildLayerMapConfig(layer)).toBeNull();
+  });
+});
+
+describe("isWrapperFullscreen", () => {
+  // jsdom doesn't implement the Fullscreen API (no real
+  // document.fullscreenElement/requestFullscreen), so this is exercised
+  // against plain objects standing in for elements — the function itself
+  // is a pure identity check, with no actual DOM/Fullscreen-API dependency.
+  it("is true when the wrapper IS the fullscreen element", () => {
+    const wrapper = {} as Element;
+    expect(isWrapperFullscreen(wrapper, wrapper)).toBe(true);
+  });
+
+  it("is false when a different element is fullscreen", () => {
+    const wrapper = {} as Element;
+    const other = {} as Element;
+    expect(isWrapperFullscreen(wrapper, other)).toBe(false);
+  });
+
+  it("is false when nothing is fullscreen", () => {
+    const wrapper = {} as Element;
+    expect(isWrapperFullscreen(wrapper, null)).toBe(false);
+  });
+
+  it("is false when the wrapper itself is null (not yet mounted)", () => {
+    expect(isWrapperFullscreen(null, null)).toBe(false);
   });
 });
 
