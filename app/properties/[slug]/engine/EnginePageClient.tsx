@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Markdown } from "@/components/Markdown";
 import type { FlightLogEntry } from "@/lib/flight-log-types";
 import type { VoxelGrid } from "@/lib/voxel-types";
 
@@ -99,17 +100,17 @@ export function EnginePageClient({
         <h2 id="engine-engineering-heading" className="text-lg font-medium">
           Engineering
         </h2>
-        {/* No markdown-rendering library is currently a dependency (checked
-            package.json — none of markdown/remark/mdx/etc. are present),
-            and this epic's content is short, already-readable structured
-            markdown (headings/lists/a table) — plain preformatted text is
-            fully readable as-is and avoids both adding a new dependency for
-            a single display-only panel and the dangerouslySetInnerHTML risk
-            of a hand-rolled HTML converter. `whitespace-pre-wrap` preserves
-            the source's line breaks while still wrapping long lines. */}
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-4 font-mono text-sm dark:border-neutral-800 dark:bg-neutral-900">
-          {engineeringMarkdown}
-        </pre>
+        {/* Rendered through the shared <Markdown> component (components/
+            Markdown.tsx) — the same react-markdown + remark-gfm + themed
+            MARKDOWN_COMPONENTS pattern the /docs/components/[slug] route
+            uses. Previously this interpolated engineeringMarkdown directly
+            into a <pre>, which rendered the raw markdown source
+            (`# Engineering Notes`, `**bold**`, `| Component | Material |`)
+            as literal escaped text instead of formatted prose — this is the
+            fix for that. */}
+        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <Markdown>{engineeringMarkdown}</Markdown>
+        </div>
       </section>
 
       <section aria-labelledby="engine-flight-log-heading" className="flex flex-col gap-2">

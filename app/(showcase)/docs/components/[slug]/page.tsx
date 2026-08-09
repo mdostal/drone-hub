@@ -2,8 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Markdown } from "@/components/Markdown";
 
 // Renders the repo's existing docs/components/*.md files as real pages, so
 // the landing page's (framework-docs-site-landing-page, a sibling story)
@@ -53,79 +52,12 @@ export function generateStaticParams() {
   return KNOWN_SLUGS.map((slug) => ({ slug }));
 }
 
-// Minimal per-element styling so the rendered markdown reads correctly
-// under this app's Tailwind v4 preflight reset (which strips default
-// list/heading UA styles) rather than rendering as flat, unstyled text —
-// content-engine.md's nested numbered lists, bold+italic+inline-code
-// mixing, ASCII directory-tree code block, and 3 fenced code blocks are
-// the spot-check target (design-discussion.md's grill-revised risk
-// section) for this not visually breaking. No syntax highlighter (plain
-// <pre><code>, react-markdown's default for fenced code blocks) and no
-// rehype-raw plugin (none of the 7 docs contain raw HTML blocks that need
-// it — verified by grepping all 7 for block-level HTML tags).
-// react-markdown calls each custom renderer with an extra `node` prop (the
-// underlying hast node) alongside the standard DOM props — every renderer
-// below must destructure it out before spreading `...rest` onto a native
-// DOM element. Skipping that (spreading the raw props object directly)
-// leaks `node` through as a literal `node="[object Object]"` HTML
-// attribute on every single styled element, found via a manual dev-server
-// render check during this story's verification (not caught by any of the
-// vitest+RTL specs, since jsdom happily accepts an unknown attribute and
-// none of the text-content assertions look at attributes).
-type WithNode<T> = T & { node?: unknown };
-
-const MARKDOWN_COMPONENTS = {
-  h1: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"h1">>) => (
-    <h1 className="mt-8 text-3xl font-semibold first:mt-0" {...rest} />
-  ),
-  h2: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"h2">>) => (
-    <h2 className="mt-8 text-2xl font-semibold" {...rest} />
-  ),
-  h3: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"h3">>) => (
-    <h3 className="mt-6 text-xl font-semibold" {...rest} />
-  ),
-  p: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"p">>) => (
-    <p className="mt-4 leading-7 text-foreground" {...rest} />
-  ),
-  ul: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"ul">>) => (
-    <ul className="mt-4 list-disc space-y-1 pl-6" {...rest} />
-  ),
-  ol: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"ol">>) => (
-    <ol className="mt-4 list-decimal space-y-1 pl-6" {...rest} />
-  ),
-  li: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"li">>) => (
-    <li className="leading-7" {...rest} />
-  ),
-  blockquote: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"blockquote">>) => (
-    <blockquote className="mt-4 border-l-2 border-border pl-4 italic text-muted" {...rest} />
-  ),
-  code: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"code">>) => (
-    <code className="rounded bg-surface px-1 py-0.5 font-mono text-sm text-foreground" {...rest} />
-  ),
-  pre: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"pre">>) => (
-    <pre
-      className="mt-4 overflow-x-auto rounded-xl border border-border bg-surface p-4 font-mono text-sm text-foreground [&>code]:bg-transparent [&>code]:p-0"
-      {...rest}
-    />
-  ),
-  a: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"a">>) => (
-    <a className="text-accent underline hover:text-accent-dark" {...rest} />
-  ),
-  strong: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"strong">>) => (
-    <strong className="font-semibold" {...rest} />
-  ),
-  hr: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"hr">>) => (
-    <hr className="mt-8 border-border" {...rest} />
-  ),
-  input: ({ node: _node, ...rest }: WithNode<React.ComponentPropsWithoutRef<"input">>) => (
-    // GFM task-list checkboxes (- [x] / - [ ]) — remark-gfm renders these
-    // as a real <input type="checkbox" disabled>. Keep them interactive-
-    // looking (not literal bracket text) but non-editable, since this is
-    // read-only rendered prose.
-    <input className="mr-2 align-middle" {...rest} disabled />
-  ),
-};
-
+// The themed per-element renderers (headings/lists/code/tables/etc, and the
+// `node`-prop-destructuring discipline react-markdown custom renderers
+// require — see that file's header comment for the full explanation) now
+// live in the shared components/Markdown.tsx, so both this route and
+// app/properties/[slug]/engine/EnginePageClient.tsx render markdown through
+// the same styled pattern instead of duplicating it.
 export default async function DocPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -145,9 +77,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         ← Components
       </Link>
       <article>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
-          {markdown}
-        </ReactMarkdown>
+        <Markdown>{markdown}</Markdown>
       </article>
     </main>
   );
