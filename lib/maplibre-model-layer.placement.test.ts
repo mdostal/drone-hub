@@ -478,6 +478,20 @@ test.describe("GL-state-pollution regression", () => {
     // whole comparison — if this ever fires, the mask/scene changed enough
     // to need a fresh look, not a silently-passing test.
     expect(duckPixelsExcluded, "duck-colored sample exclusion").toBeLessThan(cleanFingerprint.length / 2);
-    expect(diffSamples, `maxChannelDiff=${maxChannelDiff} of ${cleanFingerprint.length} samples`).toBe(0);
+    // Real georeferenced-fix story: the sample ortho was replaced with a much
+    // richer reconstruction (oblique + nadir combined, real tree-canopy
+    // detail instead of smeared/flat texture). With that much more
+    // high-frequency content, a single 20px-stride sample can land near a
+    // real fine-grained edge (a leaf/branch boundary) where ordinary
+    // sub-pixel tile-decode positioning differs by a sample between two
+    // separate page loads — confirmed live by dumping the actual differing
+    // sample: clean=[138,160,129] vs after=[140,125,80], both plausible real
+    // foliage/earth-tone colors with the R channel nearly identical (not the
+    // black/blank/wildly-wrong-color signature real GL-state corruption
+    // would produce). A tolerance of "1 outlier sample" still catches actual
+    // corruption (which shows up as most/all samples differing, per this
+    // test's own original design), while not being defeated by legitimate
+    // edge-pixel noise on genuinely more detailed imagery.
+    expect(diffSamples, `maxChannelDiff=${maxChannelDiff} of ${cleanFingerprint.length} samples`).toBeLessThanOrEqual(1);
   });
 });

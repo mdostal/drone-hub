@@ -9,7 +9,7 @@
       "url": "ortho.tif",
       "opacity": 1,
       "toggle": true,
-      "legend": "real orthomosaic reconstructed by OpenDroneMap from the nadir grid flight"
+      "legend": "real orthomosaic reconstructed by OpenDroneMap from the nadir grid + an oblique orbit pass"
     },
     {
       "id": "hillshade",
