@@ -333,3 +333,12 @@ real, meaningful checks independent of source raster.
 Every OTHER slug on the gated content-engine page still shares this same sample grid — the
 per-slug real-vs-fallback resolution pattern this note used to flag as fully deferred is
 now proven for one real property, not yet generalized to arbitrary slugs.
+
+### v2 update
+
+`heightmap.json` was regenerated from v2's DSM (the reconstruction that added an oblique
+orbit pass alongside the nadir grid — see `docs/components/layer-viewer.md`'s own "v2
+update" section for the full nadir-occlusion explanation). Same block-pooling/quantization
+method as before, just against a real DSM with better-resolved tree-canopy elevation —
+terrain features under tall trees are less likely to be artificially flattened by the
+smeared v1 reconstruction's height estimate.

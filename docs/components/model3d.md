@@ -414,3 +414,29 @@ before and after compression (identical) and by live-orbiting the actual showcas
 The original `public/model3d-samples/duck/model.glb` stays in the repo — `<LandOverlay>`'s
 showcase still uses it (see that component's own doc for why the real mesh wasn't swapped
 in there too).
+
+### v2 update — nadir + oblique orbit, real tree geometry
+
+The "sparse, jagged fragments" characteristic described above is fixed as of v2 — not by
+better processing settings (reprocessing the same nadir-only source at high quality
+produced no meaningful change), but by adding a real oblique orbit clip (`0023`, gimbal
+tilted ~45-60°, ~3 min circling the property) to the same reconstruction. A nadir-only
+camera structurally cannot resolve a tree taller than the flight altitude — it only ever
+sees the canopy top, never the sides — so no amount of point-cloud density fixes that. The
+oblique pass gives the reconstruction real side-view data for the first time.
+
+Practical fallout worth knowing if you're extending this pipeline: the oblique orbit swept
+a much wider area than just the property (the raw reconstruction's bounding box roughly
+doubled in each direction), and a handful of far outlier vertices from neighboring
+properties were enough to make the actual house a speck once `<Bounds>` auto-framed the
+whole thing. Fixed by cropping the mesh to the property's real-world bounds *by material
+group*, in the reconstruction's own local coordinate frame (via `trimesh`, since
+`gltf-transform` has no spatial-crop command) — before the resize/simplify/Draco pipeline,
+not after. Final asset: ~10MB (up from v1's ~2MB — more materials, more real geometry, a
+genuinely bigger reconstruction, not just recompressed).
+
+Two other real bugs were found and fixed getting to v2, unrelated to the mesh itself: a
+Docker Desktop default-memory-allocation limit causing intermittent segfaults in
+OpenDroneMap's dense-reconstruction step under x86-on-ARM64 emulation, and an ODM
+dataset-cache footgun (partially clearing cache files between reruns breaks the dataset
+stage rather than triggering a clean rescan — wipe the whole project directory instead).

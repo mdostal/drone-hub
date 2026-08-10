@@ -433,3 +433,12 @@ used by `<Model3D>`'s own showcase (`public/model3d-samples/prado/model.glb`): t
 is Z-up in its raw ODM/OBJ export, and this component's absolute map-alignment requirement
 needs a real axis-correction pass (verified live, same as everything else in this file) —
 budget for that as its own follow-up, don't guess at it.
+
+### v2 update
+
+The underlying ortho was replaced again with v2 (nadir + oblique orbit — see
+`docs/components/layer-viewer.md`'s "v2 update" section). The duck's anchor and all golden
+pixel-centroid values above held unchanged — v2 was cropped to within ~15m of v1's original
+extent specifically to keep this placement test valid without re-deriving new goldens, and
+that was verified live (re-ran the full e2e placement suite against the v2 ortho, not
+assumed). The Z-up mesh/axis-correction follow-up noted above is still open.

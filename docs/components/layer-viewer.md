@@ -403,3 +403,19 @@ important bug was found and fixed getting here: the first ODM run had `has_gps: 
 it reconstructed correctly relatively but anchored at a bogus location. Fixed by injecting
 real per-frame GPS (from `exiftool -ee -G3 -json -n`) into the extracted frames before
 re-running ODM.
+
+### v2 update — nadir + oblique orbit, real tree canopy
+
+That first fixed run (now called v1 locally) was still nadir-only — both flight passes
+pointed straight down, and the property's 100+ ft trees rendered as smeared, streaked
+texture in the ortho. Reprocessing the same nadir-only source at progressively higher
+quality settings produced no meaningful improvement, which confirmed this was never a
+processing-quality problem: a straight-down camera can only ever see a tree's canopy top,
+never its sides, at any point-cloud density. v2 adds a real oblique orbit clip (`0023`,
+gimbal tilted ~45-60°, ~3 min circling the property, already present in the flight's own
+catalog — no reflight needed) to the same reconstruction. No merge step required: every
+clip already carries its own embedded GPS, so the oblique frames just join the same image
+pool as the nadir grid for one ODM run. 260 of 264 total frames reconstructed; real,
+visible improvement in the tree canopy (coherent leaf/branch texture, not perfect, but no
+longer streaked). `hillshade.tif`/`contours.geojson` were regenerated from v2's DSM in
+lockstep, same "one atomic dataset" discipline as the original COG-bounds fix.
