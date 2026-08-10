@@ -153,3 +153,55 @@ caught and reverted quickly, but it's why "no real content, ever, in this
 repo" is now a hard rule here, not just a preference. Before this repo is
 ever made public again, its git history should be scrubbed of that content
 (the working tree is already clean as of this correction; history is not).
+
+## Correction (operator, 2026-08-09) — real, rights-cleared 2806 Prado data IS now in drone-hub's public samples — read the distinction below before touching this
+
+**Supersedes the 2026-08-08 "real Prado/Omaha nadir data does NOT swap into
+drone-hub at all... never in this repo's public/" line above.** As of
+2026-08-09, drone-hub's public sample data legitimately includes real 2806
+Prado St content: real flight telemetry (`<FlightCoverageAnalyzer>`'s
+sample), a real OpenDroneMap orthomosaic/DSM/textured-mesh reconstruction
+(`<LayerViewer>`/`<Model3D>`/`<VoxelTerrain>`/`<LandOverlay>`'s samples),
+and real, privacy-checked interior walkthrough video clips
+(`<VideoTour>`'s sample, authored via `<TourBuilder>`'s manifest shape).
+The operator explicitly, repeatedly, and knowingly authorized this — not a
+repeat of the incident above:
+
+- **"That is my property data, that is fine... I have full [release
+  rights]."** The operator's own words, given directly in-session, with
+  full awareness of what was being asked each time (flight telemetry, then
+  photogrammetry assets, then — via an explicit `AskUserQuestion` — real
+  interior walkthrough video specifically, choosing "Public drone-hub" over
+  private-only or a hybrid).
+- **This is casual/practice drone footage of the operator's own home
+  (2806 Prado, being sold), flown for fun/to learn** — categorically
+  different from the incident's content, which was **professional
+  real-estate-shoot photography** pending shoot-permission/release-form
+  formalization and a Part 107 license. That professional-shoot content
+  (and any future content under that same formal-shoot category) stays
+  exactly where the pre-existing rule already puts it: private, in
+  `personal-drone`, until release forms + 107 are done. This correction
+  does NOT touch that rule.
+- **Privacy-checked before use, not assumed safe:** the interior video
+  specifically was only used after directly verifying (not trusting a
+  README claim) that every interior clip's post-flight-pipeline
+  `privacy_flags` field showed no `people_visible`/`children_visible`
+  across all 38 candidate clips — the house was genuinely staged-empty.
+- **`family-reunion-aerial`-style content is still permanently off-limits**
+  — this correction is scoped to 2806 Prado's own real-estate/property
+  content specifically, not a blanket "any real footage is now fine."
+  CLAUDE.md's "never used, anywhere" rule for footage of people
+  (incl. minors) is untouched by this correction.
+
+**Practical effect:** the video-tour showcase page's own regression-guard
+test (`app/(showcase)/components/video-tour/page.test.tsx`) used to ban the
+literal string `"2806-prado"` appearing anywhere in that page, even in
+comments — written specifically to prevent a repeat of the incident above.
+That test was updated (not deleted) to allow the new, rights-cleared
+`2806-prado` walkthrough sample while still guarding against the ORIGINAL
+incident's specific content (the gated `/tours/` route family, which no
+longer exists in this repo, and the professional-shoot photo path). Read
+that test's own updated header comment for the exact boundary it now
+enforces before assuming either "anything 2806-prado is fine now" or "the
+old ban still fully applies" — neither is quite right; the test encodes the
+real distinction.

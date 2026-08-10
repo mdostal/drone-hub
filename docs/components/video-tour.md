@@ -171,3 +171,39 @@ Mathew wants the surrounding tooling to make footage **easy to upload + interact
   (ortho/mesh) for the map/3D components, video from the raw flights.
 - Ties into existing planned `<LayerViewer>`, `<Model3D>`, `<VideoAnnotator>`, `<Gallery>`.
 Keep VideoTour standalone but manifest-compatible so one property folder feeds all of them.
+
+## Real data update (2806 Prado, real-tour story, 2026-08-09)
+
+The showcase's primary demo is no longer the synthetic `demo-house` sample — it's the
+operator's own real 2806 Prado St interior walkthrough
+(`public/showcase-samples/2806-prado-tour/`), sourced from the post-flight pipeline's
+already-processed, room-labeled clip catalog (`03_analysis/catalog.tsv`,
+`04_processed/rough/clips/` — see `personal-drone/docs/post-flight-pipeline.md`). See
+CLAUDE.md's 2026-08-09 correction for the full authorization history and how this differs
+from the earlier real-tour incident this page's own regression-guard test was originally
+written to prevent — read that before touching `page.test.tsx`.
+
+**Selection + privacy process (not assumed safe — verified):** of 38 candidate interior
+clips, every single one's `privacy_flags` field was checked directly (not just trusted from
+the pipeline README's "staged-empty" claim) — zero had `people_visible`/`children_visible`.
+One representative clip per room was picked favoring `hero`-rated, `clean` motion-quality,
+`keep: yes`, `privacy_flags: none` clips (a few real rooms only had `other_houses_visible`-
+flagged options available and were skipped in favor of a clean alternative in the same
+room where one existed).
+
+**Compression** (`ffmpeg`, matching the video-tour epic's own established small-sample
+convention): each room's real 4K source clip trimmed to an 8s representative segment,
+scaled to 960px wide, muted, h264 CRF 28 — real 4K footage down to 250–670KB per clip
+(~4MB total across 9 rooms). Each room's `still` is a real JPEG frame extracted directly
+from that same clip (`ffmpeg -ss 2 -frames:v 1`), not a synthetic placeholder.
+
+**Every room has a real `spin` clip** (unlike `demo-house`, where only Living Room got one)
+— every `TourEdge.clip` stays `null` (wipe fallback): the pipeline produced per-room hero
+clips, not clip-to-clip transition flights between specific doorways, so there's no real
+transition footage to wire in yet. Room `pos` values are a hand-laid-out schematic based on
+the real room-adjacency implied by the catalog and one entry-clip still (not a real
+architectural floorplan — none exists for this property in this pipeline).
+
+`public/showcase-samples/demo-house/` (synthetic SVG stills, one generic stock spin clip)
+stays in the repo, unreferenced by this showcase page now — same "keep the old generic
+sample around, don't delete it" precedent `<Model3D>`'s duck/prado swap already set.

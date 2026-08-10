@@ -1,0 +1,104 @@
+{
+  "slug": "2806-prado-tour",
+  "title": "2806 Prado St — real interior walkthrough",
+  "startRoom": "entry",
+  "rooms": [
+    {
+      "id": "entry",
+      "label": "Entry",
+      "spin": "entry.mp4",
+      "still": "entry.jpg",
+      "pos": [50, 90],
+      "neighbors": [
+        { "to": "living", "clip": null },
+        { "to": "garage", "clip": null }
+      ]
+    },
+    {
+      "id": "living",
+      "label": "Living Room",
+      "spin": "living.mp4",
+      "still": "living.jpg",
+      "pos": [50, 65],
+      "neighbors": [
+        { "to": "entry", "clip": null },
+        { "to": "kitchen", "clip": null },
+        { "to": "hallway", "clip": null },
+        { "to": "patio", "clip": null }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "label": "Kitchen",
+      "spin": "kitchen.mp4",
+      "still": "kitchen.jpg",
+      "pos": [78, 50],
+      "neighbors": [
+        { "to": "living", "clip": null }
+      ]
+    },
+    {
+      "id": "hallway",
+      "label": "Hallway",
+      "spin": "hallway.mp4",
+      "still": "hallway.jpg",
+      "pos": [28, 50],
+      "neighbors": [
+        { "to": "living", "clip": null },
+        { "to": "bedroom", "clip": null },
+        { "to": "bathroom", "clip": null },
+        { "to": "closet", "clip": null }
+      ]
+    },
+    {
+      "id": "bedroom",
+      "label": "Bedroom",
+      "spin": "bedroom.mp4",
+      "still": "bedroom.jpg",
+      "pos": [15, 30],
+      "neighbors": [
+        { "to": "hallway", "clip": null }
+      ]
+    },
+    {
+      "id": "bathroom",
+      "label": "Bathroom",
+      "spin": "bathroom.mp4",
+      "still": "bathroom.jpg",
+      "pos": [32, 20],
+      "neighbors": [
+        { "to": "hallway", "clip": null }
+      ]
+    },
+    {
+      "id": "closet",
+      "label": "Closet",
+      "spin": "closet.mp4",
+      "still": "closet.jpg",
+      "pos": [12, 10],
+      "neighbors": [
+        { "to": "hallway", "clip": null }
+      ]
+    },
+    {
+      "id": "garage",
+      "label": "Garage",
+      "spin": "garage.mp4",
+      "still": "garage.jpg",
+      "pos": [80, 88],
+      "neighbors": [
+        { "to": "entry", "clip": null }
+      ]
+    },
+    {
+      "id": "patio",
+      "label": "Patio / Backyard",
+      "spin": "patio.mp4",
+      "still": "patio.jpg",
+      "pos": [50, 35],
+      "neighbors": [
+        { "to": "living", "clip": null }
+      ]
+    }
+  ]
+}
