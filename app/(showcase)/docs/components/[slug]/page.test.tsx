@@ -86,11 +86,13 @@ describe("<DocPage> — rendering a known slug", () => {
     expect(container.textContent).toContain("Hammer Missions");
   });
 
-  it("renders the '← Components' back link pointing at /", async () => {
+  it("renders bare article content — no outer max-width/back-link, since app/(showcase)/docs/layout.tsx's sidebar now owns navigation and page chrome", async () => {
     const element = await DocPage({ params: Promise.resolve({ slug: "layer-viewer" }) });
-    render(element);
+    const { container } = render(element);
 
-    expect(screen.getByRole("link", { name: /Components/ })).toHaveAttribute("href", "/");
+    expect(container.querySelector("main")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Components/ })).toBeNull();
+    expect(container.querySelector("article")).not.toBeNull();
   });
 });
 

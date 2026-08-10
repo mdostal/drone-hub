@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/Markdown";
 
@@ -76,14 +75,13 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const filePath = path.join(process.cwd(), "docs", "components", `${slug}.md`);
   const markdown = fs.readFileSync(filePath, "utf-8");
 
+  // No outer max-width/padding/back-link here — app/(showcase)/docs/layout.tsx
+  // (the sidebar layout) now owns that; the sidebar itself is the
+  // "how do I get elsewhere" affordance, replacing the old standalone
+  // "← Components" link.
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
-      <Link href="/" className="text-sm text-muted hover:text-accent">
-        ← Components
-      </Link>
-      <article>
-        <Markdown>{markdown}</Markdown>
-      </article>
-    </main>
+    <article>
+      <Markdown>{markdown}</Markdown>
+    </article>
   );
 }

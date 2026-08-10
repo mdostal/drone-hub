@@ -6,3 +6,5 @@ export { ComponentShowcase } from "./ComponentShowcase";
 export type { ComponentShowcaseProps } from "./ComponentShowcase";
 export { NavStrip } from "./NavStrip";
 export type { NavStripItem, NavStripProps } from "./NavStrip";
+export { DocsSidebar } from "./DocsSidebar";
+export type { DocsSidebarItem, DocsSidebarProps, DocsSidebarSection } from "./DocsSidebar";
