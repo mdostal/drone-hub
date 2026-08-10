@@ -205,3 +205,37 @@ that test's own updated header comment for the exact boundary it now
 enforces before assuming either "anything 2806-prado is fine now" or "the
 old ban still fully applies" — neither is quite right; the test encodes the
 real distinction.
+
+## Vision addition (operator, 2026-08-09) — a third pillar: drone hardware/SDK control tools
+
+**Not scoped or prioritized yet — this is a captured direction, queued
+behind the existing priority order** (Phase 2 LayerViewer tools, the
+telemetry-driven video overlay), not a signal to start building it.
+
+Everything in this repo so far falls into two pillars: **UI components**
+(`components/` — plug-and-play React, what gets imported) and
+**post-processing tools** (`/pipeline` — turns already-captured raw footage
+into usable assets: WebODM, GDAL/rio-\*, PDAL, ffmpeg/exiftool). The
+operator wants a **third pillar, structurally separate from both**: tools
+for actually *commanding* a drone — planning and executing real flight
+missions (automated nadir grids at multiple altitudes, orbit/fly-around
+patterns), not processing footage after the fact. Operator's framing:
+"separate UI components from processing and video stuff and tools from
+drone components, tools, etc."
+
+**Where it lives:** a new sibling directory, `/flight-control` (mirroring
+`/pipeline`'s own precedent exactly — documentation-only until there's a
+concrete reason to write real code against it, never imported from
+`app/`/`components/`/`lib/`, never bundled). Same three-way split the
+operator described: `components/` = UI, `/pipeline` = post-processing,
+`/flight-control` = pre-flight mission planning + in-flight SDK/API
+control.
+
+**Real, already-open question this connects to, not a fresh one:** the
+Phase-0 section above already flags "verify Litchi/Dronelink controls the
+Mini 5 Pro (DJI locks Mini-class SDK)" — that's the exact uncertainty this
+new pillar would need resolved first. DJI's own Mobile SDK / Cloud API,
+Litchi Mission Hub, and Dronelink are the candidate integration points, but
+none has been evaluated yet for actual Mini 5 Pro waypoint/altitude-grid
+support. That evaluation is real, un-scoped work for whenever this pillar
+gets prioritized — not assumed solved by this note.
