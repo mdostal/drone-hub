@@ -309,18 +309,29 @@ export function disposeSceneGraph(root: DisposableObject3DLike): void {
 let renderingModulesPromise: Promise<{
   THREE: typeof import("three");
   GLTFLoader: typeof import("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader;
+  DRACOLoader: typeof import("three/examples/jsm/loaders/DRACOLoader.js").DRACOLoader;
   MercatorCoordinate: typeof import("maplibre-gl").MercatorCoordinate;
 }> | null = null;
+
+// Same public decoder CDN @react-three/drei's `useGLTF` defaults to
+// (node_modules/@react-three/drei/core/Gltf.js) -- <Model3D> gets Draco
+// support for free through drei; this hand-rolled GLTFLoader doesn't, so it
+// needs the same DRACOLoader wiring drei does under the hood. Matching
+// drei's default keeps behavior identical between the two loading paths
+// rather than introducing a second, differently-versioned decoder.
+export const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.5/";
 
 function loadRenderingModules() {
   if (!renderingModulesPromise) {
     renderingModulesPromise = Promise.all([
       import("three"),
       import("three/examples/jsm/loaders/GLTFLoader.js"),
+      import("three/examples/jsm/loaders/DRACOLoader.js"),
       import("maplibre-gl"),
-    ]).then(([THREE, { GLTFLoader }, maplibregl]) => ({
+    ]).then(([THREE, { GLTFLoader }, { DRACOLoader }, maplibregl]) => ({
       THREE,
       GLTFLoader,
+      DRACOLoader,
       MercatorCoordinate: maplibregl.MercatorCoordinate,
     }));
   }
@@ -384,6 +395,12 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
   // LayerViewer.tsx's manifest-resolution effect's own `cancelled` flag.
   let cancelled = false;
   let visible = true;
+  // Holds the DRACOLoader instance so onRemove() can dispose it -- DRACOLoader
+  // spins up a real Web Worker pool for decoding; leaving it running after
+  // the layer is torn down leaks workers.
+  let dracoLoader: InstanceType<
+    typeof import("three/examples/jsm/loaders/DRACOLoader.js").DRACOLoader
+  > | null = null;
   // setOpacity() may be called (e.g. by a consumer syncing initial props)
   // before the glTF has loaded and modelRoot exists yet; remembered here and
   // applied once the load callback actually adds the scene graph.
@@ -395,7 +412,7 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
     renderingMode: "3d",
 
     onAdd(map: MapLibreMap, gl: WebGLRenderingContext | WebGL2RenderingContext) {
-      loadRenderingModules().then(({ THREE, GLTFLoader, MercatorCoordinate }) => {
+      loadRenderingModules().then(({ THREE, GLTFLoader, DRACOLoader, MercatorCoordinate }) => {
         // onRemove() already fired while the lazy import was in flight
         // (mount torn down before three.js even finished loading) — don't
         // spin up a renderer/scene nobody will ever clean up.
@@ -442,7 +459,16 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
         );
         modelMatrix = buildModelMatrix(model, mercator);
 
+        // Without this, GLTFLoader.parse() throws "No DRACOLoader instance
+        // provided" the moment it hits a Draco-compressed mesh (confirmed
+        // live against the real, Draco-compressed 2806 Prado reconstruction
+        // -- <Model3D> loads the identical file fine because drei's
+        // `useGLTF` wires this up automatically; this hand-rolled loader
+        // didn't).
+        dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath(DRACO_DECODER_PATH);
         const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
         loader.load(
           model.url,
           (gltf) => {
@@ -521,6 +547,11 @@ export function createModelLayer(model: GeoAnchoredModel): ModelLayer {
       camera = null;
       renderer = null;
       modelMatrix = null;
+      // Terminates DRACOLoader's decode worker pool -- same reasoning as
+      // Correction 5 above, just for the loader's own resources rather than
+      // the loaded scene graph's.
+      dracoLoader?.dispose();
+      dracoLoader = null;
     },
 
     setOpacity(opacity: number) {

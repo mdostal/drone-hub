@@ -44,6 +44,7 @@ import {
   combineMatrices,
   createModelLayer,
   disposeSceneGraph,
+  DRACO_DECODER_PATH,
   IDENTITY_MAT4,
   type Mat4,
   type MercatorLike,
@@ -299,6 +300,7 @@ const mocks = vi.hoisted(() => ({
     onError?: (err: unknown) => void;
   }>,
   renderers: [] as Array<{ render: ReturnType<typeof vi.fn>; resetState: ReturnType<typeof vi.fn> }>,
+  dracoLoaders: [] as Array<{ decoderPath: string | null; disposed: boolean }>,
 }));
 
 vi.mock("three", () => {
@@ -358,6 +360,12 @@ vi.mock("three", () => {
 
 vi.mock("three/examples/jsm/loaders/GLTFLoader.js", () => {
   class FakeGLTFLoader {
+    // Recorded so a test can assert createModelLayer actually wires a
+    // DRACOLoader in, not just that *a* loader was constructed.
+    dracoLoader: unknown = null;
+    setDRACOLoader(dracoLoader: unknown) {
+      this.dracoLoader = dracoLoader;
+    }
     load(
       url: string,
       onLoad: (gltf: { scene: unknown }) => void,
@@ -368,6 +376,23 @@ vi.mock("three/examples/jsm/loaders/GLTFLoader.js", () => {
     }
   }
   return { GLTFLoader: FakeGLTFLoader };
+});
+
+vi.mock("three/examples/jsm/loaders/DRACOLoader.js", () => {
+  class FakeDRACOLoader {
+    decoderPath: string | null = null;
+    disposed = false;
+    constructor() {
+      mocks.dracoLoaders.push(this);
+    }
+    setDecoderPath(path: string) {
+      this.decoderPath = path;
+    }
+    dispose() {
+      this.disposed = true;
+    }
+  }
+  return { DRACOLoader: FakeDRACOLoader };
 });
 
 vi.mock("maplibre-gl", () => {
@@ -424,6 +449,7 @@ describe("createModelLayer", () => {
   beforeEach(() => {
     mocks.pendingLoads.length = 0;
     mocks.renderers.length = 0;
+    mocks.dracoLoaders.length = 0;
     vi.clearAllMocks();
   });
 
@@ -436,6 +462,27 @@ describe("createModelLayer", () => {
     expect(typeof layer.onRemove).toBe("function");
     expect(typeof layer.setOpacity).toBe("function");
     expect(typeof layer.setVisible).toBe("function");
+  });
+
+  it("wires a DRACOLoader into the GLTFLoader with the drei-matching decoder path -- regression guard for 'No DRACOLoader instance provided', which the real Draco-compressed 2806 Prado mesh hit live before this fix", async () => {
+    const layer = createModelLayer(makeModel());
+    const { map, gl } = fakeMapAndGl();
+    layer.onAdd!(map, gl);
+    await flushOnAdd();
+
+    expect(mocks.dracoLoaders).toHaveLength(1);
+    expect(mocks.dracoLoaders[0].decoderPath).toBe(DRACO_DECODER_PATH);
+  });
+
+  it("disposes the DRACOLoader's decode worker pool on onRemove()", async () => {
+    const layer = createModelLayer(makeModel());
+    const { map, gl } = fakeMapAndGl();
+    layer.onAdd!(map, gl);
+    await flushOnAdd();
+
+    expect(mocks.dracoLoaders[0].disposed).toBe(false);
+    layer.onRemove!();
+    expect(mocks.dracoLoaders[0].disposed).toBe(true);
   });
 
   it("ready-guard: render() before the glTF has loaded returns without throwing and without calling renderer.render()", async () => {
