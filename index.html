@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>drone-hub — plug-and-play drone property-intelligence components</title>
+<meta name="description" content="A shadcn-style component framework for drone property intelligence: map layer viewer, 3D/point-cloud viewer, geo-anchored model overlay, video walkthrough player, and a Minecraft terrain voxelizer — real components, run against a real photogrammetry reconstruction." />
+<meta property="og:title" content="drone-hub — plug-and-play drone property-intelligence components" />
+<meta property="og:description" content="Build and own the viewer. Buy only the compute. A shadcn-style component library for drone property intelligence." />
+<meta property="og:image" content="https://mdostal.github.io/drone-hub/img/shot-layerviewer.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8590c'/%3E%3Crect x='9' y='6' width='14' height='14' rx='3' fill='white' fill-opacity='.55'/%3E%3Crect x='7' y='10' width='14' height='14' rx='3' fill='white' fill-opacity='.75'/%3E%3Crect x='5' y='14' width='14' height='14' rx='3' fill='white'/%3E%3C/svg%3E" />
+<style>
+  :root{
+    --bg: #0a0d10;
+    --bg-raised: #12161b;
+    --bg-inset: #0d1013;
+    --line: #22282f;
+    --line-soft: #181d23;
+    --ink: #e9edf1;
+    --ink-dim: #9aa5ae;
+    --ink-faint: #5c6670;
+    --accent: #e8590c;
+    --accent-soft: #e8590c22;
+    --accent-line: #e8590c55;
+    --grid-line: #ffffff08;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --radius: 3px;
+  }
+  :root[data-theme="light"]{
+    --bg: #f4f2ee;
+    --bg-raised: #ffffff;
+    --bg-inset: #ebe8e2;
+    --line: #d8d3c9;
+    --line-soft: #e5e1d8;
+    --ink: #1b1a17;
+    --ink-dim: #5c584f;
+    --ink-faint: #948f82;
+    --accent: #c8480a;
+    --accent-soft: #c8480a1a;
+    --accent-line: #c8480a55;
+    --grid-line: #00000008;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg: #f4f2ee;
+      --bg-raised: #ffffff;
+      --bg-inset: #ebe8e2;
+      --line: #d8d3c9;
+      --line-soft: #e5e1d8;
+      --ink: #1b1a17;
+      --ink-dim: #5c584f;
+      --ink-faint: #948f82;
+      --accent: #c8480a;
+      --accent-soft: #c8480a1a;
+      --accent-line: #c8480a55;
+      --grid-line: #00000008;
+    }
+  }
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  a{color:inherit;}
+  h1,h2,h3{text-wrap:balance; margin:0;}
+  p{margin:0;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px;}
+  code, .mono{font-family:var(--mono);}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+    border-bottom:1px solid var(--line-soft);
+    position:sticky; top:0; z-index:20;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-0.01em; font-size:15px;}
+  .brand .mark{width:16px;height:16px;position:relative;flex:none;}
+  .brand .mark span{position:absolute; width:11px; height:11px; border-radius:2px;}
+  .brand .mark span:nth-child(1){top:0; left:3px; background:var(--accent); opacity:.5;}
+  .brand .mark span:nth-child(2){top:3px; left:1.5px; background:var(--accent); opacity:.75;}
+  .brand .mark span:nth-child(3){top:6px; left:0; background:var(--accent);}
+  .topnav{display:flex; gap:22px; font-size:13px; color:var(--ink-dim);}
+  .topnav a{text-decoration:none;}
+  .topnav a:hover{color:var(--ink);}
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 56px;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent); background:var(--accent-soft);
+    border:1px solid var(--accent-line); border-radius:100px;
+    padding:5px 12px; margin-bottom:22px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  .hero h1{
+    font-size:clamp(34px, 5.2vw, 60px);
+    line-height:1.04; letter-spacing:-0.025em; font-weight:700;
+    max-width:15ch;
+  }
+  .hero h1 em{font-style:normal; color:var(--accent);}
+  .hero-sub{
+    margin-top:22px; font-size:18px; line-height:1.55; color:var(--ink-dim);
+    max-width:56ch;
+  }
+  .cta-row{display:flex; gap:12px; margin-top:34px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--sans); font-size:14px; font-weight:600;
+    padding:12px 20px; border-radius:var(--radius);
+    text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    border:1px solid transparent; cursor:pointer;
+  }
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover{background:#f16a1f;}
+  .btn-ghost{border-color:var(--line); color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--ink-faint);}
+  .btn svg{width:14px;height:14px;}
+
+  .readout{
+    margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+    background:var(--bg-inset);
+  }
+  .readout div{padding:16px 18px; border-right:1px solid var(--line-soft);}
+  .readout div:last-child{border-right:none;}
+  .readout .k{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint);}
+  .readout .v{font-family:var(--mono); font-size:19px; margin-top:6px; font-variant-numeric:tabular-nums; color:var(--ink);}
+  .readout .v small{font-size:12px; color:var(--ink-dim); font-weight:400;}
+
+  /* ---------- section shell ---------- */
+  section{padding:64px 0;}
+  .section-head{margin-bottom:36px; max-width:62ch;}
+  .section-label{
+    font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:12px; display:block;
+  }
+  .section-head h2{font-size:clamp(24px,3vw,32px); letter-spacing:-0.02em; font-weight:700;}
+  .section-head p{margin-top:12px; color:var(--ink-dim); font-size:15.5px; line-height:1.6;}
+
+  /* ---------- shot ---------- */
+  .shot{
+    border:1px solid var(--line); border-radius:6px; overflow:hidden;
+    background:var(--bg-raised);
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,.6);
+  }
+  .shot .chrome{
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    border-bottom:1px solid var(--line-soft); background:var(--bg-inset);
+  }
+  .shot .chrome .dots{display:flex; gap:6px;}
+  .shot .chrome .dots span{width:9px;height:9px;border-radius:50%; background:var(--line);}
+  .shot .chrome .url{
+    font-family:var(--mono); font-size:12px; color:var(--ink-faint);
+    margin-left:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .shot img{display:block; width:100%; height:auto;}
+
+  /* ---------- component grid ---------- */
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .card{background:var(--bg-raised); padding:24px; display:flex; flex-direction:column; gap:10px; min-height:168px;}
+  .card .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .card h3{font-size:17px; font-weight:700; letter-spacing:-0.01em;}
+  .card p{font-size:13.5px; color:var(--ink-dim); line-height:1.55; flex:1;}
+  .card .real{
+    font-family:var(--mono); font-size:11px; color:var(--accent);
+    display:inline-flex; align-items:center; gap:6px; width:fit-content;
+  }
+  .card .real .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+
+  /* ---------- pipeline ---------- */
+  .pipeline{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .step{display:grid; grid-template-columns:64px 1fr; border-top:1px solid var(--line-soft);}
+  .step:first-child{border-top:none;}
+  .step .num{
+    font-family:var(--mono); font-size:13px; color:var(--ink-faint);
+    background:var(--bg-inset); display:flex; align-items:flex-start; justify-content:center;
+    padding:20px 0; border-right:1px solid var(--line-soft);
+  }
+  .step .body{padding:18px 22px; background:var(--bg-raised);}
+  .step h4{font-size:14.5px; font-weight:700; margin-bottom:5px;}
+  .step p{font-size:13.5px; color:var(--ink-dim); line-height:1.6;}
+  .step code{background:var(--bg-inset); padding:1px 6px; border-radius:3px; font-size:12px; border:1px solid var(--line-soft);}
+
+  /* ---------- stack ---------- */
+  .stack-list{display:flex; flex-wrap:wrap; gap:10px;}
+  .chip{
+    font-family:var(--mono); font-size:12.5px; padding:8px 13px;
+    border:1px solid var(--line); border-radius:100px; color:var(--ink-dim);
+    background:var(--bg-inset);
+  }
+
+  /* ---------- honesty band ---------- */
+  .honest{
+    border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:0 6px 6px 0; padding:24px 26px; background:var(--bg-raised);
+  }
+  .honest p{color:var(--ink-dim); font-size:14.5px; line-height:1.65;}
+  .honest strong{color:var(--ink);}
+
+  footer{border-top:1px solid var(--line-soft); padding:40px 0; margin-top:20px;}
+  .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;}
+  .foot-row .mono{font-size:12px; color:var(--ink-faint);}
+  .foot-links{display:flex; gap:18px; font-size:13px; color:var(--ink-dim);}
+  .foot-links a{text-decoration:none;}
+  .foot-links a:hover{color:var(--ink);}
+
+  @media (max-width:860px){
+    .grid{grid-template-columns:1fr 1fr;}
+    .readout{grid-template-columns:1fr 1fr;}
+    .readout div:nth-child(2){border-right:none;}
+  }
+  @media (max-width:600px){
+    .grid{grid-template-columns:1fr;}
+    .readout{grid-template-columns:1fr;}
+    .readout div{border-right:none; border-bottom:1px solid var(--line-soft);}
+    .step{grid-template-columns:44px 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark"><span></span><span></span><span></span></div>
+    drone-hub
+  </div>
+  <nav class="topnav">
+    <a href="https://drone-hub-rust.vercel.app/docs" target="_blank" rel="noopener">Docs</a>
+    <a href="https://drone-hub-rust.vercel.app" target="_blank" rel="noopener">Live site</a>
+    <a href="https://github.com/mdostal/drone-hub" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <span class="eyebrow"><span class="dot"></span>MIT · Next.js 15 · open source</span>
+    <h1>Drone property intelligence, <em>as components.</em></h1>
+    <p class="hero-sub">A shadcn-style framework, not a hosted app. Drop a georeferenced map layer viewer, a 3D/point-cloud viewer, a video walkthrough player, or a Minecraft terrain voxelizer into your own React app. Own the viewer. Buy only the compute.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://drone-hub-rust.vercel.app" target="_blank" rel="noopener">
+        View live demo
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="https://drone-hub-rust.vercel.app/docs" target="_blank" rel="noopener">Read the docs</a>
+      <a class="btn btn-ghost" href="https://github.com/mdostal/drone-hub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.52c0 5.02 3.26 9.28 7.78 10.79.57.1.78-.25.78-.55 0-.27-.01-1.16-.01-2.11-3.17.69-3.84-1.34-3.84-1.34-.52-1.3-1.27-1.65-1.27-1.65-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.53-.29-5.19-1.27-5.19-5.63 0-1.24.44-2.26 1.17-3.06-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.14 1.17.91-.25 1.89-.38 2.86-.39.97.01 1.95.14 2.86.39 2.18-1.48 3.14-1.17 3.14-1.17.62 1.57.23 2.73.11 3.02.73.8 1.17 1.82 1.17 3.06 0 4.37-2.66 5.34-5.2 5.62.41.36.77 1.06.77 2.14 0 1.55-.01 2.79-.01 3.17 0 .3.2.66.79.55 4.51-1.51 7.77-5.77 7.77-10.79C23.02 5.24 18.27.5 12 .5Z"/></svg>
+        GitHub
+      </a>
+    </div>
+
+    <div class="readout">
+      <div><div class="k">Components shipped</div><div class="v">7</div></div>
+      <div><div class="k">Reconstruction</div><div class="v">260<small>/264 frames</small></div></div>
+      <div><div class="k">Flight altitudes</div><div class="v">66<small>ft +</small> 159<small>ft AGL</small></div></div>
+      <div><div class="k">Bundle strategy</div><div class="v">R2<small>, zero egress</small></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">01 · LayerViewer</span>
+      <h2>The killer feature is the toggle.</h2>
+      <p>MapLibre GL + a satellite base, with the orthomosaic, hillshade, contours, and parcel boundary as independently toggleable, opacity-controlled layers. This is the real orthophoto from an actual nadir-grid drone flight over 2806 Prado — not a stock tile.</p>
+    </div>
+    <div class="shot">
+      <div class="chrome"><div class="dots"><span></span><span></span><span></span></div><div class="url">drone-hub-rust.vercel.app/components/layer-viewer</div></div>
+      <img src="img/shot-layerviewer.jpg" alt="LayerViewer component showing a real drone orthomosaic draped over a satellite base map, with a layer control panel toggling hillshade, contours, and parcel boundary." loading="lazy" width="1600" height="1176" />
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">Component family</span>
+      <h2>Seven components. One import each.</h2>
+      <p>Every component below ships with a live demo, a props table, and a full docs writeup — no half-built showcase pages.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Video</span>
+        <h3>VideoTour</h3>
+        <p>Scrollytelling walkthrough that steps a floor plan through doorway-linked video clips.</p>
+        <span class="real"><span class="dot"></span>real interior footage</span>
+      </div>
+      <div class="card">
+        <span class="tag">Map</span>
+        <h3>LayerViewer</h3>
+        <p>Toggleable, opacity-controlled georeferenced overlays draped on a satellite base map.</p>
+        <span class="real"><span class="dot"></span>real ortho + DSM</span>
+      </div>
+      <div class="card">
+        <span class="tag">3D</span>
+        <h3>Model3D</h3>
+        <p>Orbit-and-measure 3D mesh / point-cloud viewer for a property's photogrammetry output.</p>
+        <span class="real"><span class="dot"></span>real textured mesh</span>
+      </div>
+      <div class="card">
+        <span class="tag">Map + 3D</span>
+        <h3>LandOverlay</h3>
+        <p>A geo-anchored 3D model draped onto the satellite map at a real lat/lon, alongside the ortho/hillshade/boundary layers.</p>
+        <span class="real"><span class="dot"></span>real georeference</span>
+      </div>
+      <div class="card">
+        <span class="tag">3D</span>
+        <h3>VoxelTerrain</h3>
+        <p>Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes, orbit-controllable.</p>
+        <span class="real"><span class="dot"></span>real DSM-derived heightmap</span>
+      </div>
+      <div class="card">
+        <span class="tag">Page</span>
+        <h3>ContentEngine</h3>
+        <p>A per-property page composing VoxelTerrain, sample engineering docs, and flight-log telemetry into one surface.</p>
+        <span class="real"><span class="dot"></span>real flight telemetry</span>
+      </div>
+      <div class="card">
+        <span class="tag">Utility</span>
+        <h3>MinecraftExport</h3>
+        <p>Real, spec-compliant Minecraft Sponge Schematic (.schem) download generated from a VoxelGrid.</p>
+        <span class="real"><span class="dot"></span>real .schem output</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">02 · VideoTour</span>
+      <h2>Scrollytelling through a real property.</h2>
+      <p>Doorway-linked video clips with a floor-plan minimap and standard playback controls — the walkthrough shown here is real, unedited interior footage.</p>
+    </div>
+    <div class="shot">
+      <div class="chrome"><div class="dots"><span></span><span></span><span></span></div><div class="url">drone-hub-rust.vercel.app/components/video-tour</div></div>
+      <img src="img/shot-videotour.jpg" alt="VideoTour component playing real interior walkthrough footage with a floor-plan minimap and playback controls." loading="lazy" width="1600" height="1255" />
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">03 · VoxelTerrain</span>
+      <h2>Same DSM, blocky instead of smooth.</h2>
+      <p>The exact digital surface model LayerViewer renders as a hillshade, voxelized into a Minecraft-style terrain block — same renderer stack as Model3D (three.js / react-three-fiber), with a sample structure resting on top and a real .schem export.</p>
+    </div>
+    <div class="shot">
+      <div class="chrome"><div class="dots"><span></span><span></span><span></span></div><div class="url">drone-hub-rust.vercel.app/components/voxel-terrain</div></div>
+      <img src="img/shot-voxel.jpg" alt="VoxelTerrain component rendering a blocky Minecraft-style terrain block derived from a real digital surface model, with a sample structure on top." loading="lazy" width="1600" height="1176" />
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">The pipeline</span>
+      <h2>Nadir grid in, viewer-ready layers out.</h2>
+      <p>The components aren't demoed against mockups — this is the actual sequence that produced the sample data every viewer above renders.</p>
+    </div>
+    <div class="pipeline">
+      <div class="step">
+        <div class="num">01</div>
+        <div class="body">
+          <h4>Fly nadir passes at two altitudes</h4>
+          <p>Straight-down grid passes at <code>66ft AGL</code> and <code>159ft AGL</code>, ~75/70% overlap. No RTK on this rig — expect 1–3m drift, corrected manually downstream.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <div class="body">
+          <h4>Reconstruct with OpenDroneMap</h4>
+          <p>Structure-from-motion + dense point cloud → orthomosaic, DSM, and a textured mesh. <code>260 / 264</code> frames reconstructed on the reference job, run in Docker with the memory allocation actually tuned for it.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <div class="body">
+          <h4>Tile and crop for the web</h4>
+          <p><code>rio warp</code> / <code>rio cogeo create</code> for a Cloud-Optimized GeoTIFF ortho; a custom Lambertian hillshade + block-pooled heightmap bake off the DSM; the mesh goes through <code>gltf-transform</code> (resize → simplify → Draco) for a browser-sized <code>.glb</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <div class="body">
+          <h4>Drop into the components</h4>
+          <p>Every layer lands in a typed manifest — <code>{'{'} id, type, url, opacity, toggle {'}'}</code> — and LayerViewer, Model3D, and VoxelTerrain all read the same shape.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-label">Stack</span>
+      <h2>Deliberately minimal, deliberately owned.</h2>
+    </div>
+    <div class="stack-list">
+      <span class="chip">Next.js 15</span>
+      <span class="chip">React 19</span>
+      <span class="chip">Tailwind v4</span>
+      <span class="chip">MapLibre GL</span>
+      <span class="chip">PMTiles</span>
+      <span class="chip">maplibre-cog-protocol</span>
+      <span class="chip">turf.js</span>
+      <span class="chip">terra-draw</span>
+      <span class="chip">three.js</span>
+      <span class="chip">react-three-fiber</span>
+      <span class="chip">drei</span>
+      <span class="chip">hls.js</span>
+      <span class="chip">embla-carousel</span>
+      <span class="chip">Cloudflare R2</span>
+      <span class="chip">Vercel</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="honest">
+      <p><strong>What's real and what isn't, stated plainly:</strong> LayerViewer, Model3D, VoxelTerrain, and LandOverlay run against a real OpenDroneMap reconstruction from an actual nadir-grid flight — a real orthomosaic, a real DSM, a real textured mesh, not a stock photo. VideoTour plays real interior footage from the same property. Where a component has no real counterpart yet — thermal imagery (no radiometric sensor owned yet), a recorded parcel boundary — that gap is labeled honestly in its own docs page rather than faked. This is a framework/showcase repo only: no real, un-released property content and no gating of any kind live here.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap foot-row">
+    <span class="mono">MIT License © 2026 Mathew Dostal</span>
+    <div class="foot-links">
+      <a href="https://github.com/mdostal/drone-hub" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://drone-hub-rust.vercel.app" target="_blank" rel="noopener">Live demo</a>
+      <a href="https://drone-hub-rust.vercel.app/docs" target="_blank" rel="noopener">Docs</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
