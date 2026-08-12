@@ -1,0 +1,82 @@
+id: pipeline-scripts-mesh
+epic: tools-skill-layer
+title: Real OBJ-to-glb mesh conversion script
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Turn pipeline/README.md §3's obj2gltf/gltf-transform mapping into a real
+  script, extended with two real steps this session's v2 mesh work needed
+  that the README doesn't document yet: a trimesh-based per-material spatial
+  crop (needed because a wide oblique-orbit sweep's far-outlier vertices blow
+  out <Bounds fit clip observe>'s auto-framing — cropping by real-world bounds
+  in the mesh's own local coordinate frame, via the ODM coords.txt UTM offset)
+  and a custom Y-up axis-correction step that must run BEFORE Draco
+  compression (the custom axis-correction script's Draco decoder isn't wired
+  for already-compressed input).
+
+acceptance_criteria:
+  - "Given a real ODM odm_texturing/ directory (OBJ + MTL + textures), when convert-mesh.sh runs, then it produces a valid .glb loadable by drei's useGLTF"
+  - "Given a property's real-world crop bounds (lat/lon) and the ODM project's coords.txt UTM offset, when crop-mesh.py runs, then it crops the mesh to that property, dropping far-outlier vertices from neighboring properties"
+  - "The pipeline order is enforced as: crop -> resize -> Y-up axis-correct -> Draco compress (documented explicitly, since axis-correct must precede Draco per this session's real finding)"
+  - "Output .glb file size is meaningfully smaller than the raw OBJ+textures input (resize/simplify/Draco actually reduce size, not just reformat)"
+
+steps:
+  - id: research
+    description: Re-read this session's real v2 mesh-cropping work (trimesh Scene loading, coords.txt UTM offset, pyproj reprojection) to extract the exact steps into a reusable script rather than re-deriving them.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/convert-mesh.sh (obj2gltf + gltf-transform resize/simplify/draco chain) and pipeline/scripts/crop-mesh.py (trimesh-based per-material crop + Y-up axis correction).
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Run against the real v2 odm-full-output/ odm_texturing/ directory and diff the result against the known-good v2 model3d-samples/prado/model.glb.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review for correct step ordering (crop before resize, axis-correct before Draco) and that no hardcoded property-specific bounds remain.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/README.md
+      purpose: "§3 already documents the obj2gltf/gltf-transform mapping this story extends"
+    - path: components/Model3D/Model3D.tsx
+      purpose: ModelDef shape the output .glb must satisfy (drei useGLTF consumer)
+    - path: lib/geo-model-types.ts
+      purpose: GeoAnchoredModel — the alternate target shape when the mesh is used for LandOverlay instead of standalone Model3D
+
+files_to_modify:
+  - file: pipeline/scripts/convert-mesh.sh
+    change: new — obj2gltf, then gltf-transform resize/simplify/draco chain
+  - file: pipeline/scripts/crop-mesh.py
+    change: new — trimesh Scene load, per-material centroid-bounds crop, Y-up axis correction (must run before Draco)
+
+design_decisions:
+  - decision: Keep crop-mesh.py as a separate script from convert-mesh.sh rather than one monolith
+    rationale: Cropping is only needed for wide-sweep (oblique orbit) captures with off-property outliers; a pure nadir-grid capture may not need it. Separate scripts let the manifest builder skip cropping when unnecessary.
+
+cross_cutting:
+  - concern: documentation
+    action: "Update pipeline/README.md §3 to document the crop + axis-correction steps this session discovered, once the script exists."
+
+risks:
+  - severity: medium
+    description: The trimesh crop logic was written once, for one property's specific geometry — generalizing it to arbitrary properties may surface edge cases (e.g. a property with no off-parcel neighbors, where cropping is a no-op)
+    mitigation: Test against v1's nadir-only mesh (no cropping needed) as well as v2's, to confirm the script degrades gracefully rather than erroring on a mesh with no outliers
+
+references:
+  - path: pipeline/README.md
+    relevant_excerpt: |
+      npx obj2gltf -i odm_texturing/odm_textured_model_geo.obj -o model.glb
+      npx gltf-transform draco model.glb model.glb

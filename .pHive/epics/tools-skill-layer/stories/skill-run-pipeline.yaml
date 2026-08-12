@@ -1,0 +1,75 @@
+id: skill-run-pipeline
+epic: tools-skill-layer
+title: run-pipeline Claude Code Skill
+status: pending
+complexity: medium
+methodology: classic
+depends_on: [pipeline-manifest-builder]
+
+description: |
+  A Claude Code Skill at .claude/skills/run-pipeline/SKILL.md that
+  orchestrates the four pipeline-scripts-* scripts end-to-end: given a
+  directory of raw drone footage and a property slug, run GPS extraction,
+  ODM reconstruction, raster/mesh conversion, and manifest assembly, in the
+  right order, surfacing progress and failures clearly. This is the
+  operator-facing "run a new property through the pipeline" workflow the
+  operator asked for by name ("for the pipeline themselves as well").
+
+acceptance_criteria:
+  - "Given a raw footage directory and a property slug, when the skill is invoked, then it runs extract-gps-frames -> run-odm -> (reproject-ortho + render-hillshade + extract-contours + convert-mesh + crop-mesh) -> build-manifest in the correct dependency order"
+  - "The skill surfaces the Docker-memory preflight failure and the whole-directory-wipe-on-rerun behavior from pipeline-scripts-odm-runner as clear, actionable messages, not swallowed errors"
+  - "Given a property that only has nadir footage (no oblique orbit clip), the skill still completes successfully, skipping the crop-mesh step gracefully rather than erroring"
+  - "SKILL.md documents what the skill does and does not automate (e.g., flying the drone, choosing which clips are usable, is still manual)"
+
+steps:
+  - id: research
+    description: Confirm the final CLI surface (arguments, flags) each of the four pipeline-scripts-* scripts exposes, once those stories are done.
+    agent: researcher
+  - id: implement
+    description: Write .claude/skills/run-pipeline/SKILL.md, orchestrating the underlying scripts in dependency order with clear progress/failure surfacing.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Invoke the skill against a small local test footage set (or the archived v1/v2 real footage) and confirm it produces the same manifest output as running the scripts manually.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that the skill correctly sequences dependencies and degrades gracefully when optional steps (mesh cropping) aren't needed.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/scripts/
+      purpose: The four scripts this skill orchestrates (all produced by upstream stories in this epic)
+    - path: ~/Desktop/drone-jobs/2026-08-08_prado_flight2/05_ortho/README.md
+      purpose: Real, field-tested record of the exact sequence and gotchas (Docker memory, cache wipe) this skill must encode
+
+files_to_modify:
+  - file: .claude/skills/run-pipeline/SKILL.md
+    change: new — orchestrates the four pipeline-scripts-* scripts
+
+design_decisions:
+  - decision: This skill is a thin orchestrator over the Layer 1 scripts, not a reimplementation of any of their logic
+    rationale: Keeps the real pipeline logic in one place (the scripts, independently testable/runnable by hand) rather than duplicating it inside skill prose
+
+cross_cutting:
+  - concern: documentation
+    action: "pipeline/README.md should gain a short pointer to this skill once it exists, so someone reading the pipeline docs finds the orchestrated path, not just the raw scripts."
+
+risks:
+  - severity: low
+    description: Skill orchestration logic drifts from the underlying scripts' actual CLI surface if either changes independently later
+    mitigation: Skill invokes the scripts by their documented CLI contract (from pipeline-scripts-* stories' acceptance criteria), not by reimplementing their internals
+
+references:
+  - path: ~/Desktop/drone-jobs/2026-08-08_prado_flight2/05_ortho/README.md
+    relevant_excerpt: |
+      Docker Desktop's default memory allocation (7.65GB) being too tight
+      for dense point-cloud reconstruction... bumped to 16GB and it stopped
+      happening.

@@ -1,0 +1,56 @@
+name: tools-skill-layer
+title: Claude Code Skills + MCP server for drone-hub's tools and pipeline
+description: >
+  Give drone-hub's tooling (the component framework and the drone-hub
+  processing pipeline) a real install/use/work-on surface: finally-real
+  /pipeline scripts, two Claude Code Skills (run-pipeline, add-component),
+  and a local-stdio MCP server exposing the component catalog. Excludes
+  /flight-control (no real work to wrap yet, explicitly queued in CLAUDE.md).
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: classic
+version_bump: none
+sidecar_retention: transient
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+
+stories:
+  - id: pipeline-scripts-raster
+    title: Real ortho + hillshade + contour scripts
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: pipeline-scripts-mesh
+    title: Real OBJ-to-glb mesh conversion script
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: pipeline-scripts-odm-runner
+    title: Real ODM invocation script (GPS EXIF + docker run)
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: pipeline-manifest-builder
+    title: build-manifest.py assembling LayerDef/ModelDef/GeoAnchoredModel JSON
+    complexity: low
+    depends_on: [pipeline-scripts-raster, pipeline-scripts-mesh, pipeline-scripts-odm-runner]
+  - id: skill-run-pipeline
+    title: run-pipeline Claude Code Skill
+    complexity: medium
+    depends_on: [pipeline-manifest-builder]
+  - id: skill-add-component
+    title: add-component Claude Code Skill (install + scaffold)
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: read-only
+  - id: mcp-component-catalog-server
+    title: MCP server exposing the component catalog (stdio)
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: read-only

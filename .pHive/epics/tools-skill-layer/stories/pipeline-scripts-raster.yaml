@@ -1,0 +1,87 @@
+id: pipeline-scripts-raster
+epic: tools-skill-layer
+title: Real ortho + hillshade + contour scripts
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Turn pipeline/README.md's already-documented ortho/hillshade/contour
+  command mapping into real, checked-in, parameterized shell/Python scripts.
+  This is not new design work — every command is already cited in
+  pipeline/README.md §1-2, sourced from commands this repo already ran
+  building land-overlay/model3d and this session's real v1/v2 Prado runs.
+  The job here is to make them real, reusable, parameterized files instead
+  of prose, and prove them against real ODM output that now exists on disk
+  (~/Desktop/drone-jobs/2026-08-08_prado_flight2/05_ortho/v2/odm-full-output/).
+
+acceptance_criteria:
+  - "Given a real odm_orthophoto.tif path, when reproject-ortho.sh runs, then it produces a valid COG in EPSG:3857 (verified via `rio cogeo validate`) matching the real v2 layer-viewer-samples/2806-prado/ortho.tif within visual tolerance"
+  - "Given a real odm_dem/dsm.tif path, when render-hillshade.sh runs, then it produces a valid EPSG:3857 COG hillshade using the same azimuth 315°/altitude 45° convention as the existing sample"
+  - "Given the same DSM, when extract-contours.py runs, then it produces a GeoJSON contour layer in the same shape as the existing sample contours.geojson"
+  - "Each script accepts input/output paths as CLI arguments — no hardcoded property-specific paths"
+  - "Each script fails loudly (non-zero exit, clear stderr message) on a missing/invalid input rather than silently producing a malformed COG"
+
+steps:
+  - id: research
+    description: Re-read pipeline/README.md §1-2 in full and the real v2 odm-full-output/ directory structure; confirm exact file paths and CRS of the real DSM/orthophoto before writing scripts against assumptions.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/reproject-ortho.sh, pipeline/scripts/render-hillshade.sh, pipeline/scripts/extract-contours.py per the acceptance criteria.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Run each script against the real v2 odm-full-output/ input and diff the result against the known-good v2 layer-viewer-samples deliverables as an answer key.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review scripts for parameterization (no hardcoded paths), error handling, and adherence to pipeline/README.md's documented command sequence.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/README.md
+      purpose: Already documents the exact command sequence (§1 ortho, §2 hillshade/contours) this story makes real
+    - path: lib/layer-types.ts
+      purpose: LayerDef shape the raster outputs must be consumable as, once pipeline-manifest-builder wraps them
+
+files_to_modify:
+  - file: pipeline/scripts/reproject-ortho.sh
+    change: new — rio warp --dst-crs EPSG:3857 --resampling bilinear | rio cogeo create | rio cogeo validate, parameterized
+  - file: pipeline/scripts/render-hillshade.sh
+    change: new — gdaldem hillshade -az 315 -alt 45, then the same warp/cogeo/validate chain
+  - file: pipeline/scripts/extract-contours.py
+    change: new — skimage.measure.find_contours-based vectorizer (or gdal_contour), matching the existing sample contours.geojson shape
+
+code_examples:
+  - title: The exact three-step reprojection sequence already established as this repo's convention
+    file: pipeline/README.md
+    snippet: |
+      rio warp odm_orthophoto.tif ortho_3857.tif --dst-crs EPSG:3857 --resampling bilinear
+      rio cogeo create ortho_3857.tif ortho.tif
+      rio cogeo validate ortho.tif
+
+cross_cutting:
+  - concern: documentation
+    action: "Update pipeline/README.md's 'Why documentation-only' section once these scripts exist — that framing is now stale (real ODM output exists on disk)."
+
+risks:
+  - severity: medium
+    description: Scripts encode a wrong assumption about ODM's real output CRS/paths, only caught after use on a future property
+    mitigation: Validate against the real, already-archived v2 odm-full-output/ as an answer key before merging, not just against synthetic samples
+
+references:
+  - path: pipeline/README.md
+    relevant_excerpt: |
+      This repo's <LayerViewer> render path (@geomatico/maplibre-cog-protocol)
+      hardcodes a Web Mercator (EPSG:3857) assumption and silently
+      mis-registers any COG that isn't already reprojected.

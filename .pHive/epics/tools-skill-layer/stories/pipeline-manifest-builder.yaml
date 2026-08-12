@@ -1,0 +1,72 @@
+id: pipeline-manifest-builder
+epic: tools-skill-layer
+title: build-manifest.py assembling LayerDef/ModelDef/GeoAnchoredModel JSON
+status: pending
+complexity: low
+methodology: classic
+depends_on: [pipeline-scripts-raster, pipeline-scripts-mesh, pipeline-scripts-odm-runner]
+
+description: |
+  pipeline/README.md's planned shape names scripts/build-manifest.py as the
+  step that assembles the LayerDef/ModelDef/GeoAnchoredModel JSON from the
+  other scripts' output — described but not written. This story writes it:
+  given the output paths from pipeline-scripts-raster and
+  pipeline-scripts-mesh, produce the actual layers.json / model manifest
+  files matching the exact shape LayerViewer/Model3D/VoxelTerrain already
+  consume (public/layer-viewer-samples/2806-prado/layers.json is the
+  reference shape).
+
+acceptance_criteria:
+  - "Given ortho.tif, hillshade.tif, and contours.geojson paths, when build-manifest.py runs, then it produces a layers.json matching the exact LayerDef[] shape lib/layer-types.ts defines"
+  - "Given a model.glb path and a property's real lat/lon, when build-manifest.py runs with --geo-anchor, then it produces a GeoAnchoredModel entry per lib/geo-model-types.ts's shape"
+  - "The output layers.json, when dropped into a property folder, is directly usable by LayerViewer without hand-editing"
+
+steps:
+  - id: research
+    description: Read lib/layer-types.ts, lib/geo-model-types.ts, and the real public/layer-viewer-samples/2806-prado/layers.json to confirm the exact target JSON shape.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/build-manifest.py.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Run against the real v2 pipeline outputs (from the three upstream stories) and diff the produced layers.json against the real, known-good public/layer-viewer-samples/2806-prado/layers.json.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that the script has zero hardcoded property-specific values and matches lib/layer-types.ts's shape exactly (not an approximation).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: lib/layer-types.ts
+      purpose: Canonical LayerDef shape this script must produce
+    - path: lib/geo-model-types.ts
+      purpose: Canonical GeoAnchoredModel shape for the --geo-anchor path
+    - path: public/layer-viewer-samples/2806-prado/layers.json
+      purpose: Real, working reference manifest to diff generated output against
+
+files_to_modify:
+  - file: pipeline/scripts/build-manifest.py
+    change: new — assembles LayerDef[]/ModelDef/GeoAnchoredModel JSON from upstream script output paths
+
+cross_cutting:
+  - concern: documentation
+    action: "pipeline/README.md's planned-shape section names build-manifest.py as a future file — update it to point at the real one once written."
+
+risks:
+  - severity: low
+    description: Manifest shape could silently drift from lib/layer-types.ts if that type changes later without this script being updated
+    mitigation: Story acceptance criteria requires diffing against a real, currently-working sample manifest, not just internal consistency
+
+references:
+  - path: pipeline/README.md
+    relevant_excerpt: |
+      build-manifest.py (assembles the LayerDef/ModelDef JSON — the
+      mapping below, automated)

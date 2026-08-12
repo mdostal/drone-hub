@@ -1,0 +1,78 @@
+id: skill-add-component
+epic: tools-skill-layer
+title: add-component Claude Code Skill (install + scaffold)
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: read-only
+
+description: |
+  A Claude Code Skill at .claude/skills/add-component/SKILL.md covering both
+  "install a drone-hub component into an external app" (shadcn-CLI-style
+  copy-and-wire-up — no npm package exists, per CLAUDE.md's "own the viewer"
+  stack decision) and "scaffold a new component matching the framework's own
+  conventions" (folded into one skill rather than split, per design
+  discussion §5.3 — both workflows share the same underlying logic of
+  reading/producing a component's real dependency and manifest shape).
+
+acceptance_criteria:
+  - "Given a component slug (e.g. LayerViewer) and a target app path, when the skill runs in install mode, then it copies the component file(s), its type file(s) from lib/*-types.ts, and its sample-data folder convention into the target app, and lists any package.json dependency the component needs that the target app doesn't already have"
+  - "Given a new component name, when the skill runs in scaffold mode, then it creates the component file, a docs/components/<slug>.md stub matching the existing docs' structure, and a showcase page entry, matching this repo's own conventions (next/dynamic ssr:false for heavy viewers, folder-per-property sample data)"
+  - "The skill reads each component's real usage snippet from docs/components/<slug>.md rather than hardcoding a per-component file list, so it self-updates as components change"
+  - "SKILL.md explicitly states this is a copy operation, not an npm install, matching CLAUDE.md's stack decision"
+
+steps:
+  - id: research
+    description: Enumerate each shipped component's actual file set (component file, type file(s), sample-data folder, docs page) by reading components/**, lib/*-types.ts, and docs/components/*.md directly, rather than assuming a uniform pattern.
+    agent: researcher
+  - id: implement
+    description: Write .claude/skills/add-component/SKILL.md covering both install and scaffold modes.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Dry-run install mode against one real component (e.g. VoxelTerrain, the simplest) into a scratch Next.js app, and scaffold mode for one new dummy component, confirming both produce working, importable code.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that the skill doesn't hardcode a per-component file list (self-updating requirement from acceptance criteria) and that scaffold mode's output matches this repo's real conventions.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/
+      purpose: 12 real docs pages, each with a working usage snippet this skill reads rather than duplicates
+    - path: components/
+      purpose: The real component files this skill copies (install mode) or scaffolds alongside (scaffold mode)
+    - path: .pHive/CONTEXT.md
+      purpose: Accumulated repo conventions (next/dynamic ssr:false, folder-per-property sample data) scaffold mode must follow
+
+files_to_modify:
+  - file: .claude/skills/add-component/SKILL.md
+    change: new — install + scaffold workflows
+
+design_decisions:
+  - decision: One skill covering both install and scaffold, not two
+    rationale: Both read the same real dependency/manifest shape info; splitting now is premature separation with no second real user yet (design discussion §5.3)
+
+cross_cutting:
+  - concern: documentation
+    action: "docs/components/*.md pages could each gain a one-line pointer to this skill (\"or run the add-component skill\") once it exists — optional, not blocking."
+
+risks:
+  - severity: low
+    description: A future component that doesn't follow the existing file-set pattern (component + types + sample-data + docs) breaks the skill's assumptions
+    mitigation: Skill derives the file set per-component from what actually exists on disk rather than assuming a fixed template
+
+references:
+  - path: docs/components/voxel-terrain.md
+    relevant_excerpt: |
+      import { VoxelTerrain, VoxelStructure } from "@/components/VoxelTerrain";
+      import sampleGrid from "@/public/minecraft-samples/2806-prado/heightmap.json";

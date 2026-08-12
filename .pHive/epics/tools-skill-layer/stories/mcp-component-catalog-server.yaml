@@ -1,0 +1,84 @@
+id: mcp-component-catalog-server
+epic: tools-skill-layer
+title: MCP server exposing the component catalog (stdio)
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: read-only
+
+description: |
+  A small standalone package under mcp/component-catalog/ using
+  @modelcontextprotocol/sdk over stdio transport, exposing the drone-hub
+  component catalog to any MCP client: list_components, get_component_docs
+  (slug), get_component_usage (slug) — reading docs/components/*.md
+  directly at request time, no duplicated content. Registered via a new
+  .mcp.json at the repo root so any Claude Code session opened in drone-hub
+  picks it up automatically. Resolves the "where does this run" question
+  from the design discussion: local stdio, no hosting/Vercel decision
+  needed.
+
+acceptance_criteria:
+  - "Given the server is running, when an MCP client calls list_components, then it returns all 12 real components/tools from docs/components/*.md with their one-line descriptions"
+  - "Given a valid component slug, when an MCP client calls get_component_docs(slug), then it returns that component's full docs/components/<slug>.md content"
+  - "Given a valid component slug, when an MCP client calls get_component_usage(slug), then it returns just that doc's usage code snippet, not the full page"
+  - "Given an invalid slug, the server returns a clear error rather than crashing or returning undefined"
+  - "The server never duplicates docs/components/*.md content into its own source — it reads the files at request time, so doc edits are reflected without redeploying the server"
+  - ".mcp.json registers the server so it's available in any Claude Code session opened at the repo root, verified by a fresh session listing it as an available tool"
+
+steps:
+  - id: research
+    description: Confirm docs/components/*.md's real frontmatter/structure (or lack thereof) to decide how list_components extracts each component's one-line description without hardcoding a separate catalog.
+    agent: researcher
+  - id: implement
+    description: Write mcp/component-catalog/ (package.json, server entrypoint using @modelcontextprotocol/sdk stdio transport) and the repo-root .mcp.json registration.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Start the server and exercise all three tools (list_components, get_component_docs, get_component_usage) plus the invalid-slug error case.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that no doc content is duplicated into the server's own source, and that .mcp.json doesn't leak anything sensitive (it shouldn't contain any — reads local files only).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/
+      purpose: The 12 real docs pages this server reads directly, at request time
+  tech_stack:
+    - "@modelcontextprotocol/sdk (new dependency, standalone package — not added to the Next.js app's own package.json)"
+
+files_to_modify:
+  - file: mcp/component-catalog/package.json
+    change: new — standalone package, @modelcontextprotocol/sdk dependency
+  - file: mcp/component-catalog/server.ts
+    change: new — stdio MCP server, list_components/get_component_docs/get_component_usage tools
+  - file: .mcp.json
+    change: new, repo root — registers the server for any Claude Code session opened here
+
+design_decisions:
+  - decision: Standalone package under mcp/, not a dependency of the Next.js app
+    rationale: This is a dev/agent-tooling surface, not something that should ever enter the Vercel bundle — same discipline as /pipeline never being imported from app/components/lib
+
+cross_cutting:
+  - concern: documentation
+    action: "The new /docs Introduction page (app/(showcase)/docs/page.tsx) could mention this MCP server exists as another way to query the catalog — optional follow-up, not blocking this story."
+
+risks:
+  - severity: low
+    description: docs/components/*.md files have no consistent frontmatter today, so extracting a clean one-line description per component for list_components may need a fallback (e.g. first paragraph) rather than a clean structured field
+    mitigation: Research step explicitly checks real file structure before implementation; acceptance criteria doesn't require frontmatter to exist, just that list_components produces something real and correct
+
+references:
+  - path: docs/components/layer-viewer.md
+    relevant_excerpt: |
+      (existing docs page — no frontmatter today; server must extract a
+      description from the page body itself, verified during the research step)
