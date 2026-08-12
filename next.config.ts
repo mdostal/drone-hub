@@ -59,6 +59,27 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // Standalone deploys (drone-hub-rust.vercel.app) are visited directly,
+      // not only through the tools.mdostal.com/framework rewrite — but
+      // basePath means Next registers NOTHING at the bare root, so a direct
+      // visit 404s at the platform level before this app ever renders
+      // (confirmed live: root 404s, /framework 200s). `basePath: false`
+      // matches the UN-prefixed "/" specifically so this fires for a direct
+      // hit; under the tools-hub mount the request already arrives
+      // pre-prefixed with /framework and never matches this rule. Only
+      // needed when BASE_PATH is actually set — the E2E server has no
+      // basePath, and "/" there IS the real app root every existing
+      // Playwright spec navigates to.
+      ...(BASE_PATH
+        ? [
+            {
+              source: "/",
+              destination: BASE_PATH,
+              basePath: false as const,
+              permanent: false,
+            },
+          ]
+        : []),
     ];
   },
 };
