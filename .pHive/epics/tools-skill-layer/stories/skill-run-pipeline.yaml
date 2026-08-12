@@ -1,7 +1,7 @@
 id: skill-run-pipeline
 epic: tools-skill-layer
 title: run-pipeline Claude Code Skill
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: [pipeline-manifest-builder]
