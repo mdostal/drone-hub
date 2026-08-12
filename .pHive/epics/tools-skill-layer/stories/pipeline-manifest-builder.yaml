@@ -1,7 +1,7 @@
 id: pipeline-manifest-builder
 epic: tools-skill-layer
 title: build-manifest.py assembling LayerDef/ModelDef/GeoAnchoredModel JSON
-status: pending
+status: completed
 complexity: low
 methodology: classic
 depends_on: [pipeline-scripts-raster, pipeline-scripts-mesh, pipeline-scripts-odm-runner]
