@@ -1,7 +1,7 @@
 id: mcp-component-catalog-server
 epic: tools-skill-layer
 title: MCP server exposing the component catalog (stdio)
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: []
