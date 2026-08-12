@@ -1,7 +1,7 @@
 id: pipeline-scripts-odm-runner
 epic: tools-skill-layer
 title: Real ODM invocation script (GPS EXIF + docker run)
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: []
