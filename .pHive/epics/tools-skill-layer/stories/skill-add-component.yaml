@@ -1,7 +1,7 @@
 id: skill-add-component
 epic: tools-skill-layer
 title: add-component Claude Code Skill (install + scaffold)
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: []
