@@ -44,8 +44,8 @@ describe("2806-prado sample heightmap", () => {
 
   it("heights.length === size*size", () => {
     expect(heightmapJson.heights.length).toBe(heightmapJson.size * heightmapJson.size);
-    expect(heightmapJson.size).toBe(32);
-    expect(heightmapJson.heights.length).toBe(1024);
+    expect(heightmapJson.size).toBe(48);
+    expect(heightmapJson.heights.length).toBe(2304);
   });
 
   it("height values fall within the documented [1,8] band", () => {
@@ -124,4 +124,15 @@ describe("2806-prado sample heightmap", () => {
   // form) — the statistical checks above (range, real variation, spatial
   // correlation) remain real, meaningful validation of the shipped data
   // independent of which raster it was pooled from.
+  //
+  // Re-generated again (32x32 -> 48x48, size assertion above updated to
+  // match): still pooled directly from dsm.tif, same lineage as above, just
+  // re-run with a tighter ~70x70m crop centered precisely on the parcel
+  // centroid (30.2618978800391, -97.7081778061722 -- the same anchor
+  // GeoAnchoredModel/ModelDef's upAxis fix uses) and 5th/95th-percentile
+  // contrast normalization instead of raw min/max, so a handful of extreme
+  // tree-canopy pixels don't compress the ground-vs-roof band separation.
+  // Cross-checked live against the real orthophoto at the same crop window
+  // before shipping: the resulting mid-band plateau lines up with the
+  // actual roof's real position, not just "some plausible-looking bumps."
 });
