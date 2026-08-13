@@ -58,4 +58,17 @@ export interface GeoAnchoredModel {
    *  represent," not a raw Mercator-space scale factor. Omitted → 1 (glTF
    *  is assumed to already be authored in meters). */
   scale?: number;
+  /** Which of the glTF's own local axes is "up" in the source asset.
+   *  Omitted → "y", the glTF-spec default (`buildModelMatrix` applies its
+   *  fixed 90° X-axis correction, exactly as before this field existed —
+   *  zero behavior change for every model authored before this field
+   *  existed). "z" skips that correction entirely instead: real
+   *  photogrammetry meshes out of OpenDroneMap (confirmed against the real
+   *  2806 Prado reconstruction — its accessor bounds put a ~89x86m
+   *  footprint on X/Y and a 133-157 range on Z, matching true ASL
+   *  elevation in meters for that site almost exactly) come out Z-up, with
+   *  Z left as absolute real-world elevation rather than glTF's
+   *  recentered/rotated Y-up convention — applying the Y-up correction to
+   *  one of these would rotate the terrain onto its side. */
+  upAxis?: "y" | "z";
 }

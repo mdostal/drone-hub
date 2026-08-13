@@ -180,6 +180,43 @@ describe("buildModelMatrix", () => {
     expect(y).toBeCloseTo(0);
     expect(z).toBeCloseTo(1);
   });
+
+  it("upAxis: 'z' skips the fixed Y-up correction entirely -- a local +Z point stays on mercator +Z instead of moving to +Y, regression guard for the real Prado mesh (Z-up, absolute ASL elevation on Z) which the default Y-up correction would tip onto its side", () => {
+    const mercator = makeMercator({ x: 0, y: 0, z: 0, meterInMercatorCoordinateUnits: () => 1 });
+    const matrix = buildModelMatrix(makeModel({ upAxis: "z", rotationDegrees: 0, scale: 1 }), mercator);
+    const [x, y, z] = applyMat4ToPoint(matrix, 0, 0, 1);
+    expect(x).toBeCloseTo(0);
+    expect(y).toBeCloseTo(0);
+    expect(z).toBeCloseTo(1);
+  });
+
+  it("upAxis: 'z' still applies the Mercator Y-handedness flip on the horizontal plane -- a local +Y point lands on mercator -Y, not +Y", () => {
+    // The negated-scale term is Mercator's own screen-space fix, not part
+    // of the source-asset up-axis correction, so it applies unconditionally
+    // regardless of upAxis (see buildModelMatrix's header comment).
+    const mercator = makeMercator({ x: 0, y: 0, z: 0, meterInMercatorCoordinateUnits: () => 1 });
+    const matrix = buildModelMatrix(makeModel({ upAxis: "z", rotationDegrees: 0, scale: 1 }), mercator);
+    const [x, y, z] = applyMat4ToPoint(matrix, 0, 1, 0);
+    expect(x).toBeCloseTo(0);
+    expect(y).toBeCloseTo(-1);
+    expect(z).toBeCloseTo(0);
+  });
+
+  it("upAxis: 'z' leaves a local +X point on mercator +X, unrotated, same as the default y-up case", () => {
+    const mercator = makeMercator({ x: 0, y: 0, z: 0, meterInMercatorCoordinateUnits: () => 1 });
+    const matrix = buildModelMatrix(makeModel({ upAxis: "z", rotationDegrees: 0, scale: 1 }), mercator);
+    const [x, y, z] = applyMat4ToPoint(matrix, 1, 0, 0);
+    expect(x).toBeCloseTo(1);
+    expect(y).toBeCloseTo(0);
+    expect(z).toBeCloseTo(0);
+  });
+
+  it("omitting upAxis defaults to the pre-existing 'y' behavior -- identical matrix to explicitly passing upAxis: 'y'", () => {
+    const mercator = makeMercator({ meterInMercatorCoordinateUnits: () => 0.5 });
+    const withDefault = buildModelMatrix(makeModel({ scale: 3, rotationDegrees: 12 }), mercator);
+    const explicitY = buildModelMatrix(makeModel({ scale: 3, rotationDegrees: 12, upAxis: "y" }), mercator);
+    expect(withDefault).toEqual(explicitY);
+  });
 });
 
 describe("combineMatrices", () => {
@@ -481,7 +518,7 @@ describe("createModelLayer", () => {
     await flushOnAdd();
 
     expect(mocks.dracoLoaders[0].disposed).toBe(false);
-    layer.onRemove!();
+    layer.onRemove!(map, gl);
     expect(mocks.dracoLoaders[0].disposed).toBe(true);
   });
 

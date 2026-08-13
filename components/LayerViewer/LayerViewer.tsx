@@ -543,6 +543,14 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
         },
         center: [0, 0],
         zoom: 1,
+        // Lets a consumer (or a test) read back the rendered frame via
+        // canvas.toDataURL()/toBlob() after the render loop has already
+        // cleared the default framebuffer — without this, MapLibre's canvas
+        // reads back blank the instant nothing is mid-frame, which is the
+        // normal state any time JS runs (confirmed live: this exact gap is
+        // why the land-overlay epic's Playwright verification couldn't
+        // capture a real screenshot of the draped 3D model before this).
+        preserveDrawingBuffer: true,
       });
       mapRef.current = map;
 

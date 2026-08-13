@@ -145,6 +145,15 @@ export interface MercatorLike {
  * unit test with a plain object (see MercatorLike above) — the real
  * createModelLayer call site (below) is the only place that actually
  * touches `maplibre-gl`.
+ *
+ * `model.upAxis` ("y", the default, vs "z" — see GeoAnchoredModel's own doc
+ * comment) swaps out the fixed 90° X-axis step only: a "z"-up source asset
+ * already has its vertical component on the axis Mercator wants it on, so
+ * the correction there is the identity instead of a rotation. Everything
+ * else (translate, the Y-negation baked into `scaling`, the yaw) is
+ * unchanged either way — the Y-negation is Mercator's own screen-space
+ * handedness fix, not part of the source-asset up-axis correction, so it
+ * applies the same regardless of which axis the source treats as "up".
  */
 export function buildModelMatrix(model: GeoAnchoredModel, mercator: MercatorLike): Mat4 {
   const scale = (model.scale ?? 1) * mercator.meterInMercatorCoordinateUnits();
@@ -152,10 +161,10 @@ export function buildModelMatrix(model: GeoAnchoredModel, mercator: MercatorLike
 
   const translation = makeTranslationMat4(mercator.x, mercator.y, mercator.z);
   const scaling = makeScaleMat4(scale, -scale, scale);
-  const rotationX = makeRotationXMat4(Math.PI / 2);
+  const axisCorrection = model.upAxis === "z" ? IDENTITY_MAT4 : makeRotationXMat4(Math.PI / 2);
   const rotationZ = makeRotationZMat4(rotateZRadians);
 
-  return multiplyMat4(multiplyMat4(multiplyMat4(translation, scaling), rotationX), rotationZ);
+  return multiplyMat4(multiplyMat4(multiplyMat4(translation, scaling), axisCorrection), rotationZ);
 }
 
 /** Pure: MapLibre's per-frame projection matrix × the model's own object
