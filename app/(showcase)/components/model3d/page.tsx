@@ -14,13 +14,16 @@
 //
 // The original public/model3d-samples/duck/model.glb (Khronos sample,
 // CC0-equivalent) stays in the repo — <LandOverlay>'s showcase still uses
-// it. The real Prado mesh is Z-up in its raw ODM export, not glTF's Y-up
-// convention — corrected below via `upAxis: "z"` on the model prop
-// (ModelDef's own doc comment / GltfScene's in components/Model3D/Model3D.tsx
-// have the full story). An earlier version of this comment claimed Model3D's
-// plain orbit viewer "has no such alignment requirement" and shipped without
-// that correction -- wrong in practice: without it, this mesh rendered as
-// scattered, near-black fragments, not merely "sideways but still viewable."
+// it. The real Prado mesh's Draco-decoded winding renders back-facing from
+// most angles a plain orbit viewer would use — corrected below via
+// `fixWinding: true` on the model prop (ModelDef's own doc comment /
+// GltfScene's in components/Model3D/Model3D.tsx have the full story). NOT
+// an axis/orientation fix: obj2gltf already bakes the correct Z-up -> Y-up
+// correction into the file's own root-node transform, so no extra rotation
+// belongs here — an earlier version of this field wrongly added one
+// (named `upAxis`, applying its own -90° X rotation on top of the file's
+// already-correct one), which is exactly why a real user reported the
+// model "wasn't allowing it to turn and it was aimed at the underside."
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
 import { withBasePath } from "@/lib/base-path";
@@ -40,7 +43,7 @@ const USAGE_CODE = `import { Model3D } from "@/components/Model3D";
     id: "prado",
     url: "/model3d-samples/prado/model.glb",
     title: "2806 Prado (real photogrammetry mesh)",
-    upAxis: "z",
+    fixWinding: true,
   }}
 />`;
 
@@ -57,7 +60,7 @@ export default function Model3DShowcasePage() {
                 id: "prado",
                 url: withBasePath("/model3d-samples/prado/model.glb"),
                 title: "2806 Prado (real photogrammetry mesh)",
-                upAxis: "z",
+                fixWinding: true,
               }}
             />
           </div>

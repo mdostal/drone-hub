@@ -70,18 +70,24 @@ export interface ModelDef {
    *  one. When absent, distances stay labeled in raw "units"; a future
    *  real-data caller can opt into a "X.XX m" label by setting this. */
   unitsPerMeter?: number;
-  /** Which of the glTF's own local axes is "up" in the source asset.
-   *  Omitted → "y", the glTF-spec default (zero behavior change for every
-   *  model authored before this field existed, including the sample duck).
-   *  "z" applies a fixed -90° X-axis correction plus a normals/winding fix
-   *  (see GltfScene's own doc comment) — mirrors `GeoAnchoredModel.upAxis`
-   *  (lib/geo-model-types.ts) for the exact same reason: real photogrammetry
-   *  meshes out of this project's OpenDroneMap pipeline come out Z-up, with
-   *  Z left as absolute real-world elevation, not glTF's Y-up convention —
-   *  confirmed live against the real 2806 Prado reconstruction, which
-   *  rendered as scattered, near-black fragments (not "sideways but still
-   *  viewable") without this. */
-  upAxis?: "y" | "z";
+  /** Whether to fix this model's Draco-decoded winding/normals (see
+   *  GltfScene's own doc comment for the full story). Omitted/false → zero
+   *  behavior change for every model authored before this field existed
+   *  (including the sample duck). Real photogrammetry meshes out of this
+   *  project's OpenDroneMap pipeline (obj2gltf conversion + Draco
+   *  compression) need this — confirmed live against the real 2806 Prado
+   *  reconstruction, which rendered as scattered, near-black fragments
+   *  without it.
+   *
+   *  NOT an axis/orientation correction, despite an earlier version of this
+   *  field being named `upAxis` and applying an extra -90° X rotation: that
+   *  was wrong. obj2gltf already bakes a Z-up -> Y-up correction into the
+   *  exported file's own root-node transform (confirmed live: `gltf.scene`'s
+   *  world-space bounding box already has elevation on Y before any rotation
+   *  of mine is applied) — adding another rotation on top produced a net
+   *  ~180° flip, which is exactly what a real user report described:
+   *  "wasn't allowing it to turn and it was aimed at the underside." */
+  fixWinding?: boolean;
 }
 
 /** Accent color for measure-mode markers/line/label — this epic's design
@@ -120,30 +126,30 @@ export interface Model3DProps {
  *  this project loads real photogrammetry glTFs) means one fewer moving
  *  part to account for when debugging either path.
  *
- *  `upAxis: "z"` models (see ModelDef's own doc comment) get two corrections
- *  applied here, BOTH confirmed necessary live against the real, Draco-
- *  compressed 2806 Prado reconstruction — dropping either one left it
- *  rendering as scattered, near-black fragments instead of a solid mesh:
- *  1. A -90° X-axis rotation (Z-up -> Y-up, matching three.js/OrbitControls'
- *     Y-up convention).
- *  2. `computeVertexNormals()` + `side: THREE.DoubleSide` on every material.
- *     This mesh's Draco-decoded winding renders back-facing from every
- *     angle a plain orbit viewer would use — default FrontSide culling
- *     leaves only the sliver of faces that happen to wind the "right" way
- *     visible (the fragments), and BackSide alone still under-lights it
- *     (same near-black result as the default). DoubleSide's automatic
- *     per-fragment normal flip for back-facing geometry is what actually
- *     fixes the lighting — a plain sign-flip on the computed normals does
- *     NOT (confirmed live: identical near-black result either way), so this
- *     isn't a "the normals point backwards" bug with a one-line sign fix,
- *     it's specifically DoubleSide's front/back-aware shading that's needed. */
+ *  `fixWinding: true` models (see ModelDef's own doc comment) get
+ *  `computeVertexNormals()` + `side: THREE.DoubleSide` on every material —
+ *  confirmed necessary live against the real, Draco-compressed 2806 Prado
+ *  reconstruction, which otherwise rendered as scattered, near-black
+ *  fragments. This mesh's Draco-decoded winding renders back-facing from
+ *  every angle a plain orbit viewer would use — default FrontSide culling
+ *  leaves only the sliver of faces that happen to wind the "right" way
+ *  visible (the fragments), and BackSide alone still under-lights it (same
+ *  near-black result as the default). DoubleSide's automatic per-fragment
+ *  normal flip for back-facing geometry is what actually fixes the
+ *  lighting — a plain sign-flip on the computed normals does NOT (confirmed
+ *  live: identical near-black result either way), so this isn't a "the
+ *  normals point backwards" bug with a one-line sign fix, it's specifically
+ *  DoubleSide's front/back-aware shading that's needed.
+ *
+ *  Deliberately does NOT touch rotation/orientation — see ModelDef.fixWinding's
+ *  doc comment for why an earlier version of this wrongly did. */
 function GltfScene({
   url,
-  upAxis,
+  fixWinding,
   onSceneReady,
 }: {
   url: string;
-  upAxis?: "y" | "z";
+  fixWinding?: boolean;
   /** Reports the loaded scene graph's root object up to <Model3D>, so the
    *  measure tool's raycaster (which lives outside <Bounds>, see
    *  MeasureController) has something to intersect against. */
@@ -156,7 +162,7 @@ function GltfScene({
     onSceneReady?.(gltf.scene);
   }, [gltf.scene, onSceneReady]);
   useEffect(() => {
-    if (upAxis !== "z") return;
+    if (!fixWinding) return;
     gltf.scene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -166,8 +172,8 @@ function GltfScene({
         (mat as THREE.Material).side = THREE.DoubleSide;
       }
     });
-  }, [gltf.scene, upAxis]);
-  return <primitive object={gltf.scene} rotation-x={upAxis === "z" ? -Math.PI / 2 : 0} />;
+  }, [gltf.scene, fixWinding]);
+  return <primitive object={gltf.scene} />;
 }
 
 /** Loading-state placeholder shown inside the canvas while the glTF fetch/
@@ -414,9 +420,10 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
         camera={{ position: [3, 3, 3], fov: 50, near: 0.01, far: 1000 }}
         gl={{ preserveDrawingBuffer: true, logarithmicDepthBuffer: true }}
       >
-        <ambientLight intensity={1.4} />
-        <directionalLight position={[5, 10, 7]} intensity={1.8} />
-        <directionalLight position={[-5, -3, -5]} intensity={0.6} />
+        <ambientLight intensity={2.6} />
+        <directionalLight position={[3, 12, 4]} intensity={2} />
+        <directionalLight position={[-6, 8, -4]} intensity={1.6} />
+        <directionalLight position={[0, -8, 0]} intensity={0.8} />
         <ModelErrorBoundary onError={onLoadError}>
           <Suspense fallback={<LoadingPlaceholder />}>
             {/* fit: auto-fit the camera to the mesh's bounding box on mount.
@@ -427,7 +434,7 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
                 Measure geometry deliberately does NOT live inside here —
                 see MeasureOverlay's doc comment. */}
             <Bounds fit clip observe margin={1.2}>
-              <GltfScene url={model.url} upAxis={model.upAxis} onSceneReady={handleSceneReady} />
+              <GltfScene url={model.url} fixWinding={model.fixWinding} onSceneReady={handleSceneReady} />
             </Bounds>
           </Suspense>
         </ModelErrorBoundary>

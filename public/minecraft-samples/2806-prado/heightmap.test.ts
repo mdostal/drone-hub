@@ -129,7 +129,7 @@ describe("2806-prado sample heightmap", () => {
   // match): still pooled directly from dsm.tif, same lineage as above, just
   // re-run with a tighter ~70x70m crop centered precisely on the parcel
   // centroid (30.2618978800391, -97.7081778061722 -- the same anchor
-  // GeoAnchoredModel/ModelDef's upAxis fix uses) and 5th/95th-percentile
+  // GeoAnchoredModel's upAxis fix uses) and 5th/95th-percentile
   // contrast normalization instead of raw min/max, so a handful of extreme
   // tree-canopy pixels don't compress the ground-vs-roof band separation.
   // Cross-checked live against the real orthophoto at the same crop window
