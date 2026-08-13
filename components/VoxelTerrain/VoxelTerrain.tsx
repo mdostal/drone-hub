@@ -101,6 +101,7 @@ export function VoxelTerrain({ grid, children, className }: VoxelTerrainProps) {
           near: 0.1,
           far: cameraDistance * 20,
         }}
+        gl={{ preserveDrawingBuffer: true }}
       >
         <ambientLight intensity={0.9} />
         <directionalLight position={[grid.size, grid.size * 2, grid.size]} intensity={1.2} />

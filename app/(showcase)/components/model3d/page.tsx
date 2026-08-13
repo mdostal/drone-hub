@@ -14,11 +14,13 @@
 //
 // The original public/model3d-samples/duck/model.glb (Khronos sample,
 // CC0-equivalent) stays in the repo — <LandOverlay>'s showcase still uses
-// it (see that page's own header comment for why: the real Prado mesh is
-// Z-up in its raw ODM export, and LandOverlay's absolute map-alignment
-// requirement needs an axis-correction pass this change didn't budget for;
-// Model3D's plain orbit viewer has no such alignment requirement, so it
-// was safe to swap here).
+// it. The real Prado mesh is Z-up in its raw ODM export, not glTF's Y-up
+// convention — corrected below via `upAxis: "z"` on the model prop
+// (ModelDef's own doc comment / GltfScene's in components/Model3D/Model3D.tsx
+// have the full story). An earlier version of this comment claimed Model3D's
+// plain orbit viewer "has no such alignment requirement" and shipped without
+// that correction -- wrong in practice: without it, this mesh rendered as
+// scattered, near-black fragments, not merely "sideways but still viewable."
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
 import { withBasePath } from "@/lib/base-path";
@@ -34,7 +36,12 @@ const Model3D = dynamic(() => import("@/components/Model3D").then((mod) => mod.M
 const USAGE_CODE = `import { Model3D } from "@/components/Model3D";
 
 <Model3D
-  model={{ id: "prado", url: "/model3d-samples/prado/model.glb", title: "2806 Prado (real photogrammetry mesh)" }}
+  model={{
+    id: "prado",
+    url: "/model3d-samples/prado/model.glb",
+    title: "2806 Prado (real photogrammetry mesh)",
+    upAxis: "z",
+  }}
 />`;
 
 export default function Model3DShowcasePage() {
@@ -50,6 +57,7 @@ export default function Model3DShowcasePage() {
                 id: "prado",
                 url: withBasePath("/model3d-samples/prado/model.glb"),
                 title: "2806 Prado (real photogrammetry mesh)",
+                upAxis: "z",
               }}
             />
           </div>

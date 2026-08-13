@@ -10,14 +10,31 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { Bounds, Html, Line, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
+import { Bounds, Html, Line, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { cx } from "./cx";
+
+// Same decoder CDN drei's useGLTF defaults to -- matching, not introducing a
+// second differently-versioned decoder.
+const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.5/";
+// Module-level singleton, mirroring drei's own useGLTF internals -- avoids
+// spinning up a new DRACOLoader (and its Web Worker decode pool) per mount.
+let sharedDracoLoader: DRACOLoader | null = null;
+function getSharedDracoLoader(): DRACOLoader {
+  if (!sharedDracoLoader) {
+    sharedDracoLoader = new DRACOLoader();
+    sharedDracoLoader.setDecoderPath(DRACO_DECODER_PATH);
+  }
+  return sharedDracoLoader;
+}
 
 /**
  * <Model3D> — CBA's Phase-3 `Model3DViewer`: a `@react-three/fiber` glTF
- * mesh viewer. Loads a single glb/gltf via drei's `useGLTF`, orbits it with
+ * mesh viewer. Loads a single glb/gltf via `useLoader(GLTFLoader, ...)` (see
+ * GltfScene's own doc comment for why not drei's `useGLTF`), orbits it with
  * drei's `<OrbitControls>`, and auto-frames it with drei's `<Bounds>` so an
  * arbitrary model (unknown scale/units/origin) isn't tiny/huge/off-center by
  * default — the acceptance criteria's "reasonably framed" requirement. Also
@@ -53,6 +70,18 @@ export interface ModelDef {
    *  one. When absent, distances stay labeled in raw "units"; a future
    *  real-data caller can opt into a "X.XX m" label by setting this. */
   unitsPerMeter?: number;
+  /** Which of the glTF's own local axes is "up" in the source asset.
+   *  Omitted → "y", the glTF-spec default (zero behavior change for every
+   *  model authored before this field existed, including the sample duck).
+   *  "z" applies a fixed -90° X-axis correction plus a normals/winding fix
+   *  (see GltfScene's own doc comment) — mirrors `GeoAnchoredModel.upAxis`
+   *  (lib/geo-model-types.ts) for the exact same reason: real photogrammetry
+   *  meshes out of this project's OpenDroneMap pipeline come out Z-up, with
+   *  Z left as absolute real-world elevation, not glTF's Y-up convention —
+   *  confirmed live against the real 2806 Prado reconstruction, which
+   *  rendered as scattered, near-black fragments (not "sideways but still
+   *  viewable") without this. */
+  upAxis?: "y" | "z";
 }
 
 /** Accent color for measure-mode markers/line/label — this epic's design
@@ -77,26 +106,68 @@ export interface Model3DProps {
   className?: string;
 }
 
-/** The actual mesh, loaded via drei's `useGLTF` (Suspense-driven — throws a
- *  promise while loading, which the <Suspense> boundary below catches).
- *  Rendered as a `<primitive>` wrapping the parsed scene graph rather than
- *  picking out individual meshes, so this works for arbitrary glTFs (single
- *  mesh or multi-node hierarchy) without assuming a shape. */
+/** The actual mesh, loaded via `useLoader(GLTFLoader, ...)` (Suspense-driven
+ *  — throws a promise while loading, which the <Suspense> boundary below
+ *  catches). Rendered as a `<primitive>` wrapping the parsed scene graph
+ *  rather than picking out individual meshes, so this works for arbitrary
+ *  glTFs (single mesh or multi-node hierarchy) without assuming a shape.
+ *
+ *  Deliberately NOT drei's `useGLTF`: that goes through three-stdlib's own
+ *  GLTFLoader/DRACOLoader re-implementation, a second, independently
+ *  maintained copy of the same loading code. Not the actual cause of the
+ *  bug below (confirmed live — swapping loaders alone changed nothing), but
+ *  matching lib/maplibre-model-layer.ts's loader stack (the other place
+ *  this project loads real photogrammetry glTFs) means one fewer moving
+ *  part to account for when debugging either path.
+ *
+ *  `upAxis: "z"` models (see ModelDef's own doc comment) get two corrections
+ *  applied here, BOTH confirmed necessary live against the real, Draco-
+ *  compressed 2806 Prado reconstruction — dropping either one left it
+ *  rendering as scattered, near-black fragments instead of a solid mesh:
+ *  1. A -90° X-axis rotation (Z-up -> Y-up, matching three.js/OrbitControls'
+ *     Y-up convention).
+ *  2. `computeVertexNormals()` + `side: THREE.DoubleSide` on every material.
+ *     This mesh's Draco-decoded winding renders back-facing from every
+ *     angle a plain orbit viewer would use — default FrontSide culling
+ *     leaves only the sliver of faces that happen to wind the "right" way
+ *     visible (the fragments), and BackSide alone still under-lights it
+ *     (same near-black result as the default). DoubleSide's automatic
+ *     per-fragment normal flip for back-facing geometry is what actually
+ *     fixes the lighting — a plain sign-flip on the computed normals does
+ *     NOT (confirmed live: identical near-black result either way), so this
+ *     isn't a "the normals point backwards" bug with a one-line sign fix,
+ *     it's specifically DoubleSide's front/back-aware shading that's needed. */
 function GltfScene({
   url,
+  upAxis,
   onSceneReady,
 }: {
   url: string;
+  upAxis?: "y" | "z";
   /** Reports the loaded scene graph's root object up to <Model3D>, so the
    *  measure tool's raycaster (which lives outside <Bounds>, see
    *  MeasureController) has something to intersect against. */
   onSceneReady?: (scene: THREE.Object3D) => void;
 }) {
-  const gltf = useGLTF(url);
+  const gltf = useLoader(GLTFLoader, url, (loader) => {
+    loader.setDRACOLoader(getSharedDracoLoader());
+  });
   useEffect(() => {
     onSceneReady?.(gltf.scene);
   }, [gltf.scene, onSceneReady]);
-  return <primitive object={gltf.scene} />;
+  useEffect(() => {
+    if (upAxis !== "z") return;
+    gltf.scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.computeVertexNormals();
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of materials) {
+        (mat as THREE.Material).side = THREE.DoubleSide;
+      }
+    });
+  }, [gltf.scene, upAxis]);
+  return <primitive object={gltf.scene} rotation-x={upAxis === "z" ? -Math.PI / 2 : 0} />;
 }
 
 /** Loading-state placeholder shown inside the canvas while the glTF fetch/
@@ -339,10 +410,13 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
 
   return (
     <div className={cx("relative h-full w-full", className)} aria-label={model.title}>
-      <Canvas camera={{ position: [3, 3, 3], fov: 50, near: 0.01, far: 1000 }}>
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[5, 10, 7]} intensity={1.2} />
-        <directionalLight position={[-5, -3, -5]} intensity={0.4} />
+      <Canvas
+        camera={{ position: [3, 3, 3], fov: 50, near: 0.01, far: 1000 }}
+        gl={{ preserveDrawingBuffer: true, logarithmicDepthBuffer: true }}
+      >
+        <ambientLight intensity={1.4} />
+        <directionalLight position={[5, 10, 7]} intensity={1.8} />
+        <directionalLight position={[-5, -3, -5]} intensity={0.6} />
         <ModelErrorBoundary onError={onLoadError}>
           <Suspense fallback={<LoadingPlaceholder />}>
             {/* fit: auto-fit the camera to the mesh's bounding box on mount.
@@ -353,7 +427,7 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
                 Measure geometry deliberately does NOT live inside here —
                 see MeasureOverlay's doc comment. */}
             <Bounds fit clip observe margin={1.2}>
-              <GltfScene url={model.url} onSceneReady={handleSceneReady} />
+              <GltfScene url={model.url} upAxis={model.upAxis} onSceneReady={handleSceneReady} />
             </Bounds>
           </Suspense>
         </ModelErrorBoundary>
