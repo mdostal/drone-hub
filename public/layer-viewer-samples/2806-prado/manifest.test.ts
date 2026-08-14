@@ -146,7 +146,7 @@ sys.exit(0 if ok else 1)
     }
   });
 
-  it("parcel.geojson is a valid GeoJSON FeatureCollection with a Polygon geometry, labeled as a placeholder", () => {
+  it("parcel.geojson is a valid GeoJSON FeatureCollection with a Polygon geometry, sourced from the real Travis County parcel record (not a reconstruction approximation)", () => {
     const geojson = JSON.parse(readFileSync(path.join(sampleDir, "parcel.geojson"), "utf-8"));
     expect(geojson.type).toBe("FeatureCollection");
     expect(Array.isArray(geojson.features)).toBe(true);
@@ -158,10 +158,15 @@ sys.exit(0 if ok else 1)
     // First/last ring point must match (closed ring) - a basic Polygon-validity check.
     const ring = feature.geometry.coordinates[0];
     expect(ring[0]).toEqual(ring[ring.length - 1]);
-    expect(feature.properties.placeholder).toBe(true);
+    // Real recorded boundary now (Travis County Appraisal District), not the
+    // old approximate-reconstruction-footprint placeholder -- see this
+    // property's own commit for how it was fetched/verified (owner-of-record
+    // match against the real address).
+    expect(feature.properties.placeholder).toBeUndefined();
+    expect(feature.properties.source).toMatch(/Travis County/i);
   });
 
-  it("contours.geojson is a valid GeoJSON FeatureCollection of LineString contours, labeled as a placeholder", () => {
+  it("contours.geojson is a valid GeoJSON FeatureCollection of LineString contours, derived from the real DSM (not a placeholder)", () => {
     const geojson = JSON.parse(readFileSync(path.join(sampleDir, "contours.geojson"), "utf-8"));
     expect(geojson.type).toBe("FeatureCollection");
     expect(Array.isArray(geojson.features)).toBe(true);
@@ -172,7 +177,8 @@ sys.exit(0 if ok else 1)
       expect(feature.type).toBe("Feature");
       expect(["LineString", "MultiLineString"]).toContain(feature.geometry.type);
       expect(feature.geometry.coordinates.length).toBeGreaterThanOrEqual(2);
-      expect(feature.properties.placeholder).toBe(true);
+      expect(feature.properties.placeholder).toBeUndefined();
+      expect(typeof feature.properties.elevationMeters).toBe("number");
     }
   });
 

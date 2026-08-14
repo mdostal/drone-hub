@@ -9,7 +9,7 @@
       "url": "ortho.tif",
       "opacity": 1,
       "toggle": true,
-      "legend": "real orthomosaic reconstructed by OpenDroneMap from the nadir grid + an oblique orbit pass"
+      "legend": "real orthomosaic reconstructed by OpenDroneMap from the nadir grid + an oblique orbit pass, cropped to this parcel's own recorded boundary"
     },
     {
       "id": "hillshade",
@@ -18,7 +18,7 @@
       "url": "hillshade.tif",
       "opacity": 0.6,
       "toggle": false,
-      "legend": "real hillshade derived from the ODM-reconstructed DSM"
+      "legend": "real hillshade derived from the ODM-reconstructed DSM, cropped to this parcel's own recorded boundary"
     },
     {
       "id": "boundary",
@@ -26,7 +26,7 @@
       "url": "parcel.geojson",
       "opacity": 1,
       "toggle": true,
-      "legend": "approximate reconstruction footprint — not a real recorded parcel boundary"
+      "legend": "real recorded parcel boundary — Travis County Appraisal District, not a licensed survey"
     },
     {
       "id": "thermal",
