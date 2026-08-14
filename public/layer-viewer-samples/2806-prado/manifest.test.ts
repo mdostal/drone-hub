@@ -63,9 +63,9 @@ describe("2806-prado sample manifest", () => {
     expect(Array.isArray(manifest.layers)).toBe(true);
   });
 
-  it("has exactly the five expected layer ids", () => {
+  it("has exactly the six expected layer ids", () => {
     const ids = manifestJson.layers.map((l) => l.id);
-    expect(ids).toEqual(["ortho", "hillshade", "boundary", "thermal", "contours"]);
+    expect(ids).toEqual(["ortho", "hillshade", "lidar_hillshade", "boundary", "thermal", "contours"]);
   });
 
   it("thermal is a disabled stub again (real georeferenced-fix story: no radiometric sensor exists, so a fake same-extent thermal raster was replaced with CBA's original disabled-stub shape rather than kept as a mismatched-location file)", () => {

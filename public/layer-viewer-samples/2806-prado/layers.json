@@ -18,7 +18,16 @@
       "url": "hillshade.tif",
       "opacity": 0.6,
       "toggle": false,
-      "legend": "real hillshade derived from the ODM-reconstructed DSM, cropped to this parcel's own recorded boundary"
+      "legend": "real hillshade derived from the ODM-reconstructed DSM (photogrammetry, includes roof/canopy relief), cropped to this parcel's own recorded boundary"
+    },
+    {
+      "id": "lidar_hillshade",
+      "type": "raster",
+      "format": "cog",
+      "url": "lidar-hillshade.tif",
+      "opacity": 0.7,
+      "toggle": false,
+      "legend": "real USGS 3DEP LiDAR hillshade (bare-earth, not photogrammetry) — a second, independent government elevation source; relief is 8x exaggerated for visibility since this lot's actual bare-ground relief is under 1m"
     },
     {
       "id": "boundary",
