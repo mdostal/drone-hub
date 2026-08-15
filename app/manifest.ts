@@ -3,11 +3,12 @@ import { withBasePath } from "@/lib/base-path";
 
 // App Router convention: manifest.ts is automatically served as
 // /manifest.webmanifest with Next auto-injecting the
-// <link rel="manifest"> tag (basePath-prefixed the same way icon.tsx's
-// generated <link rel="icon"> already is — verified live). The icon `src`
-// values below are plain strings, which Next's own metadata-file machinery
-// does NOT basePath-prefix on their own, so they go through withBasePath()
-// per this repo's established convention (see lib/base-path.ts).
+// <link rel="manifest"> tag (basePath-prefixed the same way app/icon.png's
+// auto-generated <link rel="icon"> already is — verified live). The icon
+// `src` values below point at public/icons/*.png and are plain strings,
+// which Next's own metadata-file machinery does NOT basePath-prefix on
+// their own, so they go through withBasePath() per this repo's established
+// convention (see lib/base-path.ts).
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "drone-hub",
@@ -20,12 +21,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#e8590c",
     icons: [
       {
-        src: withBasePath("/icon-192"),
+        src: withBasePath("/icons/icon-192.png"),
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: withBasePath("/icon-512"),
+        src: withBasePath("/icons/icon-512.png"),
         sizes: "512x512",
         type: "image/png",
       },
