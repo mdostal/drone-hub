@@ -77,12 +77,12 @@ export default function LayerViewerShowcasePage() {
               onLayersChange={setLayers}
               onFullscreenChange={setIsFullscreen}
             />
-            <div className="pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2">
+            <div className="pointer-events-auto absolute right-3 top-3 bottom-3 flex flex-col items-end gap-2">
               <button
                 type="button"
                 onClick={() => viewerRef.current?.toggleFullscreen()}
                 aria-pressed={isFullscreen}
-                className="rounded-lg border border-border bg-surface/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur transition-colors hover:border-accent hover:text-accent"
+                className="shrink-0 rounded-lg border border-border bg-surface/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur transition-colors hover:border-accent hover:text-accent"
               >
                 {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
               </button>
