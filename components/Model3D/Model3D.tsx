@@ -11,7 +11,7 @@ import {
   type RefObject,
 } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
-import { Bounds, Html, Line, OrbitControls } from "@react-three/drei";
+import { Bounds, Html, Line, OrbitControls, useBounds } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -381,11 +381,58 @@ class ModelErrorBoundary extends Component<
   }
 }
 
+/** Sets the default camera position/target once the real loaded mesh's
+ *  bounding box is known — rendered as a child of <Bounds> (needs its
+ *  React context, see drei's useBounds) as a sibling of <GltfScene>.
+ *
+ *  Why this exists instead of just picking a `camera={{ position: [...] }}`
+ *  prop on <Canvas>: <Bounds fit>'s own auto-fit (drei's Bounds.js
+ *  `reset()`) computes viewing DIRECTION as
+ *  `camera.position.clone().sub(center).normalize()` — i.e. relative to
+ *  ORIGIN, not relative to the mesh's own bounding-box center. For a mesh
+ *  whose real center is far from the origin (confirmed empirically for
+ *  this sample — its center sits tens/hundreds of units out, not near
+ *  [0,0,0]), that direction ends up dominated by `-center` almost
+ *  regardless of what small initial `camera.position` is chosen, making
+ *  the "default angle" effectively uncontrollable via that prop. This
+ *  component sidesteps the whole issue by computing camera position
+ *  explicitly relative to the mesh's ACTUAL center, once real geometry
+ *  (not an empty placeholder box) is loaded. <Bounds clip observe> (no
+ *  `fit`) is still used for near/far-plane clipping and for the
+ *  imperative `refresh()` call this component makes, which primes
+ *  Bounds' own internal state — just not for the auto camera-fit. */
+function DefaultViewSetter({ box }: { box: THREE.Box3 | null }) {
+  const boundsApi = useBounds();
+  useEffect(() => {
+    if (!box || box.isEmpty()) return;
+    const center = box.getCenter(new THREE.Vector3());
+    const radius = box.getSize(new THREE.Vector3()).length() / 2;
+    // A low, oblique elevation — a real-estate-style aerial hero angle
+    // (roof + some facade + surrounding trees/yard all read at once)
+    // rather than a near-top-down survey view. 45° azimuth gives a
+    // diagonal 3/4 view instead of looking straight down one axis.
+    const azimuth = Math.PI / 4;
+    const elevation = THREE.MathUtils.degToRad(30);
+    const distance = radius * 2.4;
+    const offset = new THREE.Vector3(
+      Math.cos(elevation) * Math.cos(azimuth),
+      Math.sin(elevation),
+      Math.cos(elevation) * Math.sin(azimuth),
+    ).multiplyScalar(distance);
+    boundsApi.refresh(box).moveTo(center.clone().add(offset)).lookAt({ target: center });
+  }, [box, boundsApi]);
+  return null;
+}
+
 export function Model3D({ model, onLoadError, className }: Model3DProps) {
   const sceneRef = useRef<THREE.Object3D | null>(null);
   const [measureMode, setMeasureMode] = useState(false);
   const [points, setPoints] = useState<THREE.Vector3[]>([]);
   const [markerRadius, setMarkerRadius] = useState(0.02);
+  // Feeds <DefaultViewSetter> — see its own doc comment for why the
+  // default camera angle is set explicitly from this real box instead of
+  // via <Bounds fit>'s own auto-fit.
+  const [sceneBox, setSceneBox] = useState<THREE.Box3 | null>(null);
 
   const handleSceneReady = useCallback((scene: THREE.Object3D) => {
     sceneRef.current = scene;
@@ -397,6 +444,7 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
     const box = new THREE.Box3().setFromObject(scene);
     const diagonal = box.isEmpty() ? 0 : box.getSize(new THREE.Vector3()).length();
     setMarkerRadius(diagonal > 0 ? diagonal * 0.01 : 0.02);
+    setSceneBox(box);
   }, []);
 
   const handlePlacePoint = useCallback((point: THREE.Vector3) => {
@@ -417,6 +465,11 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
   return (
     <div className={cx("relative h-full w-full", className)} aria-label={model.title}>
       <Canvas
+        // Just a transient starting point before the mesh loads —
+        // <DefaultViewSetter> (inside <Bounds> below) takes over and sets
+        // the real default angle explicitly once the mesh's actual
+        // bounding box is known. See that component's doc comment for why
+        // <Bounds fit>'s own auto-fit can't be steered via this prop alone.
         camera={{ position: [3, 3, 3], fov: 50, near: 0.01, far: 1000 }}
         gl={{ preserveDrawingBuffer: true, logarithmicDepthBuffer: true }}
       >
@@ -426,15 +479,22 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
         <directionalLight position={[0, -8, 0]} intensity={0.8} />
         <ModelErrorBoundary onError={onLoadError}>
           <Suspense fallback={<LoadingPlaceholder />}>
-            {/* fit: auto-fit the camera to the mesh's bounding box on mount.
-                clip: push the camera's near/far planes to the mesh's bounds
-                so it isn't clipped. observe: re-fit if the mesh's own bounds
-                change later (e.g. a swapped `model.url`). margin: a little
-                breathing room around the mesh rather than a tight crop.
-                Measure geometry deliberately does NOT live inside here —
-                see MeasureOverlay's doc comment. */}
-            <Bounds fit clip observe margin={1.2}>
+            {/* Deliberately no `fit` here — <DefaultViewSetter> (below,
+                inside <Bounds> for useBounds() access) sets the default
+                camera position/target explicitly instead; see its doc
+                comment for why <Bounds fit>'s own auto-fit direction math
+                can't be steered for this mesh. clip: push the camera's
+                near/far planes to the mesh's bounds so it isn't clipped.
+                observe: re-refresh/re-clip if the mesh's own bounds change
+                later (e.g. a swapped `model.url` — <DefaultViewSetter>
+                separately re-fires on the new sceneBox via its own effect,
+                so a model swap still repositions the camera too). margin:
+                a little breathing room around the mesh rather than a tight
+                crop. Measure geometry deliberately does NOT live inside
+                here — see MeasureOverlay's doc comment. */}
+            <Bounds clip observe margin={1.2}>
               <GltfScene url={model.url} fixWinding={model.fixWinding} onSceneReady={handleSceneReady} />
+              <DefaultViewSetter box={sceneBox} />
             </Bounds>
           </Suspense>
         </ModelErrorBoundary>
