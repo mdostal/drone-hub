@@ -1,7 +1,7 @@
 id: dem-to-heightmap-script
 epic: mesh-quality-and-terrain-pipeline
 title: Formalize GeoTIFF DEM -> VoxelTerrain heightmap.json script
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: []
