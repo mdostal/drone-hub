@@ -1,0 +1,78 @@
+id: pipeline-scripts-odm-runner
+epic: tools-skill-layer
+title: Real ODM invocation script (GPS EXIF + docker run)
+status: completed
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  Not documented in pipeline/README.md at all yet — the ODM invocation
+  itself. Wraps: (1) exiftool -ee -G3 -json -n GPS extraction from source
+  DJI clips, written back onto extracted frames as EXIF; (2) the ODM docker
+  CLI invocation itself; (3) two real, hard-won operational fixes from this
+  session baked in as preflight checks, not just comments — Docker Desktop
+  memory must be >=16GB or DensifyPointCloud segfaults under x86-on-ARM64
+  emulation, and the dataset-stage cache must be wiped as a whole directory
+  (never partially) between reruns with a changed image set.
+
+acceptance_criteria:
+  - "Given a directory of DJI video clips, when extract-gps-frames.sh runs, then it produces JPEG frames with real GPS EXIF written back from exiftool -ee -G3 -json -n"
+  - "Given a directory of GPS-tagged frames, when run-odm.sh runs, then it invokes ODM's docker CLI with a preflight check that fails loudly (before starting the multi-hour run) if Docker's allocated memory is under 16GB"
+  - "Given a rerun with a changed image set, when run-odm.sh detects an existing project directory, then it wipes the whole directory (not select cache files) rather than risking the FileNotFoundError dataset-stage failure this session hit"
+  - "Script accepts --pc-quality, --feature-quality, and other ODM flags as passthrough arguments rather than hardcoding them"
+
+steps:
+  - id: research
+    description: Re-read this session's Docker memory fix (settings-store.json MemoryMiB) and the dataset-cache footgun, to encode both as real preflight/rerun checks rather than just comments.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/extract-gps-frames.sh and pipeline/scripts/run-odm.sh.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Dry-run against a small local clip set (or mock the docker invocation) to confirm the memory preflight check and the whole-directory-wipe-on-rerun behavior actually fire correctly, without requiring a full multi-hour ODM run in CI.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that the two operational fixes are real preflight/rerun guards, not just documentation comments that a future run could still skip.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/README.md
+      purpose: Documents downstream conversions this script's output feeds, but not the ODM invocation itself (the gap this story fills)
+
+files_to_modify:
+  - file: pipeline/scripts/extract-gps-frames.sh
+    change: new — ffmpeg frame extraction + exiftool -ee -G3 -json -n GPS write-back
+  - file: pipeline/scripts/run-odm.sh
+    change: new — docker run wrapper with a Docker-memory preflight check and whole-directory-wipe-on-rerun logic
+
+design_decisions:
+  - decision: Encode the Docker memory check as an actual preflight (query docker info, compare against a 16GB floor, fail loudly before starting) rather than a README warning
+    rationale: This session's actual failure mode was a segfault partway through a multi-hour run — a preflight check that fails fast is the real fix, a comment someone might not read is not
+
+cross_cutting:
+  - concern: documentation
+    action: "pipeline/README.md currently has no section on the ODM invocation step at all — add one once this script exists, matching the style of its existing §1-3."
+
+risks:
+  - severity: medium
+    description: The 16GB memory floor is specific to this session's x86-on-ARM64 emulation setup — may not generalize to a native-architecture Docker host
+    mitigation: Make the floor a script parameter with 16GB as the default, not a hardcoded assumption baked in unconditionally
+
+references:
+  - path: pipeline/README.md
+    relevant_excerpt: |
+      None of that tooling is an npm dependency and none of it ships to
+      Vercel — /pipeline is a sibling of app/, components/, and lib/
+      specifically so it's structurally obvious it never enters the bundle.

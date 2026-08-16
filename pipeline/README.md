@@ -1,8 +1,12 @@
 # /pipeline — WebODM/GDAL/rio-\*/PDAL/tippecanoe toolchain (not bundled)
 
-**This directory is documentation-only for now.** No scripts, no Dockerfile,
-no runtime code lives here yet — see "Why documentation-only" below for why
-that's deliberate, not an oversight.
+**Update (2026-08-12): the scripts below are now real.** This directory
+used to be documentation-only — see "From mapping to real scripts" below
+for why, and for what changed. `pipeline/scripts/` now contains real,
+tested, checked-in scripts covering the full mapping this README documents,
+plus a `.claude/skills/run-pipeline/SKILL.md` orchestrating them end-to-end.
+Nothing here still ships to Vercel or gets imported from `app/`/`components/`/
+`lib/` — that discipline is unchanged.
 
 ## What this directory is for
 
@@ -31,43 +35,62 @@ the Vercel bundle.
 None of that tooling is an npm dependency and none of it ships to Vercel —
 `/pipeline` is a sibling of `app/`, `components/`, and `lib/` specifically so
 it's structurally obvious (and enforced by "just don't import it from
-anywhere under those three") that it never enters the Next.js bundle. When
-built out, this directory's shape is expected to be:
+anywhere under those three") that it never enters the Next.js bundle. The
+real, current shape of this directory:
 
 ```
 /pipeline
-  README.md              (this file)
-  docker-compose.yml      (WebODM's own docker-compose stack, or a
-                            reference to WebODM Lightning if run as a
-                            hosted/cloud service instead of self-hosted)
+  README.md                    (this file)
   scripts/
-    reproject-ortho.sh     (rio warp + rio cogeo — see §1 below)
-    render-hillshade.sh    (gdaldem/rasterio — see §2 below)
-    convert-mesh.sh         (obj2gltf/gltf-transform — see §3 below)
-    build-manifest.py      (assembles the LayerDef/ModelDef JSON — the
-                            mapping below, automated)
+    extract-gps-frames.sh       (ffmpeg frame extraction + exiftool GPS write-back)
+    run-odm.sh                  (ODM docker wrapper — memory preflight,
+                                 whole-directory-wipe-on-rerun guard)
+    reproject-ortho.sh          (rio warp + rio cogeo — see §1 below)
+    render-hillshade.sh         (+ render_hillshade.py — rasterio hillshade,
+                                 gdaldem not required — see §2 below)
+    extract-contours.py         (DSM -> contour GeoJSON — see §2 below)
+    convert-mesh.sh             (obj2gltf/gltf-transform — see §3 below)
+    crop-mesh.py                (trimesh per-material crop + Y-up axis
+                                 correction — see §3 below)
+    build-manifest.py           (assembles the LayerDef[]/ModelDef/
+                                 GeoAnchoredModel JSON)
 ```
 
-None of those scripts exist yet. See "Why documentation-only" below.
+A `docker-compose.yml` for WebODM's own stack (or a note on running against
+WebODM Lightning instead of self-hosting) isn't written yet — `run-odm.sh`
+invokes the `opendronemap/odm` image directly via `docker run`, which covers
+every real run so far; a compose file would only add value once there's a
+reason to orchestrate more than one container.
 
-## Why documentation-only
+Orchestrating all of the above for one property, in the right order, is
+`.claude/skills/run-pipeline/SKILL.md` — read that skill's own file for the
+full sequencing and what it does/doesn't automate. This README stays the
+canonical reference for *what each script does and why*; the skill is the
+canonical reference for *running them together*.
 
-CLAUDE.md's Phase-0 gate is explicit: the operator's current drone shots are
-**obliques that will not photogrammetrically align** — a real WebODM run
-needs a nadir grid pass that hasn't been flown yet. There is, right now, no
-real `odm_orthophoto.tif`/`odm_dem.tif`/`odm_texturing` output anywhere to
-run a conversion script against. A script written today would have nothing
-real to validate against and would necessarily encode guesses about real
-WebODM output (exact pixel dimensions, CRS quirks, texture-atlas layout)
-that this repo has no way to verify. The concrete, actionable deliverable
-this directory can ship *today* is the mapping below — precise enough that
-writing the actual scripts, once a real WebODM run exists, is mechanical.
+## From mapping to real scripts
 
-**This mapping is not new speculation about how to reproject/COG a raster or
-render a hillshade.** Every command cited below is one this repo has
-*already run for real*, against real sample data, as part of building
+Until 2026-08-12, this directory was documentation-only. The reason at the
+time was real, not a stall: CLAUDE.md's Phase-0 gate flagged that the
+operator's drone shots were obliques that wouldn't photogrammetrically
+align, so there was no real `odm_orthophoto.tif`/`odm_dem.tif`/
+`odm_texturing` output anywhere to validate a script against — writing one
+would have meant guessing at real WebODM output shape (pixel dimensions,
+CRS quirks, texture-atlas layout) with no way to check the guess.
+
+That premise stopped being true once a real nadir-grid flight actually
+happened: the v1/v2 Prado reconstruction (documented in
+`~/Desktop/drone-jobs/2026-08-08_prado_flight2/05_ortho/README.md`) produced
+real ODM output twice over, including a full raw ODM project archived
+locally. The scripts above were written against that real output as an
+answer key — each is tested against it, not against a guess.
+
+**This mapping was never new speculation about how to reproject/COG a
+raster or render a hillshade.** Every command cited below is one this repo
+had *already run for real*, against real sample data, as part of building
 `<LayerViewer>`/`<Model3D>`/the land-overlay epic — see the "cited from"
-notes under each step.
+notes under each step. What changed is that those commands are now real
+files under `scripts/`, not just prose.
 
 ## The mapping: real WebODM/ODM output → this framework's manifest shapes
 

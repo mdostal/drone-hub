@@ -1,5 +1,7 @@
 node_modules/
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/skills/**
 .next/
 .next-e2e/
 out/
@@ -41,3 +43,5 @@ public/property-samples/
 !.pHive/epics/brand-theming-and-viewer-polish/**
 !.pHive/epics/nav-video-pipeline-files/
 !.pHive/epics/nav-video-pipeline-files/**
+!.pHive/epics/tools-skill-layer/
+!.pHive/epics/tools-skill-layer/**

@@ -1,0 +1,19 @@
+{
+  "name": "@drone-hub/mcp-component-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone MCP (Model Context Protocol) server exposing drone-hub's docs/components/*.md catalog over stdio. Never imported by the Next.js app or bundled for Vercel.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/run-tests.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

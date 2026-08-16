@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "drone-hub-component-catalog": {
+      "command": "node",
+      "args": ["mcp/component-catalog/server.js"]
+    }
+  }
+}
