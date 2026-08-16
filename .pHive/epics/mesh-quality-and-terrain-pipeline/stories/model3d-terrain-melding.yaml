@@ -1,0 +1,67 @@
+id: model3d-terrain-melding
+epic: mesh-quality-and-terrain-pipeline
+title: Drape DSM terrain beneath the mesh to fill reconstruction holes
+status: completed
+complexity: high
+methodology: classic
+depends_on: [precise-parcel-mesh-crop]
+
+description: |
+  The photogrammetry mesh has real, visible holes (confirmed in the
+  operator's own screenshots) where reconstruction failed — occlusion,
+  insufficient overlap, reflective surfaces. The DSM-derived terrain
+  surface (hillshade.tif, already real, already shipped) covers the same
+  footprint with no holes. This story renders that terrain as a base
+  surface beneath the photogrammetry mesh in <Model3D>, so gaps show real
+  (if lower-detail) terrain instead of blank white — "meld the model" per
+  the operator's own framing. Depends on precise-parcel-mesh-crop so this
+  work happens against the final, neighbor-excluded mesh, not one that
+  needs re-cropping later.
+
+acceptance_criteria:
+  - "Given the cropped mesh + its DSM (or the already-baked hillshade.tif's source elevation data), when Model3D renders, then a terrain surface mesh is visible directly beneath the photogrammetry mesh at matching real-world scale/alignment"
+  - "Where the photogrammetry mesh has a real hole, the terrain surface shows through instead of the background color — verified by comparing a known gap location (from the operator's screenshot) before/after"
+  - "No visible z-fighting/flickering where the mesh and terrain surface are close together — the terrain sits a small, consistent offset below the mesh's own lowest point, not coplanar"
+  - "This is additive/opt-in on the ModelDef (e.g. an optional terrain prop), not a breaking change to Model3D's existing API — the duck sample and any consumer without terrain data still renders exactly as before"
+
+steps:
+  - id: research
+    description: Read components/Model3D/Model3D.tsx in full (current Canvas/Bounds/lighting structure) and confirm what elevation data is available to build a terrain surface mesh from (the real DSM behind hillshade.tif, or the hillshade raster's own height-encoding if that's what's actually available) — do not assume a shape that isn't real.
+    agent: researcher
+  - id: implement
+    description: Add an optional terrain-surface prop/mechanism to Model3D (a plane/grid mesh generated from real elevation data, positioned at real-world scale beneath the photogrammetry mesh with a small offset), wire it for the Prado sample specifically.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Visually verify (real browser screenshot) that a known hole location now shows terrain instead of blank background, and that the duck sample (no terrain data) is visually unchanged.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the terrain-surface addition is opt-in/backward-compatible and the offset approach avoids z-fighting.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/Model3D/Model3D.tsx
+      purpose: The component this story extends — read its full current structure before changing it, including the recent DefaultViewSetter/Bounds work from this same epic's prerequisite work
+    - path: public/layer-viewer-samples/2806-prado/hillshade.tif
+      purpose: The real DSM-derived terrain surface this story drapes beneath the mesh
+
+files_to_modify:
+  - file: components/Model3D/Model3D.tsx
+    change: add optional terrain-surface rendering
+
+design_decisions:
+  - decision: Offset the terrain surface below the mesh's lowest point rather than coplanar
+    rationale: Standard GIS-drape technique to avoid z-fighting — design discussion §3 risk table
+
+risks:
+  - severity: medium
+    description: If real per-pixel elevation values aren't actually recoverable from what's shipped (e.g. hillshade.tif is a rendered illumination image, not a height-encoded raster), this story may need to source elevation from the DSM directly (check odm_dem/dsm.tif in the archived v2 ODM output) rather than the shipped hillshade
+    mitigation: Research step explicitly verifies what data is really available before implementation assumes a shape

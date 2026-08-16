@@ -1,0 +1,64 @@
+id: fix-parcel-owner-pii
+epic: mesh-quality-and-terrain-pipeline
+title: Strip owner name from public parcel.geojson
+status: completed
+complexity: low
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  public/layer-viewer-samples/2806-prado/parcel.geojson's properties.note
+  field contains "Owner of record: Dostal Mathew B." — live right now,
+  publicly servable, on a property currently being sold. This goes beyond
+  what's been authorized so far (imagery, telemetry, video) — a full legal
+  name tied to an exact parcel boundary. Strip the owner-name phrase while
+  keeping everything else real (TCAD sourcing, acreage, the boundary
+  geometry itself, the "not a substitute for a licensed survey" framing).
+
+acceptance_criteria:
+  - "Given the current parcel.geojson, when the owner-name phrase is removed, then properties.note no longer contains any personal name"
+  - "The TCAD source attribution, acreage, legal lot/block description, and boundary geometry are all otherwise unchanged"
+  - "Grep the rest of public/ for the same name string to confirm no other sample file has the same exposure"
+
+steps:
+  - id: implement
+    description: Edit public/layer-viewer-samples/2806-prado/parcel.geojson's properties.note to remove the owner-name phrase only.
+    agent: developer
+  - id: test
+    description: Grep public/ recursively for "Dostal Mathew" (and case variants) to confirm this was the only occurrence.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the diff touches only the owner-name phrase, nothing else in the file changed.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: public/layer-viewer-samples/2806-prado/parcel.geojson
+      purpose: The file with the exposure — properties.note field
+
+files_to_modify:
+  - file: public/layer-viewer-samples/2806-prado/parcel.geojson
+    change: remove "Owner of record: Dostal Mathew B." from properties.note, keep everything else
+
+risks:
+  - severity: low
+    description: None realistically — this is a strict subtraction of one phrase from a JSON string field
+    mitigation: Diff review confirms scope
+
+references:
+  - path: public/layer-viewer-samples/2806-prado/parcel.geojson
+    relevant_excerpt: |
+      "note": "Real Travis County Appraisal District parcel boundary
+      (taxmaps.traviscountytx.gov), not a reconstruction approximation.
+      Owner of record: Dostal Mathew B. Legal: LOT 3 BLK 5 OLT 26-27 OLT
+      32-33 DIV A CHERNOSKY NO 12. Still not a substitute for a licensed
+      survey."

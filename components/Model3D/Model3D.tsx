@@ -88,6 +88,26 @@ export interface ModelDef {
    *  ~180° flip, which is exactly what a real user report described:
    *  "wasn't allowing it to turn and it was aimed at the underside." */
   fixWinding?: boolean;
+  /** Optional URL of a second glTF/glb — a low-detail terrain SURFACE
+   *  rendered as a base layer beneath this model's own mesh, so real
+   *  reconstruction holes in `url`'s mesh (occlusion, insufficient camera
+   *  overlap) show real terrain through the gap instead of blank canvas
+   *  background — the operator's own "meld the model... fill in and
+   *  shadows" framing. Additive/opt-in: omitted (including for the sample
+   *  duck) → zero rendering change, exactly as <Model3D> behaved before
+   *  this field existed.
+   *
+   *  Deliberately NOT a generic "second model" slot with its own transform
+   *  props (scale/position/etc, same do_not-list rationale as the rest of
+   *  this interface) — the terrain asset is expected to already be baked
+   *  into the SAME local coordinate frame `url`'s mesh uses (real-world
+   *  scale, same UTM-offset + Y-up convention crop-mesh.py established —
+   *  see pipeline/scripts/dsm-to-terrain-mesh.py, which bakes exactly that
+   *  alignment, including a small downward vertical offset from the
+   *  terrain's own true elevation to avoid z-fighting with the mesh above
+   *  it) — so it renders correctly with no runtime position/rotation/scale
+   *  applied here. */
+  terrainUrl?: string;
 }
 
 /** Accent color for measure-mode markers/line/label — this epic's design
@@ -146,10 +166,25 @@ export interface Model3DProps {
 function GltfScene({
   url,
   fixWinding,
+  castsShadow,
+  receivesShadow,
   onSceneReady,
 }: {
   url: string;
   fixWinding?: boolean;
+  /** Whether every real Mesh in this loaded scene graph casts shadows onto
+   *  other shadow-receiving surfaces below/around it -- true for the
+   *  primary photogrammetry mesh (trees/roof should shadow EACH OTHER and
+   *  the terrain surface beneath them, the operator's "real shadows"
+   *  request), omitted for the terrain surface (the ground plane itself
+   *  doesn't need to cast shadows onto anything). */
+  castsShadow?: boolean;
+  /** Whether every real Mesh in this loaded scene graph receives shadows
+   *  cast by other shadow-casting surfaces -- true for both the primary
+   *  mesh (trees/roof shadow each other) and the terrain surface beneath
+   *  it (trees/roof shadowing the ground below is the actual "real
+   *  shadows" effect this story adds). */
+  receivesShadow?: boolean;
   /** Reports the loaded scene graph's root object up to <Model3D>, so the
    *  measure tool's raycaster (which lives outside <Bounds>, see
    *  MeasureController) has something to intersect against. */
@@ -173,6 +208,19 @@ function GltfScene({
       }
     });
   }, [gltf.scene, fixWinding]);
+  // Same traverse-every-real-Mesh pattern as the fixWinding effect above --
+  // glTFs can be a single mesh or an arbitrary multi-node hierarchy, and
+  // castShadow/receiveShadow are per-Mesh three.js flags with no scene-graph
+  // inheritance, so every Mesh node needs them set individually.
+  useEffect(() => {
+    if (!castsShadow && !receivesShadow) return;
+    gltf.scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      if (castsShadow) mesh.castShadow = true;
+      if (receivesShadow) mesh.receiveShadow = true;
+    });
+  }, [gltf.scene, castsShadow, receivesShadow]);
   return <primitive object={gltf.scene} />;
 }
 
@@ -424,6 +472,98 @@ function DefaultViewSetter({ box }: { box: THREE.Box3 | null }) {
   return null;
 }
 
+/** The scene's primary directional light -- the "sun" -- chosen as the
+ *  strongest/most-overhead of the three fixed directionalLights below
+ *  (position `[3, 12, 4]`, intensity `2`: the highest Y position and the
+ *  highest intensity of the three, i.e. the closest thing this scene has to
+ *  an overhead sun; the other two, intensity 1.6 and 0.8, stay flat
+ *  non-shadow-casting fill lights). Set `castShadow` on this one and tune
+ *  its shadow camera here rather than on a plain `<directionalLight>` JSX
+ *  tag because a *correct* shadow camera needs repositioning relative to
+ *  the mesh's REAL bounding-box center, not world origin -- same root
+ *  reason `<DefaultViewSetter>` above computes camera position from `box`
+ *  instead of using a static `<Canvas camera>` prop: this scene's real
+ *  center can sit tens/hundreds of units from `[0,0,0]` (confirmed
+ *  empirically, see `<DefaultViewSetter>`'s doc comment), and a directional
+ *  light's shadow camera is a literal, finite-frustum orthographic camera
+ *  sitting at `light.position` looking at `light.target.position` (default
+ *  target: world origin) -- left at the origin-relative default, that
+ *  camera would end up nowhere near the real geometry it needs to shadow.
+ *
+ *  The *lighting angle* itself doesn't need this (three.js directional
+ *  lights simulate parallel rays from `position - target`, so translating
+ *  both by the same amount changes nothing about the visible lighting
+ *  direction) -- only the shadow camera's placement and frustum size do.
+ *  So: re-anchor the light to the real box's center along the SAME
+ *  direction the original fixed `[3, 12, 4]` position implied (preserving
+ *  the original lighting angle), then size the orthographic frustum to the
+ *  box's own bounding-sphere radius (the same `getSize().length() / 2`
+ *  measure `<DefaultViewSetter>` already uses for its camera-distance math)
+ *  -- tight enough to not waste shadow-map resolution on empty space, wide
+ *  enough that shadows near the edge of the scene aren't clipped. */
+function ShadowLight({ box }: { box: THREE.Box3 | null }) {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const targetRef = useRef<THREE.Object3D>(null);
+
+  useEffect(() => {
+    const light = lightRef.current;
+    const target = targetRef.current;
+    if (!light || !target || !box || box.isEmpty()) return;
+
+    const center = box.getCenter(new THREE.Vector3());
+    // Bounding-sphere radius -- same measure <DefaultViewSetter> uses for
+    // its own camera-distance math, reused here for consistency.
+    const radius = box.getSize(new THREE.Vector3()).length() / 2;
+
+    // The original fixed light's direction, preserved -- just re-anchored
+    // to the real box center instead of the origin, and pushed out to
+    // `radius * 3` so the whole bounding sphere sits comfortably between
+    // the shadow camera's near and far planes below.
+    const direction = new THREE.Vector3(3, 12, 4).normalize();
+    light.position.copy(center).addScaledVector(direction, radius * 3);
+    target.position.copy(center);
+    light.target = target;
+
+    // Orthographic shadow-camera frustum: +15% margin around the bounding
+    // sphere's radius on every side -- covers the real scene with a little
+    // breathing room, not a generic oversized box. Near/far bracket the
+    // sphere as seen from a light sitting `radius * 3` out: closest possible
+    // point on the sphere is `radius * 2` away, farthest is `radius * 4`;
+    // near/far give margin on both sides of that range.
+    const frustumSize = radius * 1.15;
+    light.shadow.camera.left = -frustumSize;
+    light.shadow.camera.right = frustumSize;
+    light.shadow.camera.top = frustumSize;
+    light.shadow.camera.bottom = -frustumSize;
+    light.shadow.camera.near = radius * 1.5;
+    light.shadow.camera.far = radius * 5;
+    light.shadow.camera.updateProjectionMatrix();
+  }, [box]);
+
+  return (
+    <>
+      <directionalLight
+        ref={lightRef}
+        position={[3, 12, 4]}
+        intensity={2}
+        castShadow
+        // 2048x2048 -- real shadow definition for a demo page without going
+        // maxed-out/wasteful; tuned against the real bounding-box frustum
+        // above rather than a generic default so this resolution actually
+        // lands on the scene instead of being spread across empty space.
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+      {/* The light's shadow-camera look-at target -- a plain, invisible
+          Object3D positioned at the real box's center above. Rendered as a
+          sibling (not nested inside the light) so its `position` prop is
+          world-space directly, matching `center`'s own world coordinates
+          with no parent-transform conversion needed. */}
+      <object3D ref={targetRef} />
+    </>
+  );
+}
+
 export function Model3D({ model, onLoadError, className }: Model3DProps) {
   const sceneRef = useRef<THREE.Object3D | null>(null);
   const [measureMode, setMeasureMode] = useState(false);
@@ -472,9 +612,15 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
         // <Bounds fit>'s own auto-fit can't be steered via this prop alone.
         camera={{ position: [3, 3, 3], fov: 50, near: 0.01, far: 1000 }}
         gl={{ preserveDrawingBuffer: true, logarithmicDepthBuffer: true }}
+        // Enables three.js's shadow-map renderer -- without this, castShadow/
+        // receiveShadow on lights and meshes below are silently no-ops.
+        shadows
       >
         <ambientLight intensity={2.6} />
-        <directionalLight position={[3, 12, 4]} intensity={2} />
+        {/* The primary/"sun" light -- see ShadowLight's own doc comment for
+            why this replaces a plain <directionalLight position={[3, 12, 4]}
+            intensity={2}> instead of just adding `castShadow` to one. */}
+        <ShadowLight box={sceneBox} />
         <directionalLight position={[-6, 8, -4]} intensity={1.6} />
         <directionalLight position={[0, -8, 0]} intensity={0.8} />
         <ModelErrorBoundary onError={onLoadError}>
@@ -493,7 +639,35 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
                 crop. Measure geometry deliberately does NOT live inside
                 here — see MeasureOverlay's doc comment. */}
             <Bounds clip observe margin={1.2}>
-              <GltfScene url={model.url} fixWinding={model.fixWinding} onSceneReady={handleSceneReady} />
+              <GltfScene
+                url={model.url}
+                fixWinding={model.fixWinding}
+                // The primary mesh both casts (trees/roof shadow each other
+                // AND the terrain surface below them) and receives (they
+                // can shadow each other) shadows -- see GltfScene's own
+                // prop doc comments.
+                castsShadow
+                receivesShadow
+                onSceneReady={handleSceneReady}
+              />
+              {/* Terrain surface, rendered beneath the mesh above — see
+                  ModelDef.terrainUrl's own doc comment. Deliberately does
+                  NOT pass onSceneReady: <DefaultViewSetter>'s camera
+                  framing and MeasureController's raycast target both stay
+                  scoped to the photogrammetry mesh alone (`sceneBox`/
+                  `sceneRef` are only ever set from the primary GltfScene's
+                  onSceneReady above), not enlarged/confused by the terrain
+                  plane's own extent — a rendering-only addition. Still a
+                  sibling INSIDE <Bounds> (not outside, unlike
+                  MeasureOverlay) so its geometry still contributes to
+                  <Bounds clip>'s near/far-plane computation, same reasoning
+                  as GltfScene above.
+
+                  receivesShadow (not castsShadow): the ground plane itself
+                  doesn't need to cast a shadow onto anything -- it's the
+                  surface trees/roof from the mesh above shadow ONTO, the
+                  "real shadows" effect this story adds. */}
+              {model.terrainUrl && <GltfScene url={model.terrainUrl} receivesShadow />}
               <DefaultViewSetter box={sceneBox} />
             </Bounds>
           </Suspense>

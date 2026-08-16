@@ -81,7 +81,22 @@ export function VoxelInstances({ blocks }: { blocks: VoxelBlockInstance[] }) {
 
 function TerrainBlocks({ grid }: { grid: VoxelGrid }) {
   const blocks = useMemo(() => buildTerrainBlocks(grid), [grid]);
-  return <VoxelInstances blocks={blocks} />;
+  // key={grid.slug}: forces a full remount of <VoxelInstances>'s underlying
+  // <Instances> whenever the grid identity changes (e.g. a showcase page
+  // switching between sample grids of different sizes/instance counts).
+  // drei's <Instances> allocates its instance-matrix/color Float32Arrays
+  // ONCE, sized to its `limit` prop, via a bare `useState(() => ...)`
+  // initializer (node_modules/@react-three/drei/core/Instances.js) — it
+  // does NOT reallocate when `limit` changes on a later render of the SAME
+  // component instance. Without this key, switching from a smaller grid to
+  // a larger one (more block instances than the first grid rendered) would
+  // silently overflow that undersized buffer (WebGL
+  // "bufferSubData: srcOffset + length too large" / "vertex buffer is not
+  // big enough for the draw call", and a blank canvas) instead of drawing
+  // the new terrain. Keying on the grid's own slug guarantees a fresh
+  // <Instances> — and a correctly-sized buffer — every time the rendered
+  // grid actually changes.
+  return <VoxelInstances key={grid.slug} blocks={blocks} />;
 }
 
 export function VoxelTerrain({ grid, children, className }: VoxelTerrainProps) {

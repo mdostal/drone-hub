@@ -1,0 +1,82 @@
+id: precise-parcel-mesh-crop
+epic: mesh-quality-and-terrain-pipeline
+title: Re-crop the mesh to the real parcel boundary, neighbor's house out
+status: completed
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  pipeline/scripts/crop-mesh.py already supports cropping by real lat/lon
+  bounds (--lat-min/--lat-max/--lon-min/--lon-max + --coords-txt for the
+  UTM-offset reprojection) — it was built for exactly this, but the
+  currently-shipped public/model3d-samples/prado/model.glb was cropped
+  once, this session, against manually-eyeballed LOCAL-frame bounds
+  (--x-min -30 --x-max 30 ...), not the real recorded parcel boundary now
+  available in public/layer-viewer-samples/2806-prado/parcel.geojson. This
+  story re-runs the crop against the REAL parcel polygon's own extent (with
+  a small outward buffer so real structure near the property line, e.g. an
+  eave overhang, isn't clipped) so the neighbor's structure is genuinely
+  excluded, then regenerates the manifest.
+
+acceptance_criteria:
+  - "Given parcel.geojson's real polygon extent (+ a small buffer, a few meters), when crop-mesh.py runs with those bounds against the real ODM odm_texturing/ OBJ, then the resulting mesh contains no geometry recognizably belonging to the neighboring structure"
+  - "The property's own structure (main house) is NOT clipped by the buffer choice — verify against the pre-crop mesh that the buffered bounds fully contain the real structure's footprint"
+  - "build-manifest.py regenerates model.json/layers.json referencing the newly-cropped model.glb, and the resulting layers.json is structurally unchanged (same shape) from before"
+  - "The regenerated model.glb is wired into both components/Model3D's sample (public/model3d-samples/prado/model.glb) and LayerViewer's GeoAnchoredModel sample (land-overlay showcase), not just one"
+
+steps:
+  - id: research
+    description: Read parcel.geojson's real polygon coordinates and pipeline/scripts/crop-mesh.py's exact --lat-min/--lat-max/--lon-min/--lon-max/--coords-txt contract; locate the real ODM odm_texturing/ OBJ input this session's v2 run produced (check ~/Desktop/drone-jobs/2026-08-08_prado_flight2/05_ortho/v2/odm-full-output/ per this repo's own README precedent).
+    agent: researcher
+  - id: implement
+    description: Compute the parcel polygon's bounding box + a small buffer (document the buffer size and why), run crop-mesh.py with those real lat/lon bounds, run convert-mesh.sh on the result, run build-manifest.py to regenerate the manifest, and replace the shipped model.glb + wire into both Model3D and LandOverlay samples.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Visually/programmatically confirm the neighbor's structure is gone (compare vertex/face count and a rendered top-down view against the pre-crop mesh) and the real structure's footprint is fully intact (not clipped).
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the buffer choice is documented and reasoned, not an arbitrary magic number, and that both consumers (Model3D, LandOverlay) reference the new asset.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/scripts/crop-mesh.py
+      purpose: Already supports lat/lon-bounds cropping — this story uses it, doesn't modify it, unless a real gap is found
+    - path: pipeline/scripts/build-manifest.py
+      purpose: Regenerates the manifest referencing the new cropped model
+    - path: public/layer-viewer-samples/2806-prado/parcel.geojson
+      purpose: The real polygon this story crops to (post fix-parcel-owner-pii's redaction if that story lands first — check current state, don't reintroduce the owner-name phrase)
+    - path: app/(showcase)/components/land-overlay/page.tsx
+      purpose: The other real consumer of the cropped mesh (GeoAnchoredModel), besides Model3D's own sample
+
+files_to_modify:
+  - file: public/model3d-samples/prado/model.glb
+    change: replaced with the parcel-boundary-cropped version
+  - file: public/layer-viewer-samples/2806-prado/layers.json
+    change: regenerated via build-manifest.py if any layer references change
+
+design_decisions:
+  - decision: Buffer the parcel bounds outward rather than crop to the exact legal line
+    rationale: "The goal is \"neighbor's house gone,\" not \"shave the eaves off the real structure\" — design discussion §3 risk table"
+
+risks:
+  - severity: medium
+    description: Buffer too tight clips real structure; buffer too loose leaves neighbor's structure partially visible
+    mitigation: Explicit before/after comparison against the real structure's own footprint as an acceptance check, not just "looks right"
+
+references:
+  - path: pipeline/scripts/crop-mesh.py
+    relevant_excerpt: |
+      latlon_group.add_argument("--lat-min", type=float, help="Latitude minimum, degrees")
+      latlon_group.add_argument("--coords-txt", ...)

@@ -2,9 +2,14 @@
 
 // Public showcase page for <VoxelTerrain> (+ <VoxelStructure>). This whole
 // repo carries no gating of any kind (see CLAUDE.md's "Scope boundary"
-// section). Sample data is public/minecraft-samples/2806-prado/heightmap.json
-// — already-confirmed public-safe derived terrain (see VoxelTerrainDemo.tsx's
-// header comment), not raw property photogrammetry.
+// section). VoxelTerrainDemo.tsx renders two real, selectable samples:
+// public/minecraft-samples/2806-prado/heightmap.json — already-confirmed
+// public-safe derived terrain, structure-on-terrain — and
+// public/minecraft-samples/az-wilson-mountain/heightmap.json — real USGS
+// 3DEP public elevation data for Wilson Mountain / Oak Creek Canyon near
+// Sedona, AZ, land-only (no structure), the Tier-1 "terrain drama is the
+// pitch" case. See VoxelTerrainDemo.tsx's header comment for the real fetch
+// details and attribution.
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ComponentShowcase } from "@/components/showcase";
@@ -32,7 +37,7 @@ export default function VoxelTerrainShowcasePage() {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
       <ComponentShowcase
         title="VoxelTerrain"
-        description="Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes with a sample structure resting on top, orbit-controllable."
+        description="Blocky, Minecraft-style terrain renderer — a VoxelGrid of stacked, height-banded cubes, orbit-controllable. Two real samples: 2806 Prado (structure resting on terrain) and Wilson Mountain, Sedona AZ (real USGS 3DEP elevation, land only)."
         demo={
           <div className="flex flex-col gap-3">
             <div className="h-[480px] w-full overflow-hidden rounded-xl bg-background">

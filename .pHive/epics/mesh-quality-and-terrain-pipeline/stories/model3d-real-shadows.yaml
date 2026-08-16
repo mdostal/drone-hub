@@ -1,0 +1,59 @@
+id: model3d-real-shadows
+epic: mesh-quality-and-terrain-pipeline
+title: Real shadow-mapped lighting in Model3D
+status: completed
+complexity: medium
+methodology: classic
+depends_on: [model3d-terrain-melding]
+
+description: |
+  components/Model3D/Model3D.tsx currently lights the scene with flat
+  ambient (intensity 2.6) + a few directionalLights, none shadow-casting —
+  no <Canvas shadows>, no castShadow/receiveShadow anywhere. Add real
+  shadow-mapped lighting so trees/roof structures cast visible shadows onto
+  the mesh (and, once model3d-terrain-melding lands, onto the terrain
+  surface too) — depends on that story landing first since both touch the
+  same file and shadow tuning should happen against the final melded scene,
+  not before it.
+
+acceptance_criteria:
+  - "Given the melded mesh+terrain scene, when rendered, then at least the primary directional light casts real shadows (visible dark regions under tree canopy / roof overhangs onto the surface below), not just flat-lit geometry"
+  - "Shadow quality is tuned for this scene's real scale (shadow map resolution/camera frustum sized to the property's actual bounding box, not a generic default that's either blocky or absurdly oversized)"
+  - "The duck sample (no terrain surface) still renders correctly — shadows fall on the ground plane / itself sensibly, no regression"
+  - "Frame rate stays interactive (no obvious stutter) with shadows enabled — spot-check, not a formal perf budget"
+
+steps:
+  - id: research
+    description: Confirm the final scene structure from model3d-terrain-melding (what's mesh, what's terrain, their relative scale) before choosing shadow-camera frustum bounds.
+    agent: researcher
+  - id: implement
+    description: Add <Canvas shadows>, set castShadow on the primary directional light, receiveShadow on the terrain surface + mesh, tune shadow-map size and the light's shadow camera frustum to the real scene scale.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Visually verify real shadows appear under tree canopy/roof in a real browser screenshot, and confirm the duck sample still renders correctly.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm shadow-map settings are reasoned (tied to real scene scale) not copy-pasted defaults, and there's no visible performance regression.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/Model3D/Model3D.tsx
+      purpose: The component this story extends — read the post-terrain-melding state, not the pre-melding version
+
+files_to_modify:
+  - file: components/Model3D/Model3D.tsx
+    change: add shadow-mapped lighting
+
+risks:
+  - severity: low
+    description: Shadow maps can be a real performance cost on lower-end devices
+    mitigation: Reasonable shadow-map resolution (not maxed out), spot-check frame rate during test step
