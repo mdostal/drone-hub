@@ -1,7 +1,7 @@
 id: model3d-terrain-melding
 epic: mesh-quality-and-terrain-pipeline
 title: Drape DSM terrain beneath the mesh to fill reconstruction holes
-status: pending
+status: completed
 complexity: high
 methodology: classic
 depends_on: [precise-parcel-mesh-crop]

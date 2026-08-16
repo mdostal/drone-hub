@@ -24,6 +24,17 @@
 // (named `upAxis`, applying its own -90° X rotation on top of the file's
 // already-correct one), which is exactly why a real user reported the
 // model "wasn't allowing it to turn and it was aimed at the underside."
+//
+// terrain.glb (ModelDef.terrainUrl): a real terrain-surface mesh baked
+// from the same job's real DSM (odm_dem/dsm.tif) via
+// pipeline/scripts/dsm-to-terrain-mesh.py, aligned to model.glb's own
+// local coordinate frame (same coords.txt UTM offset + Y-up convention
+// crop-mesh.py established). Renders beneath the photogrammetry mesh so
+// real reconstruction holes (occlusion under tree canopy, insufficient
+// camera overlap — see pipeline/scripts/detect-coverage-gaps.py's own real
+// findings for this property) show real terrain instead of blank canvas
+// background — "meld the model" per the operator's own framing. See
+// ModelDef.terrainUrl's doc comment in components/Model3D/Model3D.tsx.
 import dynamic from "next/dynamic";
 import { ComponentShowcase } from "@/components/showcase";
 import { withBasePath } from "@/lib/base-path";
@@ -44,6 +55,9 @@ const USAGE_CODE = `import { Model3D } from "@/components/Model3D";
     url: "/model3d-samples/prado/model.glb",
     title: "2806 Prado (real photogrammetry mesh)",
     fixWinding: true,
+    // Real DSM-derived terrain surface, rendered beneath the mesh so real
+    // reconstruction holes show terrain instead of blank background.
+    terrainUrl: "/model3d-samples/prado/terrain.glb",
   }}
 />`;
 
@@ -61,6 +75,7 @@ export default function Model3DShowcasePage() {
                 url: withBasePath("/model3d-samples/prado/model.glb"),
                 title: "2806 Prado (real photogrammetry mesh)",
                 fixWinding: true,
+                terrainUrl: withBasePath("/model3d-samples/prado/terrain.glb"),
               }}
             />
           </div>

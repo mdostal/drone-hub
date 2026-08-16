@@ -88,6 +88,26 @@ export interface ModelDef {
    *  ~180° flip, which is exactly what a real user report described:
    *  "wasn't allowing it to turn and it was aimed at the underside." */
   fixWinding?: boolean;
+  /** Optional URL of a second glTF/glb — a low-detail terrain SURFACE
+   *  rendered as a base layer beneath this model's own mesh, so real
+   *  reconstruction holes in `url`'s mesh (occlusion, insufficient camera
+   *  overlap) show real terrain through the gap instead of blank canvas
+   *  background — the operator's own "meld the model... fill in and
+   *  shadows" framing. Additive/opt-in: omitted (including for the sample
+   *  duck) → zero rendering change, exactly as <Model3D> behaved before
+   *  this field existed.
+   *
+   *  Deliberately NOT a generic "second model" slot with its own transform
+   *  props (scale/position/etc, same do_not-list rationale as the rest of
+   *  this interface) — the terrain asset is expected to already be baked
+   *  into the SAME local coordinate frame `url`'s mesh uses (real-world
+   *  scale, same UTM-offset + Y-up convention crop-mesh.py established —
+   *  see pipeline/scripts/dsm-to-terrain-mesh.py, which bakes exactly that
+   *  alignment, including a small downward vertical offset from the
+   *  terrain's own true elevation to avoid z-fighting with the mesh above
+   *  it) — so it renders correctly with no runtime position/rotation/scale
+   *  applied here. */
+  terrainUrl?: string;
 }
 
 /** Accent color for measure-mode markers/line/label — this epic's design
@@ -494,6 +514,19 @@ export function Model3D({ model, onLoadError, className }: Model3DProps) {
                 here — see MeasureOverlay's doc comment. */}
             <Bounds clip observe margin={1.2}>
               <GltfScene url={model.url} fixWinding={model.fixWinding} onSceneReady={handleSceneReady} />
+              {/* Terrain surface, rendered beneath the mesh above — see
+                  ModelDef.terrainUrl's own doc comment. Deliberately does
+                  NOT pass onSceneReady: <DefaultViewSetter>'s camera
+                  framing and MeasureController's raycast target both stay
+                  scoped to the photogrammetry mesh alone (`sceneBox`/
+                  `sceneRef` are only ever set from the primary GltfScene's
+                  onSceneReady above), not enlarged/confused by the terrain
+                  plane's own extent — a rendering-only addition. Still a
+                  sibling INSIDE <Bounds> (not outside, unlike
+                  MeasureOverlay) so its geometry still contributes to
+                  <Bounds clip>'s near/far-plane computation, same reasoning
+                  as GltfScene above. */}
+              {model.terrainUrl && <GltfScene url={model.terrainUrl} />}
               <DefaultViewSetter box={sceneBox} />
             </Bounds>
           </Suspense>
