@@ -1,7 +1,7 @@
 id: precise-parcel-mesh-crop
 epic: mesh-quality-and-terrain-pipeline
 title: Re-crop the mesh to the real parcel boundary, neighbor's house out
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: []
