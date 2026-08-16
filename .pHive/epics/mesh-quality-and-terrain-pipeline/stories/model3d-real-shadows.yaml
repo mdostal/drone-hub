@@ -1,7 +1,7 @@
 id: model3d-real-shadows
 epic: mesh-quality-and-terrain-pipeline
 title: Real shadow-mapped lighting in Model3D
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: [model3d-terrain-melding]
