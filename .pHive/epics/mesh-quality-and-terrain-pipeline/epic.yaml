@@ -1,0 +1,56 @@
+name: mesh-quality-and-terrain-pipeline
+title: Precise parcel crop, mesh melding + shadows, coverage-gap detection, LiDAR terrain
+description: >
+  Closes real gaps found reviewing the v2 Prado reconstruction: a neighbor's
+  structure still visible in the mesh, unfilled reconstruction holes and
+  flat lighting, no way to know where those holes are on the ground, and no
+  formalized DEM-to-VoxelTerrain path for land-only AZ/UT properties.
+  Excludes CAD/DWG structure voxelization and headless beauty rendering
+  (blocked on tool installs not present on this machine; also explicitly
+  sequenced after this work by the operator).
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: classic
+version_bump: none
+sidecar_retention: transient
+
+git_flow:
+  base_branch: master
+  branch_strategy: per-epic
+
+stories:
+  - id: fix-parcel-owner-pii
+    title: Strip owner name from public parcel.geojson
+    complexity: low
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: precise-parcel-mesh-crop
+    title: Re-crop the mesh to the real parcel boundary, neighbor's house out
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: model3d-terrain-melding
+    title: Drape DSM terrain beneath the mesh to fill reconstruction holes
+    complexity: high
+    depends_on: [precise-parcel-mesh-crop]
+  - id: model3d-real-shadows
+    title: Real shadow-mapped lighting in Model3D
+    complexity: medium
+    depends_on: [model3d-terrain-melding]
+  - id: coverage-gap-detector
+    title: Detect mesh coverage gaps and map them to real-world direction/location
+    complexity: high
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: dem-to-heightmap-script
+    title: Formalize GeoTIFF DEM -> VoxelTerrain heightmap.json script
+    complexity: medium
+    depends_on: []
+    parallel_allowed: true
+    parallel_rationale: bounded-slice
+  - id: voxel-terrain-az-lidar-sample
+    title: Real USGS 3DEP AZ terrain as VoxelTerrain's flagship land-only sample
+    complexity: medium
+    depends_on: [dem-to-heightmap-script]

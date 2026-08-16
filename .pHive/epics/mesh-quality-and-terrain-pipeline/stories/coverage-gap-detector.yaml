@@ -1,0 +1,82 @@
+id: coverage-gap-detector
+epic: mesh-quality-and-terrain-pipeline
+title: Detect mesh coverage gaps and map them to real-world direction/location
+status: pending
+complexity: high
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  The operator asked: "we need a way to determine and figure out if our
+  clip is missing areas and how to grab or figure those out so we get the
+  rest of the areas into the pic as well." FlightCoverageAnalyzer already
+  exists but judges FLIGHT TELEMETRY overlap, not the reconstructed mesh's
+  actual holes — a different, new capability. This story is a standalone
+  analysis script: projects the real mesh geometry to a 2D top-down
+  coverage mask, finds unfilled regions via connected-component analysis,
+  reprojects each gap's centroid back to real lat/lon (reusing crop-mesh.py's
+  own UTM-offset reprojection technique), and emits a report — a CLI/report
+  tool (like run-pipeline), not a new showcase component, per design
+  discussion §5.1.
+
+acceptance_criteria:
+  - "Given the real (post-crop) Prado mesh, when the detector runs, then it identifies at least the known real gaps visible in the operator's own screenshots (e.g. under dense tree canopy) as coverage-gap regions"
+  - "Each detected gap is reported with an approximate real-world lat/lon centroid (reprojected from local mesh coordinates via the ODM coords.txt UTM offset, same technique crop-mesh.py already uses) and an approximate compass direction/description relative to the property center"
+  - "Output is a real, inspectable artifact — a GeoJSON of gap polygons/centroids plus a plain-text summary — not just a console log"
+  - "The tool explicitly does NOT claim to know WHY each gap exists (occlusion vs. a genuinely flat/featureless area) — it reports location/size honestly, per design discussion's risk-table framing, leaving judgment to the operator"
+
+steps:
+  - id: research
+    description: Read crop-mesh.py's UTM-offset reprojection approach (coords.txt parsing + pyproj.Transformer) to reuse the identical technique for reprojecting gap centroids back to lat/lon, and inspect the real cropped mesh (from precise-parcel-mesh-crop, or the current shipped one if that story hasn't landed yet) to understand its real face/vertex density so a gap-detection threshold can be chosen sensibly rather than guessed.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/detect-coverage-gaps.py -- rasterize the mesh's top-down face coverage to a 2D grid, find connected empty regions above a minimum size threshold, compute each region's centroid in local mesh coordinates, reproject to lat/lon, and write a GeoJSON + text summary report.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Run against the real Prado mesh and confirm the known tree-canopy gap (visible in the operator's screenshots) is detected, with a sane centroid location and a non-fabricated confidence framing.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the tool doesn't overclaim (no fabricated "why" for each gap) and that the lat/lon reprojection matches crop-mesh.py's own established technique rather than reinventing it differently.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: pipeline/scripts/crop-mesh.py
+      purpose: Source of the UTM-offset reprojection technique this story reuses for gap centroids
+    - path: docs/components/flight-coverage-analyzer.md
+      purpose: The adjacent-but-different existing tool (telemetry-based, not mesh-based) -- read to understand the real distinction and avoid duplicating its scope
+
+files_to_modify:
+  - file: pipeline/scripts/detect-coverage-gaps.py
+    change: new
+
+design_decisions:
+  - decision: CLI/report tool, not a new showcase component
+    rationale: Operator-facing analysis aid in the same category as run-pipeline, not a plug-and-play UI component — design discussion §5.1
+
+cross_cutting:
+  - concern: documentation
+    action: "pipeline/README.md should gain a short section on this script once it exists, matching its existing per-script documentation style."
+
+risks:
+  - severity: medium
+    description: Gap-detection threshold tuned wrong either floods the report with noise (every small texture seam flagged) or misses real gaps
+    mitigation: Tune against the real, known gap in the operator's own screenshots as ground truth, not an arbitrary default
+
+references:
+  - path: docs/components/flight-coverage-analyzer.md
+    relevant_excerpt: |
+      The one real risk both the operator's own flight notes and this
+      analysis agree on is canopy occlusion from the property's large
+      tree — a coverage gap no flight geometry fixes, not a grid-validity
+      problem.

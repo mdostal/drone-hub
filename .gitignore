@@ -45,3 +45,5 @@ public/property-samples/
 !.pHive/epics/nav-video-pipeline-files/**
 !.pHive/epics/tools-skill-layer/
 !.pHive/epics/tools-skill-layer/**
+!.pHive/epics/mesh-quality-and-terrain-pipeline/
+!.pHive/epics/mesh-quality-and-terrain-pipeline/**

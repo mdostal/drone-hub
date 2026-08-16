@@ -1,0 +1,67 @@
+id: dem-to-heightmap-script
+epic: mesh-quality-and-terrain-pipeline
+title: Formalize GeoTIFF DEM -> VoxelTerrain heightmap.json script
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+parallel_allowed: true
+parallel_rationale: bounded-slice
+
+description: |
+  This session's own external work already proved DEM->heightmap->.schem
+  end-to-end from a real USGS 3DEP tile ("~15 lines of rasterio": crop to
+  parcel bbox, block-pool to NxN, quantize to height bands) -- producing a
+  real az-compound.schem, 128 cubed, 91k blocks -- but that script was
+  never committed to this repo. This story formalizes it as a real,
+  reusable, tested pipeline script, matching the shape VoxelTerrain's
+  existing heightmap.json samples already use (see
+  public/minecraft-samples/2806-prado/heightmap.json for the target shape).
+
+acceptance_criteria:
+  - "Given a GeoTIFF DEM (or multiple tiles), when the script runs, then it produces a heightmap.json matching VoxelTerrain's real, already-consumed shape (structurally diffed against public/minecraft-samples/2806-prado/heightmap.json, same pattern pipeline-manifest-builder's own story used)"
+  - "Block-pooling and height-band quantization parameters (grid size, number of bands) are CLI flags with sensible defaults, not hardcoded"
+  - "Tested against a real DEM -- either the archived v2 Prado DSM or a freshly-fetched real USGS 3DEP tile -- producing real, inspectable output, not a synthetic fixture"
+  - "No hardcoded personal paths or property-specific values in the committed script"
+
+steps:
+  - id: research
+    description: Read public/minecraft-samples/2806-prado/heightmap.json's real shape and components/VoxelTerrain's consuming code to confirm the exact target format before writing the script.
+    agent: researcher
+  - id: implement
+    description: Write pipeline/scripts/dem-to-heightmap.py -- crop to bounds, block-pool to NxN, quantize to height bands, emit heightmap.json.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Run against a real DEM (the archived v2 Prado DSM, or fetch a real USGS 3DEP tile) and structurally diff the output against the real shipped sample.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm parameters are real CLI flags (not hardcoded), and the output shape genuinely matches what VoxelTerrain consumes.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: public/minecraft-samples/2806-prado/heightmap.json
+      purpose: Real, already-consumed reference shape this script's output must match
+    - path: components/VoxelTerrain
+      purpose: The real consumer of heightmap.json -- confirms the exact shape/field names expected
+
+files_to_modify:
+  - file: pipeline/scripts/dem-to-heightmap.py
+    change: new
+
+cross_cutting:
+  - concern: documentation
+    action: "pipeline/README.md should gain a section documenting this script, matching its existing per-script style, once it exists."
+
+risks:
+  - severity: low
+    description: Height-band quantization choices affect how dramatic the resulting voxel terrain looks -- a real design choice, not just a technical parameter
+    mitigation: Expose as a CLI flag with a documented, reasoned default rather than a silent hardcoded choice

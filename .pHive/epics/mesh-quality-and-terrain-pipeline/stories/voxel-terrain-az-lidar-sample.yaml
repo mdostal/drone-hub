@@ -1,0 +1,77 @@
+id: voxel-terrain-az-lidar-sample
+epic: mesh-quality-and-terrain-pipeline
+title: Real USGS 3DEP AZ terrain as VoxelTerrain's flagship land-only sample
+status: pending
+complexity: medium
+methodology: classic
+depends_on: [dem-to-heightmap-script]
+
+description: |
+  The operator's own framing: "The terrain should come from lidar and
+  whatnot. The arizona and utah areas and stuff should be the top end ones
+  there" -- i.e. Tier 1 of the operator's own spec ("land/acreage/distant
+  properties -> terrain-only voxel... the terrain drama is the pitch, no
+  structure needed"). This story fetches a real USGS 3DEP tile for an AZ
+  location (same free, public, no-auth source already used for Prado's real
+  lidar-hillshade.tif; default to AZ per design discussion §5.3 -- matches
+  personal-site's own existing az-height/az-hillshade precedent and this
+  session's own already-proven az-compound.schem external work) and wires
+  it as a new, real VoxelTerrain sample demonstrating the land-only,
+  no-structure case -- distinct from the existing Prado sample, which has a
+  structure.
+
+acceptance_criteria:
+  - "Given a real USGS 3DEP DEM tile for a real AZ location, when dem-to-heightmap-script runs against it, then it produces a real heightmap.json with dramatic, real elevation relief (not a flat/boring tile) -- 'the terrain drama is the pitch'"
+  - "The new sample is wired into VoxelTerrain's showcase as a genuinely selectable second sample (not replacing the existing Prado sample), demonstrating the land-only Tier-1 case with no structure placed on it"
+  - "The sample's own attribution is honest about what it is -- real USGS 3DEP public elevation data for a real location, explicitly not tied to any specific client/property unless a real one is named"
+  - "No fabricated claim that this is a specific operator property unless it actually is one"
+
+steps:
+  - id: research
+    description: Confirm dem-to-heightmap-script's final real CLI contract (once that story lands) and identify a real, specific AZ location with dramatic terrain relief to fetch from USGS 3DEP's public API/download service.
+    agent: researcher
+  - id: implement
+    description: Fetch the real 3DEP tile, run it through dem-to-heightmap-script, wire the resulting heightmap.json into VoxelTerrain's showcase page as a second, real, selectable sample.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Visually verify (real browser screenshot) the new sample renders with genuine dramatic relief, distinct from the flatter Prado terrain sample.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the sample's attribution is honest (real public data, real location, not overclaiming a specific client tie) and that it doesn't regress the existing Prado sample.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VoxelTerrain
+      purpose: The showcase component this story adds a second real sample to
+    - path: pipeline/scripts/dem-to-heightmap-script.py
+      purpose: The script this story's real data flows through (from the prerequisite story)
+
+files_to_modify:
+  - file: public/minecraft-samples/az-sample/heightmap.json
+    change: new -- real USGS 3DEP AZ terrain
+  - file: app/(showcase)/components/voxel-terrain/page.tsx
+    change: add the AZ sample as a second selectable option
+
+design_decisions:
+  - decision: Default to AZ over UT for this pass
+    rationale: Operator listed both without picking one; AZ matches personal-site's existing az-height/az-hillshade precedent and this session's own already-proven az-compound.schem work -- design discussion §5.3
+
+risks:
+  - severity: low-medium
+    description: A generic "any AZ tile" pick might not have real significance to the operator, who may have a specific parcel in mind
+    mitigation: Choose a real, named, dramatic public-lands or well-known-terrain location and say so plainly in the sample's attribution rather than implying a specific unnamed client property
+
+references:
+  - path: public/minecraft-samples/2806-prado/heightmap.json
+    relevant_excerpt: |
+      (existing real sample -- the new AZ sample should match this exact
+      shape, per dem-to-heightmap-script's own acceptance criteria)
