@@ -1,7 +1,7 @@
 id: voxel-terrain-az-lidar-sample
 epic: mesh-quality-and-terrain-pipeline
 title: Real USGS 3DEP AZ terrain as VoxelTerrain's flagship land-only sample
-status: pending
+status: completed
 complexity: medium
 methodology: classic
 depends_on: [dem-to-heightmap-script]
