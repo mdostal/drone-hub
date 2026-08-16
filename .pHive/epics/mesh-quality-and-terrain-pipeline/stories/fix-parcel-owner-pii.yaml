@@ -1,7 +1,7 @@
 id: fix-parcel-owner-pii
 epic: mesh-quality-and-terrain-pipeline
 title: Strip owner name from public parcel.geojson
-status: pending
+status: completed
 complexity: low
 methodology: classic
 depends_on: []
