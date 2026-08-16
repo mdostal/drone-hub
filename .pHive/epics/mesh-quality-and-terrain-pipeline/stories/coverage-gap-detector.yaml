@@ -1,7 +1,7 @@
 id: coverage-gap-detector
 epic: mesh-quality-and-terrain-pipeline
 title: Detect mesh coverage gaps and map them to real-world direction/location
-status: pending
+status: completed
 complexity: high
 methodology: classic
 depends_on: []
