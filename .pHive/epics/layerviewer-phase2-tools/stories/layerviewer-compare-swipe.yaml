@@ -1,7 +1,7 @@
 id: layerviewer-compare-swipe
 epic: layerviewer-phase2-tools
 title: CompareSwipe -- swipe divider comparing two layers side by side
-status: pending
+status: complete
 complexity: medium
 methodology: classic
 depends_on: []
