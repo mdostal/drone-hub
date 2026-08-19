@@ -41,6 +41,7 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.5.0",
     "terra-draw": "^1.0.0",
+    "terra-draw-maplibre-gl-adapter": "^1.4.1",
     "three": "^0.169.0"
   },
   "devDependencies": {

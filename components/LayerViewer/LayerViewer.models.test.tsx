@@ -97,6 +97,40 @@ vi.mock("maplibre-gl", () => {
 
 vi.mock("@geomatico/maplibre-cog-protocol", () => ({ cogProtocol: {} }));
 
+// This suite's FakeMap above doesn't implement getContainer()/dragRotate/
+// dragPan/etc. — the real terra-draw-maplibre-gl-adapter's constructor
+// needs those (see LayerViewer.annotate.test.tsx's header comment for why
+// the annotation tool's OWN suite mocks terra-draw the same way). The
+// `models` prop isn't this story's concern at all, so both packages are
+// mocked to bare no-ops here purely so the map's 'load' handler (which now
+// also constructs a TerraDraw instance — see LayerViewer.tsx's "Annotation
+// tool" block) doesn't throw against this file's simpler FakeMap.
+vi.mock("terra-draw", () => {
+  class FakeTerraDraw {
+    start() {}
+    stop() {}
+    setMode() {}
+    on() {}
+    off() {}
+    getSnapshot() {
+      return [];
+    }
+    removeFeatures() {}
+  }
+  class FakeMode {}
+  return {
+    TerraDraw: FakeTerraDraw,
+    TerraDrawPointMode: FakeMode,
+    TerraDrawLineStringMode: FakeMode,
+    TerraDrawPolygonMode: FakeMode,
+    TerraDrawFreehandMode: FakeMode,
+    TerraDrawRenderMode: FakeMode,
+  };
+});
+vi.mock("terra-draw-maplibre-gl-adapter", () => ({
+  TerraDrawMapLibreGLAdapter: class {},
+}));
+
 // The real createModelLayer (lib/maplibre-model-layer.ts) is fully covered
 // by its own suite (lib/maplibre-model-layer.test.ts) — mocked here so
 // these specs test LayerViewer's WIRING (does it get called with the right

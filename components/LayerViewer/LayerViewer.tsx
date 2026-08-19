@@ -34,6 +34,38 @@ import { createModelLayer } from "@/lib/maplibre-model-layer";
 // cog-protocol modules above, so it needs none of loadMapLibreModules()'s
 // lazy-import treatment.
 import { distance as turfDistance } from "@turf/turf";
+// Annotation tool (this epic's AnnotationLayer -- see ANNOTATION_IDLE_MODE's
+// comment below and the map-creation effect's "Annotation tool" block for
+// where these get wired up). Real value imports, statically -- NOT deferred
+// into loadMapLibreModules() the way maplibre-gl/@geomatico/maplibre-cog-protocol
+// are, because neither of these two packages has maplibre-gl's
+// Worker-at-module-load problem: `terra-draw`'s compiled dist has zero
+// `window`/`document` references anywhere (verified directly against
+// node_modules/terra-draw/dist/terra-draw.module.js, not just its .d.ts),
+// and `terra-draw-maplibre-gl-adapter`'s only `document`/`Image` touches
+// (its marker-icon resizeImage helper) live inside a METHOD, not at module
+// scope (verified the same way) -- exactly the "safe to import statically"
+// bar createModelLayer/turfDistance above already clear.
+import {
+  TerraDraw,
+  TerraDrawFreehandMode,
+  TerraDrawLineStringMode,
+  TerraDrawPointMode,
+  TerraDrawPolygonMode,
+  TerraDrawRenderMode,
+} from "terra-draw";
+// terra-draw's own core package deliberately ships no map-library-specific
+// adapter (only an abstract base one) -- this is the real, separate
+// "buy compute, own the viewer" npm package (peer deps terra-draw ^1.0.0 +
+// maplibre-gl >=4, both satisfied by this repo's package.json) that hooks
+// terra-draw into an ALREADY-EXISTING `maplibre-gl` `Map` instance (the one
+// this component already owns via mapRef, constructed above -- NOT a
+// second map of its own): its constructor just takes `{ map }` and calls
+// `map.addSource`/`map.addLayer` against it, per its own guide
+// (github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md),
+// which is why it's initialized inside the 'load' handler below, same
+// timing as every other map.addSource/addLayer call in this file.
+import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import { cx } from "./cx";
 
 /**
@@ -100,6 +132,36 @@ const MEASURE_LINE_LAYER_ID = "layerviewer-measure-line";
  *  Model3D.tsx's identical MEASURE_ACCENT_COLOR constant/rationale, for
  *  cross-component consistency of the measure tool's look. */
 const MEASURE_ACCENT_COLOR = "#e8590c";
+
+// Annotation tool (this epic's AnnotationLayer -- see this file's header
+// comment for the "why import terra-draw statically" rationale). These are
+// terra-draw's OWN built-in mode name strings, not invented here -- verified
+// at runtime (each mode class assigns `this.mode = "point"` / "linestring" /
+// "polygon" / "freehand" / "render" internally; the .d.ts only types `mode`
+// as `string`, so this was checked against the compiled dist output, not
+// just the type declarations) -- `draw.setMode(...)` below is called with
+// these exact strings.
+export type AnnotationMode = "point" | "linestring" | "polygon" | "freehand";
+/** terra-draw's own display-only "idle" mode (`TerraDrawRenderMode`) --
+ *  placed annotations still render, but no map interaction starts a new
+ *  one. Registered as one of this component's terra-draw modes and set
+ *  active whenever the mode-switcher toolbar has no drawing mode selected,
+ *  so the map ALWAYS has a valid active terra-draw mode (required by
+ *  terra-draw) without that mode ever being a drawing one -- mirrors the
+ *  measure tool's own `if (!measureModeRef.current) return;` idle gate,
+ *  just enforced by terra-draw itself instead of a boolean check here. */
+const ANNOTATION_IDLE_MODE = "render";
+/** One row per drawing mode in the mode-switcher toolbar, in display order.
+ *  Deliberately excludes terra-draw's other built-in modes (circle,
+ *  rectangle, sector, sensor, select, marker, ...) -- the story's brief
+ *  asks for "point / line / polygon / freehand at minimum" and no more. */
+const ANNOTATION_MODE_LABELS: Record<AnnotationMode, string> = {
+  point: "Point",
+  linestring: "Line",
+  polygon: "Polygon",
+  freehand: "Freehand",
+};
+const ANNOTATION_MODE_ORDER: AnnotationMode[] = ["point", "linestring", "polygon", "freehand"];
 
 function mapSourceId(layerId: string): string {
   return `layer-${layerId}`;
@@ -458,6 +520,18 @@ export interface LayerViewerProps {
   onLayersChange?: (layers: LayerDef[]) => void;
   /** Fired if the manifest fails to load. */
   onLoadError?: (message: string) => void;
+  /** Annotation tool (this epic's AnnotationLayer): fired with the CURRENT
+   *  full list of placed annotation features (points/lines/polygons/
+   *  freehand shapes) every time it changes -- an annotation placed,
+   *  edited, or deleted via the legend panel's per-row Delete button. This
+   *  repo has no backend anywhere (CLAUDE.md), so <LayerViewer> owns no
+   *  persistence of its own -- this is the escape hatch a consuming app
+   *  uses to own that itself (localStorage, a database, wherever), same
+   *  "the viewer doesn't own state it shouldn't" pattern as
+   *  `onLayersChange` above. Features are plain GeoJSON (terra-draw's own
+   *  `getSnapshot()` output), not a terra-draw-specific shape, so a
+   *  consumer never needs to depend on terra-draw's types directly. */
+  onAnnotationsChange?: (features: GeoJSON.Feature[]) => void;
   /** Fired whenever fullscreen state changes (user-initiated via the
    *  handle's `toggleFullscreen()`, OR externally — e.g. the browser's own
    *  "Esc to exit fullscreen" affordance, which bypasses the handle
@@ -478,7 +552,7 @@ export interface LayerViewerProps {
 }
 
 export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(function LayerViewer(
-  { manifest, models, onLayersChange, onLoadError, onFullscreenChange, className },
+  { manifest, models, onLayersChange, onLoadError, onFullscreenChange, onAnnotationsChange, className },
   ref,
 ) {
   const [propertyLayers, setPropertyLayers] = useState<PropertyLayers | null>(null);
@@ -572,6 +646,22 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
     setMeasureLabelPos({ x: projected.x, y: projected.y });
   }, []);
 
+  // Annotation tool (this epic's AnnotationLayer -- see this file's header
+  // comment + ANNOTATION_IDLE_MODE's comment above for the full rationale).
+  // `terraDrawRef` holds the live TerraDraw instance, created once inside
+  // the map's 'load' handler below (never re-created for the life of this
+  // map instance). `annotationMode` is which drawing mode the mode-switcher
+  // toolbar currently has active -- `null` means terra-draw is sitting in
+  // its ANNOTATION_IDLE_MODE, same "off" meaning as the measure tool's
+  // `measureMode === false`. `annotations` is the live list of placed
+  // features, kept in sync from terra-draw's own "change" event (its own
+  // store is the source of truth -- this state is a read-only mirror of it
+  // for the legend panel to render + for the onAnnotationsChange callback
+  // below, not a second source of truth terra-draw has to be told about).
+  const terraDrawRef = useRef<TerraDraw | null>(null);
+  const [annotationMode, setAnnotationMode] = useState<AnnotationMode | null>(null);
+  const [annotations, setAnnotations] = useState<GeoJSON.Feature[]>([]);
+
   // Latest callbacks, read from effects without re-firing just because the
   // caller passed a new inline function each render (same pattern as
   // VideoTour's onRoomChangeRef).
@@ -587,6 +677,43 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   useEffect(() => {
     onFullscreenChangeRef.current = onFullscreenChange;
   }, [onFullscreenChange]);
+  const onAnnotationsChangeRef = useRef(onAnnotationsChange);
+  useEffect(() => {
+    onAnnotationsChangeRef.current = onAnnotationsChange;
+  }, [onAnnotationsChange]);
+
+  // Mode-switcher toolbar click handler: clicking the ALREADY-active mode's
+  // button toggles annotation drawing off (back to ANNOTATION_IDLE_MODE) --
+  // same "click active to turn off" toggle affordance as the Measure
+  // button above -- clicking any other mode switches straight to it
+  // (terra-draw's own setMode() handles stopping whichever mode was
+  // previously active). No-op before terra-draw has been constructed
+  // (map not ready yet).
+  const handleAnnotationModeClick = useCallback(
+    (mode: AnnotationMode) => {
+      const draw = terraDrawRef.current;
+      if (!draw) return;
+      if (annotationMode === mode) {
+        draw.setMode(ANNOTATION_IDLE_MODE);
+        setAnnotationMode(null);
+      } else {
+        draw.setMode(mode);
+        setAnnotationMode(mode);
+      }
+    },
+    [annotationMode],
+  );
+
+  // Legend panel's per-row Delete button. terra-draw's own "change" event
+  // (registered where the TerraDraw instance is constructed below) is what
+  // actually updates `annotations` state + fires onAnnotationsChange --
+  // this just tells terra-draw's store to remove the feature, the same
+  // "terra-draw's store is the source of truth" precedent as the mode
+  // click handler above.
+  const handleDeleteAnnotation = useCallback((id: GeoJSON.Feature["id"]) => {
+    if (id === undefined) return;
+    terraDrawRef.current?.removeFeatures([id]);
+  }, []);
 
   // Read by the handle's isFullscreen() — a ref (not just the `document`
   // global directly) so it stays consistent with getLayers()'s "read
@@ -774,6 +901,55 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
             "circle-stroke-color": "#ffffff",
           },
         });
+
+        // Annotation tool: TerraDraw attached directly to THIS already-
+        // constructed `map` instance via TerraDrawMapLibreGLAdapter (see
+        // this file's header comment) -- not a second map of its own. The
+        // adapter's own register() call (triggered by draw.start() below)
+        // adds three more GeoJSON sources/layers of ITS own (default
+        // "td-point"/"td-linestring"/"td-polygon" prefixed ids) on top of
+        // this same map, after the property/model/measure layers above so
+        // placed annotations render on top of the imagery being annotated
+        // -- same ordering rationale as the measure tool's own layers.
+        // Constructed here (inside 'load', not at map construction time)
+        // per the adapter's own guide, which calls out that its register()
+        // needs the style to have already loaded.
+        const draw = new TerraDraw({
+          adapter: new TerraDrawMapLibreGLAdapter({ map }),
+          modes: [
+            new TerraDrawPointMode(),
+            new TerraDrawLineStringMode(),
+            new TerraDrawPolygonMode(),
+            new TerraDrawFreehandMode(),
+            // Unlike the drawing modes above, TerraDrawRenderMode's
+            // constructor requires a `styles` option (even if empty) —
+            // an empty object keeps its defaults, which is all this idle
+            // mode needs (it never lets a user draw, so its own styling
+            // never actually gets used for a NEW feature — only for
+            // re-rendering whatever the drawing modes already placed).
+            new TerraDrawRenderMode({ styles: {} }),
+          ],
+        });
+        draw.start();
+        // Idle by default -- see ANNOTATION_IDLE_MODE's own comment above
+        // for why a plain map click must not start drawing until a
+        // consumer picks a mode from the toolbar.
+        draw.setMode(ANNOTATION_IDLE_MODE);
+        // terra-draw's own store is the single source of truth for placed
+        // annotations (see handleAnnotationModeClick/handleDeleteAnnotation
+        // above) -- every create/update/delete/styling change re-reads the
+        // full current snapshot rather than trying to diff the event's own
+        // ids/type payload, which keeps this in sync regardless of WHICH
+        // terra-draw internal codepath caused the change (a toolbar-driven
+        // draw, a legend-panel delete, or any future programmatic
+        // addFeatures/removeFeatures call).
+        draw.on("change", () => {
+          const snapshot = draw.getSnapshot() as GeoJSON.Feature[];
+          setAnnotations(snapshot);
+          onAnnotationsChangeRef.current?.(snapshot);
+        });
+        terraDrawRef.current = draw;
+
         mapReadyRef.current = true;
         // Re-sync in case a toggle/opacity change (via the imperative handle)
         // landed between map construction and 'load' firing.
@@ -818,6 +994,17 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           if (mapRef.current.getLayer(id)) mapRef.current.removeLayer(id);
         }
         addedModelIdsRef.current.clear();
+        // Annotation tool: stop() (not just dropping the ref) triggers the
+        // adapter's own unregister(), which removes ITS "td-*" sources/
+        // layers from this map — same "don't just drop the reference, tear
+        // down what was actually added to the map" rigor as the model
+        // layers above. Must run BEFORE mapRef.current.remove() below,
+        // while the map instance stop()/unregister() writes into is still
+        // alive.
+        if (terraDrawRef.current) {
+          terraDrawRef.current.stop();
+          terraDrawRef.current = null;
+        }
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -986,6 +1173,64 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
               <li>Toggle Measure to place points</li>
             )}
           </ul>
+        </div>
+      </div>
+
+      {/* Annotation tool panel — mode-switcher toolbar (point/line/polygon/
+          freehand) + a legend/list panel of placed annotations with a
+          per-row delete button, styled with the exact same design tokens
+          as the Measure panel above / <LayerControl>'s own panel
+          (bg-surface/90, border-border, rounded-xl, backdrop-blur).
+          Positioned top-left, deliberately distinct from both the Measure
+          panel's bottom-left slot and the right-hand
+          Fullscreen-button+<LayerControl> column a consumer typically
+          renders (see this repo's own showcase page) — same "this is
+          <LayerViewer>'s own internal chrome, avoid colliding with common
+          consumer layouts" reasoning as the Measure panel's own placement
+          comment above. */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute left-3 top-3 flex max-h-[60vh] w-56 min-h-0 flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-surface/90 p-3 text-xs text-foreground shadow-lg backdrop-blur">
+          <span className="font-medium">Annotate</span>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Annotation drawing mode">
+            {ANNOTATION_MODE_ORDER.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => handleAnnotationModeClick(mode)}
+                aria-pressed={annotationMode === mode}
+                className={cx(
+                  "rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
+                  annotationMode === mode
+                    ? "border-accent bg-accent text-white"
+                    : "border-border text-foreground hover:border-accent hover:text-accent",
+                )}
+              >
+                {ANNOTATION_MODE_LABELS[mode]}
+              </button>
+            ))}
+          </div>
+          {annotationMode && <span className="text-accent">Click the map to draw</span>}
+          {annotations.length === 0 ? (
+            <span className="text-muted">No annotations yet</span>
+          ) : (
+            <ul aria-label="Placed annotations" className="flex flex-col gap-1 text-muted">
+              {annotations.map((feature) => (
+                <li key={String(feature.id)} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate capitalize text-foreground">
+                    {feature.geometry.type}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteAnnotation(feature.id)}
+                    aria-label={`Delete ${feature.geometry.type} annotation`}
+                    className="shrink-0 text-foreground underline decoration-dotted underline-offset-2 hover:text-accent"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
