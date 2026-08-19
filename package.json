@@ -4,6 +4,13 @@
   "private": true,
   "license": "MIT",
   "description": "Shadcn-style component framework for drone property intelligence — plug-and-play React components (MapLibre layer viewer, 3D/point-cloud viewer, geo-anchored model overlay, video walkthrough player, Minecraft terrain voxelizer + exporter), each with a live demo and full docs. Own the viewer, buy only compute.",
+  "author": "Mathew Dostal (https://mdostal.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mdostal/drone-hub.git"
+  },
+  "homepage": "https://drone-hub-rust.vercel.app",
+  "bugs": "https://github.com/mdostal/drone-hub/issues",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -150,9 +150,21 @@ sample data — but ungated, like everything else here.
 repo was briefly made public on GitHub while the real Prado tour photos
 (`public/tours/2806-prado/*.jpg`) were still committed to its history —
 caught and reverted quickly, but it's why "no real content, ever, in this
-repo" is now a hard rule here, not just a preference. Before this repo is
-ever made public again, its git history should be scrubbed of that content
-(the working tree is already clean as of this correction; history is not).
+repo" is now a hard rule here, not just a preference.
+
+**Update (verified 2026-08-18, ahead of the real OSS release):** the git-history
+scrub this section used to flag as still-outstanding has been checked, concretely,
+not assumed — `git log --all` / `git fsck --unreachable --dangling` / a fetch of
+both `refs/pull/*/head` across all 142 commits and all 9 branches (+2 PR refs) on
+`origin` (the actual public GitHub remote, `gh repo view` confirms `isPrivate:
+false` right now) turned up zero trace of `public/tours/2806-prado/*.jpg`,
+`docs/components/reference/prado-tour.prototype.html`, or any other file under a
+`tours/` photo path, reachable or dangling. Whatever got briefly committed during
+the incident was never actually part of any commit that made it into a persisted
+ref — nothing to `git-filter-repo`/force-push here. (This can't rule out a
+third-party clone during the brief public window before the catch — that risk is
+outside what git-history inspection alone can bound — but the repository itself,
+as it stands live on GitHub today, is clean.)
 
 ## Correction (operator, 2026-08-09) — real, rights-cleared 2806 Prado data IS now in drone-hub's public samples — read the distinction below before touching this
 

@@ -10,7 +10,7 @@ parallel_rationale: bounded-slice
 
 description: |
   public/layer-viewer-samples/2806-prado/parcel.geojson's properties.note
-  field contains "Owner of record: Dostal Mathew B." — live right now,
+  field contains an "Owner of record: [full legal name]" phrase — live right now,
   publicly servable, on a property currently being sold. This goes beyond
   what's been authorized so far (imagery, telemetry, video) — a full legal
   name tied to an exact parcel boundary. Strip the owner-name phrase while
@@ -27,7 +27,7 @@ steps:
     description: Edit public/layer-viewer-samples/2806-prado/parcel.geojson's properties.note to remove the owner-name phrase only.
     agent: developer
   - id: test
-    description: Grep public/ recursively for "Dostal Mathew" (and case variants) to confirm this was the only occurrence.
+    description: Grep public/ recursively for the owner-name phrase (see git history for the exact original string) to confirm this was the only occurrence.
     agent: tester
     depends_on: [implement]
   - id: review
@@ -47,7 +47,7 @@ context:
 
 files_to_modify:
   - file: public/layer-viewer-samples/2806-prado/parcel.geojson
-    change: remove "Owner of record: Dostal Mathew B." from properties.note, keep everything else
+    change: remove the "Owner of record: [full legal name]" phrase from properties.note, keep everything else
 
 risks:
   - severity: low
@@ -59,6 +59,6 @@ references:
     relevant_excerpt: |
       "note": "Real Travis County Appraisal District parcel boundary
       (taxmaps.traviscountytx.gov), not a reconstruction approximation.
-      Owner of record: Dostal Mathew B. Legal: LOT 3 BLK 5 OLT 26-27 OLT
+      Owner of record: [full legal name]. Legal: LOT 3 BLK 5 OLT 26-27 OLT
       32-33 DIV A CHERNOSKY NO 12. Still not a substitute for a licensed
       survey."

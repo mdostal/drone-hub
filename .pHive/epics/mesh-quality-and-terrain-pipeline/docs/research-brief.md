@@ -52,13 +52,16 @@ fragments", "remove a wrong double-rotation, keep only the winding fix").
 ### A real, live privacy exposure found while researching this epic
 
 `public/layer-viewer-samples/2806-prado/parcel.geojson`'s `properties.note`
-field contains `"Owner of record: Dostal Mathew B."` — live right now at
+field contained an "Owner of record: [full legal name]" phrase — live right
+now at
 `drone-hub-rust.vercel.app/framework/layer-viewer-samples/2806-prado/parcel.geojson`,
 confirmed via a direct fetch. This goes beyond what's been discussed/
 authorized so far (imagery, telemetry, video) — a full legal name tied to an
 exact parcel boundary, publicly indexable, on a property currently being
 sold. In scope for this epic since it's touched by the parcel-crop story
-regardless.
+regardless. (Redacted here too, in this planning doc — see the
+open-source-release review that caught this doc still quoting the PII
+verbatim after the source file itself was fixed.)
 
 ### The neighbor's-house / "perfect boundary" ask
 

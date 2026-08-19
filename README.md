@@ -40,11 +40,15 @@ npm run dev
 ```
 
 Everything in this repo is public, ungated, and safe to browse — there is no
-passcode/auth layer of any kind here. All sample data (imagery, tours,
-terrain, flight logs) is synthetic/placeholder; this repo never contains
-real property content. (Real client-facing property data + access control
-live in the separate, private `personal-drone` platform, which pulls this
-repo in as its component library.)
+passcode/auth layer of any kind here. Most sample data (imagery, terrain,
+flight logs) is synthetic/placeholder. Some components ship real, rights-cleared
+sample data instead — flight telemetry, an OpenDroneMap photogrammetry
+reconstruction, and privacy-checked interior walkthrough video, all from the
+maintainer's own property, explicitly released for public use — never
+professional-shoot or third-party content, and never anything with people in it.
+(Real client-facing property data for other properties + its own access control
+live in the separate, private `personal-drone` platform, which pulls this repo
+in as its component library.)
 
 ## Testing
 
