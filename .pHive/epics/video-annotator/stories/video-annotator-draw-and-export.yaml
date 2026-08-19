@@ -1,0 +1,105 @@
+id: video-annotator-draw-and-export
+epic: video-annotator
+title: Drawing overlay (shapes/points/labels) + frame export
+status: pending
+complexity: medium
+methodology: classic
+depends_on: [video-annotator-core-player]
+
+description: |
+  Builds on video-annotator-core-player's <video> + zoom/pan wrapper
+  (already merged onto this branch) to add the "draw shapes/points/labels
+  over the video, export" half of CLAUDE.md's original <VideoAnnotator>
+  spec.
+
+  A <canvas> positioned exactly over the <video> element -- same
+  dimensions as the video's actual rendered box (not its intrinsic
+  decode resolution), resized on video metadata-load and window resize,
+  and re-positioned correctly when the video is zoomed/panned (from the
+  prior story). Drawing tools: point, rectangle, freehand line, and a
+  text/label tool, switched via a small toolbar matching this repo's
+  established panel styling (bg-surface/border-border/text-accent
+  tokens -- same visual language LayerViewer's AnnotationLayer toolbar
+  just shipped). A legend/list of placed annotations with a per-
+  annotation delete action.
+
+  Reuse components/Model3D/Model3D.tsx's proven click-vs-drag
+  disambiguation pattern (CLICK_MAX_MOVEMENT_PX / CLICK_MAX_DURATION_MS
+  constants, or equivalent) so a genuine draw-click isn't confused with a
+  pan-drag gesture when the video is zoomed in.
+
+  Props addition: `onAnnotationsChange?: (shapes: VideoAnnotation[]) =>
+  void` (no server-side persistence -- same no-backend posture every other
+  component in this repo already follows).
+
+  EXPORT SCOPE -- confirm before implementing, don't just inherit blindly:
+  this repo has no video-encoding library installed (no ffmpeg.wasm or
+  equivalent), and adding one would be a heavy new dependency at odds with
+  CLAUDE.md's Vercel-bandwidth-conscious stack posture. "Export" in scope
+  for this story means: composite the CURRENT video frame + all currently-
+  drawn annotations onto an offscreen canvas (draw the <video> element via
+  CanvasRenderingContext2D.drawImage, then replay the annotation shapes on
+  top) and download the result as a PNG via canvas.toBlob() + an anchor
+  download link. A full annotated-video re-export is explicitly OUT of
+  scope for this story -- confirm this is still the right call during your
+  own research step (a quick check for a genuinely lightweight video-export
+  approach is fine, but don't add ffmpeg.wasm or similar without flagging
+  it back as a real scope change first).
+
+acceptance_criteria:
+  - "Given the point/rectangle/freehand/label tool is active, when the user interacts with the canvas, then the corresponding annotation shape is drawn and appears in the legend/list"
+  - "Given the video is zoomed and panned (from the prior story's viewport transform), when an annotation is drawn, then it visually aligns with the correct point on the underlying video frame, not the un-zoomed coordinate space"
+  - "Given an annotation exists in the legend/list, when its delete action is clicked, then it's removed from both the canvas and the list"
+  - "Given onAnnotationsChange is provided, when annotations are added or removed, then it's called with the current full shape set"
+  - "Clicking Export downloads a PNG containing the current video frame composited with all currently-drawn annotations, verified by a real pixel/content check in a test, not just 'a download was triggered'"
+  - "A drag gesture used to pan the zoomed video (from the prior story) does not also place a stray annotation shape"
+
+steps:
+  - id: research
+    description: Read components/Model3D/Model3D.tsx's MeasureController click-vs-drag threshold pattern and components/LayerViewer's AnnotationLayer toolbar styling to mirror. Confirm the canvas-over-video positioning approach against the actual <video> element's rendered box (getBoundingClientRect, not videoWidth/videoHeight) so it stays correct at any zoom/pan/resize state. Confirm the PNG-only export scope decision above is still right.
+    agent: researcher
+  - id: implement
+    description: Implement the drawing overlay + export functionality on components/VideoAnnotator/VideoAnnotator.tsx.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write tests covering every acceptance criterion, including a real check of the exported PNG's content (e.g. reading back canvas pixel data or confirming the composite draw calls happened with correct arguments), not just that toBlob was called.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm click-vs-drag disambiguation genuinely works (pan doesn't leak a stray shape), annotation-to-video-frame alignment is correct under zoom/pan, and the export scope stayed PNG-only as decided.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/video-annotator.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VideoAnnotator/VideoAnnotator.tsx
+      purpose: The core player + zoom/pan wrapper this story builds on top of
+    - path: components/Model3D/Model3D.tsx
+      purpose: CLICK_MAX_MOVEMENT_PX/CLICK_MAX_DURATION_MS click-vs-drag pattern to reuse
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: AnnotationLayer's just-shipped toolbar/legend visual pattern to mirror
+
+files_to_modify:
+  - file: components/VideoAnnotator/VideoAnnotator.tsx
+    change: add the canvas drawing overlay, toolbar, legend, and export
+
+design_decisions:
+  - decision: Export is a composited PNG of the current frame + annotations, not a re-encoded annotated video
+    rationale: No video-encoding library is installed; adding one (e.g. ffmpeg.wasm) is a heavy dependency at odds with this repo's Vercel-bandwidth-conscious posture -- out of scope for this epic
+
+risks:
+  - severity: medium
+    description: Keeping annotation coordinates correctly aligned with the underlying video frame across zoom/pan/resize is a real geometry bug risk
+    mitigation: Acceptance criteria explicitly test alignment under a zoomed/panned state, not just the unzoomed default
+
+references:
+  - path: components/Model3D/Model3D.tsx
+    relevant_excerpt: |
+      const CLICK_MAX_MOVEMENT_PX = 6;
+      const CLICK_MAX_DURATION_MS = 500;
