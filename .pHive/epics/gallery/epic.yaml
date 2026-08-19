@@ -1,0 +1,15 @@
+name: gallery
+title: "<Gallery> component — plain shots carousel"
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: classic
+version_bump: minor
+
+stories:
+  - id: gallery-component-and-docs
+    title: Build <Gallery> component + tests + docs writeup
+    complexity: low
+    depends_on: []
+  - id: gallery-showcase-integration
+    title: Showcase page, docs route wiring, root ToC entry
+    complexity: low
+    depends_on: [gallery-component-and-docs]

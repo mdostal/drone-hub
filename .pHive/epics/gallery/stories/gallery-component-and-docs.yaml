@@ -1,0 +1,102 @@
+id: gallery-component-and-docs
+epic: gallery
+title: Build <Gallery> component + tests + docs writeup
+status: pending
+complexity: low
+methodology: classic
+depends_on: []
+
+description: |
+  Build the <Gallery> component -- the last unbuilt component from
+  CLAUDE.md's original Phase-1 MVP list ("<Gallery> -- plain shots
+  carousel (shadcn carousel -- trivial)"). embla-carousel-react ^8.3.0
+  has been an unused dependency in package.json since project scaffolding.
+
+  components/Gallery/Gallery.tsx: a thin wrapper around embla-carousel-react.
+  Props: `images: GalleryImage[]` where GalleryImage = {src: string, alt:
+  string, caption?: string}, optional `className`, optional `loop` (default
+  true). Deliberately narrow prop surface -- match this repo's established
+  "deliberately minimal props" convention (see components/Model3D/Model3D.tsx's
+  ModelDef doc comment for the do-not-list rationale pattern to follow, even
+  though this is a different component). No lazy-load/lightbox/zoom -- out
+  of scope for a "trivial" carousel per CLAUDE.md's own framing.
+
+  Keyboard-navigable (left/right arrow keys), visible prev/next buttons, dot
+  indicators showing current slide. Style with this repo's existing design
+  tokens (bg-surface/border-border/text-accent/text-foreground from
+  app/globals.css) -- match the visual language components/FileList/FileList.tsx
+  or components/VoxelTerrain's showcase chrome already uses, don't invent a
+  new visual style.
+
+  docs/components/gallery.md: write to the same template every other
+  docs/components/*.md file follows (read docs/components/voxel-terrain.md
+  or docs/components/model3d.md first for the exact section structure --
+  title, one-line description, props table, usage example, design notes).
+
+acceptance_criteria:
+  - "Given an array of 3+ images, when <Gallery> mounts, then all images render as carousel slides with prev/next navigation working via click and left/right arrow keys"
+  - "Given loop is omitted, when the carousel reaches the last slide and next is clicked, then it wraps to the first slide (default true)"
+  - "Given loop={false}, when the carousel reaches the last slide, then the next button is disabled rather than wrapping"
+  - "Dot indicators show the correct active-slide state and clicking a dot navigates directly to that slide"
+  - "docs/components/gallery.md exists and follows the same section structure as the other 7 docs/components/*.md files"
+  - "npm test passes with new Gallery tests included"
+
+steps:
+  - id: research
+    description: Read docs/components/voxel-terrain.md and components/FileList/FileList.tsx for the exact doc template and component-file conventions to match. Check app/globals.css for the exact token class names in use.
+    agent: researcher
+  - id: implement
+    description: Implement components/Gallery/Gallery.tsx (+ index.ts barrel) and docs/components/gallery.md per the description above.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write components/Gallery/Gallery.test.tsx covering every acceptance criterion above (slide render, click nav, keyboard nav, loop true/false, dot indicators). Run npm test and confirm it passes.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the prop surface stayed narrow (no scope creep beyond images/className/loop), tokens match existing components, and docs/components/gallery.md's structure matches its siblings.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/gallery.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/FileList/FileList.tsx
+      purpose: Closest-complexity sibling component -- a small, prop-driven display component with no WebGL/map dependency (mounts directly, no next/dynamic ssr:false needed)
+    - path: docs/components/voxel-terrain.md
+      purpose: Doc-writeup template to match exactly
+    - path: app/globals.css
+      purpose: Design tokens (bg-surface/border-border/text-accent/text-foreground) to reuse, not reinvent
+    - path: package.json
+      purpose: embla-carousel-react ^8.3.0 is already an installed, unused dependency -- do not add a different carousel library
+
+files_to_modify:
+  - file: components/Gallery/Gallery.tsx
+    change: new file -- the component
+  - file: components/Gallery/Gallery.test.tsx
+    change: new file -- tests
+  - file: components/Gallery/index.ts
+    change: new file -- barrel export
+  - file: docs/components/gallery.md
+    change: new file -- docs writeup
+
+design_decisions:
+  - decision: Reuse public/showcase-samples/2806-prado-tour/*.jpg for the showcase demo (next story), not new placeholder images
+    rationale: Already established as real, rights-cleared, public-appropriate sample data in this repo (used by <VideoTour>'s showcase) -- matches this repo's "real, not lorem-ipsum" sample-data convention
+
+risks:
+  - severity: low
+    description: Scope creep into lightbox/zoom/lazy-load beyond a "trivial" carousel
+    mitigation: Acceptance criteria and prop surface are explicitly bounded above
+
+references:
+  - path: components/Model3D/Model3D.tsx
+    relevant_excerpt: |
+      DELIBERATELY MINIMAL PROPS (per the original model3d epic's do_not list):
+      `ModelDef` is `{id, url, title}` plus one narrow, additive exception...
+      Still no scale/position/geo-anchoring *transform* fields; those stay
+      deferred... per the original rationale below.

@@ -47,3 +47,5 @@ public/property-samples/
 !.pHive/epics/tools-skill-layer/**
 !.pHive/epics/mesh-quality-and-terrain-pipeline/
 !.pHive/epics/mesh-quality-and-terrain-pipeline/**
+!.pHive/epics/gallery/
+!.pHive/epics/gallery/**

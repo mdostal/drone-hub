@@ -1,0 +1,85 @@
+id: gallery-showcase-integration
+epic: gallery
+title: Showcase page, docs route wiring, root ToC entry
+status: pending
+complexity: low
+methodology: classic
+depends_on: [gallery-component-and-docs]
+
+description: |
+  Wire the newly-built <Gallery> component (from gallery-component-and-docs)
+  into the showcase/docs site, matching every other shipped component's
+  integration pattern exactly.
+
+  1. app/(showcase)/components/gallery/page.tsx -- live demo + usage
+     snippet, same shape as app/(showcase)/components/voxel-terrain/page.tsx
+     (a <CopyButton>-wrapped code block showing the import + minimal usage).
+     Feed the live demo with the 8 real photos already in
+     public/showcase-samples/2806-prado-tour/*.jpg (entry/kitchen/living/
+     bedroom/bathroom/closet/hallway/garage/patio -- use withBasePath() for
+     each src per lib/base-path.ts's established convention, same as every
+     other showcase page's asset URLs).
+
+  2. app/(showcase)/docs/components/[slug]/page.tsx's generateStaticParams
+     hardcoded slug array: add "gallery". CRITICAL -- this MUST be a literal
+     array edit, never a readdirSync scan (docs/components/reference/ would
+     throw EISDIR -- established constraint, see framework-docs-site epic's
+     design-discussion.md for the original incident this rule prevents).
+
+  3. app/page.tsx's TocEntry[] array: add the 8th entry (name: "Gallery",
+     description drawn from docs/components/gallery.md's one-line summary,
+     demoHref: the new showcase route, docHref: the new docs route).
+
+acceptance_criteria:
+  - "Given a fresh npm run build, when it completes, then /components/gallery and /docs/components/gallery both render with zero errors (this specifically catches the generateStaticParams-forgot-the-slug failure mode -- a build check, not just npm run dev)"
+  - "The root / page lists Gallery as an 8th ToC entry, linking to both its live demo and its docs page, matching the existing 7 entries' visual/structural pattern exactly"
+  - "The live demo on /components/gallery renders all 8 real 2806-prado-tour photos, navigable via the carousel"
+  - "npm test still passes (existing page.test.tsx-style regression guard pattern -- check whether other showcase pages have a page.test.tsx asserting their route renders/mentions expected content, and add one for gallery if that's the established pattern)"
+
+steps:
+  - id: implement
+    description: Implement the three integration points described above.
+    agent: developer
+  - id: test
+    description: Run npm run build (not just npm run dev) to catch the generateStaticParams slug-array failure mode, and npm test. Fix and re-run if either fails.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm all three integration points match their siblings' exact pattern (no divergent structure), and that the build-time check in acceptance criteria actually ran (not just dev-server smoke test).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/gallery, then merge to master (no other epic depends on this staying unmerged).
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: app/(showcase)/components/voxel-terrain/page.tsx
+      purpose: Showcase page pattern to match exactly (live demo + CopyButton usage snippet)
+    - path: "app/(showcase)/docs/components/[slug]/page.tsx"
+      purpose: Contains the hardcoded generateStaticParams slug array -- add "gallery" here, never switch this to a readdirSync scan
+    - path: app/page.tsx
+      purpose: Root ToC -- TocEntry[] array gets the 8th entry
+    - path: lib/base-path.ts
+      purpose: withBasePath() helper -- every showcase page's sample-asset src attributes must use this, not a raw string, per the real basePath bug fixed earlier in this repo's history
+
+files_to_modify:
+  - file: app/(showcase)/components/gallery/page.tsx
+    change: new file -- showcase demo page
+  - file: "app/(showcase)/docs/components/[slug]/page.tsx"
+    change: add "gallery" to the hardcoded generateStaticParams slug array
+  - file: app/page.tsx
+    change: add Gallery as the 8th TocEntry
+
+risks:
+  - severity: medium
+    description: Forgetting the generateStaticParams slug-array entry produces a working /components/gallery demo but a silent 404 on /docs/components/gallery, only caught by a real production build, not npm run dev
+    mitigation: Acceptance criteria explicitly requires npm run build as the verification step, not just dev-server smoke test
+
+references:
+  - path: "app/(showcase)/docs/components/[slug]/page.tsx"
+    relevant_excerpt: |
+      generateStaticParams must use a hardcoded literal slug array, never a
+      readdirSync scan -- docs/components/reference/ would throw EISDIR.
