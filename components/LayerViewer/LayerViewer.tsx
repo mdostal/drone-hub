@@ -1,12 +1,13 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 // Type-only imports — erased entirely at compile time (isolatedModules
 // requires the explicit `type` keyword for that erasure to be guaranteed).
 // Deliberately NOT a value import: see loadMapLibreModules() below for why
 // the actual `maplibre-gl` / cog-protocol modules are loaded lazily inside
 // an effect instead of at module scope.
 import type {
+  GeoJSONSource,
   LayerSpecification,
   Map as MapLibreMap,
   RasterTileSource,
@@ -27,6 +28,12 @@ import type { GeoAnchoredModel } from "@/lib/geo-model-types";
 // createModelLayer here has no module-load-time side effect and doesn't
 // need the loadMapLibreModules()-style lazy-import treatment.
 import { createModelLayer } from "@/lib/maplibre-model-layer";
+// Also a real value import, also safe at module scope: @turf/turf's
+// distance() is pure geodesic math (haversine over a mean Earth radius) —
+// no `Worker`/`window`/WebGL touched at all, unlike the maplibre-gl/
+// cog-protocol modules above, so it needs none of loadMapLibreModules()'s
+// lazy-import treatment.
+import { distance as turfDistance } from "@turf/turf";
 import { cx } from "./cx";
 
 /**
@@ -71,6 +78,28 @@ const ESRI_ATTRIBUTION = "Esri, Maxar, Earthstar Geographics, and the GIS User C
 
 const BASEMAP_SOURCE_ID = "esri-world-imagery";
 const BASEMAP_LAYER_ID = "esri-world-imagery-layer";
+
+// Measure tool (this epic's MeasureTool -- see this file's header comment
+// for the state-ownership rationale) -- a single GeoJSON source holding
+// 0-2 placed Point features plus (once both are placed) one connecting
+// LineString feature, backing two MapLibre layers below. One source shared
+// by both layers rather than one source per layer: a `circle` layer only
+// ever renders Point/MultiPoint geometry from its source and a `line`
+// layer only ever renders LineString/MultiLineString geometry, so mixing
+// both feature types in one source is safe -- each layer simply ignores
+// the geometry type it doesn't draw.
+const MEASURE_SOURCE_ID = "layerviewer-measure";
+const MEASURE_POINTS_LAYER_ID = "layerviewer-measure-points";
+const MEASURE_LINE_LAYER_ID = "layerviewer-measure-line";
+/** Accent color for the measure tool's point/line MapLibre paint
+ *  properties -- this epic's design token (app/globals.css's
+ *  --color-accent, #e8590c). Hardcoded rather than read from CSS because
+ *  these are MapLibre GL paint values, not DOM/Tailwind classes -- MapLibre
+ *  has no notion of a CSS custom property. Keep in sync with --color-accent
+ *  if that token's value ever changes. Mirrors components/Model3D/
+ *  Model3D.tsx's identical MEASURE_ACCENT_COLOR constant/rationale, for
+ *  cross-component consistency of the measure tool's look. */
+const MEASURE_ACCENT_COLOR = "#e8590c";
 
 function mapSourceId(layerId: string): string {
   return `layer-${layerId}`;
@@ -267,6 +296,68 @@ function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
   }
 }
 
+/** A single measure-tool point, in geographic (not screen-pixel)
+ *  coordinates — lng/lat plain fields (not MapLibre's own `LngLat` class
+ *  instance) so this stays a plain, serializable value with no MapLibre
+ *  dependency, same "bare {x,y,z}, not THREE.Vector3" precedent as
+ *  components/Model3D/Model3D.tsx's `Point3`. */
+export interface MeasurePoint {
+  lng: number;
+  lat: number;
+}
+
+/** Real great-circle distance between two measure points, in meters —
+ *  `@turf/turf`'s `distance()` (haversine over a mean Earth radius), NOT
+ *  naive screen-pixel distance, which would be meaningless at different
+ *  zoom levels (CBA's own rationale for this tool). Pure and
+ *  MapLibre-independent — see LayerViewer.test.tsx for a numeric check
+ *  against a known real-world coordinate pair (not part of <LayerViewer>'s
+ *  public API; not re-exported from index.ts, same precedent as
+ *  buildLayerMapConfig/resolveManifest above). */
+export function measureDistanceMeters(a: MeasurePoint, b: MeasurePoint): number {
+  return turfDistance([a.lng, a.lat], [b.lng, b.lat], { units: "meters" });
+}
+
+/** Formats a meters distance for the measure tool's floating label — meters
+ *  to 1 decimal place under 1000m, kilometers to 2 decimals at/above
+ *  1000m. Mirrors components/Model3D/Model3D.tsx's `formatDistance()`
+ *  smart-unit-formatting precedent (there: raw units vs. real meters given
+ *  an optional scale hint; here: meters vs. km, since real-world distance
+ *  is always known on a georeferenced map — there's no "no known scale"
+ *  case to guard against). */
+export function formatMeasureDistance(meters: number): string {
+  if (meters >= 1000) {
+    return `${(meters / 1000).toFixed(2)} km`;
+  }
+  return `${meters.toFixed(1)} m`;
+}
+
+/** Builds the GeoJSON FeatureCollection the measure tool's MapLibre source
+ *  (MEASURE_SOURCE_ID) is kept in sync with: one Point feature per placed
+ *  point, plus — once both points are placed — one LineString feature
+ *  connecting them. Pure and MapLibre-independent — see
+ *  LayerViewer.test.tsx for direct unit coverage, same "pull pure logic
+ *  out of the browser-API-dependent shell" precedent as
+ *  buildLayerMapConfig/resolveManifest above. */
+export function buildMeasureFeatureCollection(points: MeasurePoint[]): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = points.map((point) => ({
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [point.lng, point.lat] as [number, number] },
+    properties: {},
+  }));
+  if (points.length === 2) {
+    features.push({
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: points.map((point) => [point.lng, point.lat] as [number, number]),
+      },
+      properties: {},
+    });
+  }
+  return { type: "FeatureCollection", features };
+}
+
 /** Pure(ish) manifest resolution: given a `PropertyLayers | string` prop
  *  value, returns the resolved `PropertyLayers` — fetching + parsing JSON
  *  if given a URL string, or resolving immediately with the object as-is.
@@ -426,6 +517,61 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   }, [models]);
   const addedModelIdsRef = useRef<Set<string>>(new Set());
 
+  // Measure tool (this epic's MeasureTool — see MEASURE_SOURCE_ID's own
+  // comment for the shared-source rationale). `measurePoints` is the
+  // source of truth (0-2 points); `measureMode` gates whether a map click
+  // places a new point at all — the map's normal pan/zoom/click behavior
+  // is otherwise completely unaffected. Mirrors components/Model3D/
+  // Model3D.tsx's measureMode/points state and "a third click clears the
+  // old measurement and starts fresh at the new point" behavior, for
+  // cross-component UX consistency.
+  const [measureMode, setMeasureMode] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState<MeasurePoint[]>([]);
+  // Screen-pixel position of the floating distance label
+  // (`map.project()`'d from the two points' midpoint), recomputed on every
+  // 'move' (pan/zoom/rotate) so the label tracks the map instead of
+  // drifting. Deliberately NOT a `maplibregl.Popup` — a Popup's own default
+  // chrome (white background, tip arrow, close button) would have to be
+  // fought/overridden to use this epic's design tokens (bg-surface/
+  // border-border/text-accent, matching <LayerControl>'s panel look)
+  // instead of just applying them directly to a plain positioned div, the
+  // same way Model3D's drei-<Html>-based label does.
+  const [measureLabelPos, setMeasureLabelPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Read by the map's 'click' listener (registered once, at map
+  // construction, see the map-creation effect below) without needing
+  // `measureMode` in that effect's dependency array — same "avoid stale
+  // closures via a ref" pattern as layersRef/modelsRef above.
+  const measureModeRef = useRef(measureMode);
+  useEffect(() => {
+    measureModeRef.current = measureMode;
+  }, [measureMode]);
+  // Read by updateMeasureLabelPosition (below) so that callback can stay a
+  // stable identity (empty deps) while still always reading the CURRENT
+  // points — same pattern as layersRef.
+  const measurePointsRef = useRef<MeasurePoint[]>([]);
+  useEffect(() => {
+    measurePointsRef.current = measurePoints;
+  }, [measurePoints]);
+
+  // Recomputes measureLabelPos from the CURRENT measurePoints (via the ref
+  // above). Called both from the map's 'move' listener (registered once at
+  // map construction, so it needs a stable function identity) and directly
+  // whenever measurePoints itself changes (the sync effect below) — panning
+  // isn't the only thing that should reposition/hide the label; placing or
+  // clearing points must too.
+  const updateMeasureLabelPosition = useCallback(() => {
+    const map = mapRef.current;
+    const points = measurePointsRef.current;
+    if (!map || points.length !== 2) {
+      setMeasureLabelPos(null);
+      return;
+    }
+    const midpoint = { lng: (points[0].lng + points[1].lng) / 2, lat: (points[0].lat + points[1].lat) / 2 };
+    const projected = map.project([midpoint.lng, midpoint.lat]);
+    setMeasureLabelPos({ x: projected.x, y: projected.y });
+  }, []);
+
   // Latest callbacks, read from effects without re-firing just because the
   // caller passed a new inline function each render (same pattern as
   // VideoTour's onRoomChangeRef).
@@ -510,6 +656,22 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
     }
   }, [layers, propertyLayers]);
 
+  // Sync the measure tool's placed points onto the map: rebuild the
+  // MEASURE_SOURCE_ID GeoJSON source's data (buildMeasureFeatureCollection
+  // above) and reposition the floating distance label. Guarded on
+  // mapReadyRef same as the layers-sync effect above — no-op before the
+  // map's 'load' has fired; the 'load' handler below re-syncs from
+  // measurePointsRef.current for exactly the same "a click landed before
+  // load fired" reason layersRef gets a re-sync there.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && mapReadyRef.current) {
+      const source = map.getSource(MEASURE_SOURCE_ID) as GeoJSONSource | undefined;
+      source?.setData(buildMeasureFeatureCollection(measurePoints));
+    }
+    updateMeasureLabelPosition();
+  }, [measurePoints, updateMeasureLabelPosition]);
+
   // Create the map exactly once, as soon as the manifest has resolved and
   // the container div exists. Adds the Esri satellite basemap immediately,
   // then (on 'load') each non-disabled layer's initial source/layer.
@@ -554,6 +716,20 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       });
       mapRef.current = map;
 
+      // Measure tool: registered here (not inside 'load') so a genuine
+      // click landing between map construction and 'load' firing isn't
+      // lost — the 'load' handler below re-syncs the map's measure source
+      // from measurePointsRef.current for exactly that reason, same
+      // precedent as layersRef's own re-sync there. Placement is gated on
+      // measureModeRef.current (not a stale `measureMode` closure) so
+      // toggling Measure on/off never needs this listener re-registered.
+      map.on("click", (e) => {
+        if (!measureModeRef.current) return;
+        const { lng, lat } = e.lngLat;
+        setMeasurePoints((prev) => (prev.length >= 2 ? [{ lng, lat }] : [...prev, { lng, lat }]));
+      });
+      map.on("move", updateMeasureLabelPosition);
+
       map.on("load", () => {
         for (const layer of layersRef.current) {
           // disabled:true → NO MapLibre source/layer added at all. Real
@@ -571,12 +747,46 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           map.addLayer(createModelLayer(model));
           addedModelIdsRef.current.add(model.id);
         }
+        // Measure tool's own GeoJSON source + point/line layers — added
+        // once here (not lazily on first click) so MEASURE_SOURCE_ID
+        // always exists for the sync effect above to setData() against.
+        // Added AFTER the property/model layers so measure markers/line
+        // render on top of the imagery/models a user is actively
+        // measuring against.
+        map.addSource(MEASURE_SOURCE_ID, {
+          type: "geojson",
+          data: buildMeasureFeatureCollection(measurePointsRef.current),
+        });
+        map.addLayer({
+          id: MEASURE_LINE_LAYER_ID,
+          type: "line",
+          source: MEASURE_SOURCE_ID,
+          paint: { "line-color": MEASURE_ACCENT_COLOR, "line-width": 2 },
+        });
+        map.addLayer({
+          id: MEASURE_POINTS_LAYER_ID,
+          type: "circle",
+          source: MEASURE_SOURCE_ID,
+          paint: {
+            "circle-radius": 5,
+            "circle-color": MEASURE_ACCENT_COLOR,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
         mapReadyRef.current = true;
         // Re-sync in case a toggle/opacity change (via the imperative handle)
         // landed between map construction and 'load' firing.
         for (const layer of layersRef.current) {
           updateLayerOnMap(map, layer);
         }
+        // Same re-sync for the measure tool: a click landing between map
+        // construction and 'load' firing already updated React state (and
+        // therefore measurePointsRef.current), but the source didn't exist
+        // yet for the sync effect above to write into.
+        const measureSource = map.getSource(MEASURE_SOURCE_ID) as GeoJSONSource | undefined;
+        measureSource?.setData(buildMeasureFeatureCollection(measurePointsRef.current));
+        updateMeasureLabelPosition();
       });
 
       // Auto-fit the view to the first raster/cog layer's real geographic
@@ -614,7 +824,7 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       mapReadyRef.current = false;
       firstFitDoneRef.current = false;
     };
-  }, [propertyLayers]);
+  }, [propertyLayers, updateMeasureLabelPosition]);
 
   // Add/remove model layers on every `models` prop change, once the map is
   // ready. Diffed by id against addedModelIdsRef so an already-added entry
@@ -707,6 +917,78 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           height instead of filling the viewport). Percentage sizing via
           h-full/w-full doesn't depend on which position scheme wins. */}
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
+
+      {/* Measure tool floating distance label — screen-pixel positioned via
+          measureLabelPos (see that state's own comment for why this is a
+          plain div, not a maplibregl.Popup). pointer-events-none so it
+          never intercepts map clicks — a third click landing under the
+          label should still reset the measurement, not be swallowed by it.
+          Styled to match Model3D's own floating measure label exactly
+          (rounded-md border border-border bg-surface/90 ... text-accent
+          shadow-lg) for cross-component consistency. */}
+      {measureLabelPos && measurePoints.length === 2 && (
+        <div
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-surface/90 px-2 py-1 text-xs font-medium text-accent shadow-lg"
+          style={{ left: measureLabelPos.x, top: measureLabelPos.y }}
+        >
+          {formatMeasureDistance(measureDistanceMeters(measurePoints[0], measurePoints[1]))}
+        </div>
+      )}
+
+      {/* Measure tool panel — toggle + legend + Clear action, styled with
+          the same design tokens <LayerControl> uses for its own panel
+          (bg-surface/90, border-border, rounded-xl, backdrop-blur — see
+          LayerControl.tsx). Positioned bottom-left, deliberately not
+          top-right: this repo's own showcase page places a
+          consumer-rendered <LayerControl> + Fullscreen button top-right
+          (app/(showcase)/components/layer-viewer/page.tsx) and this panel
+          is <LayerViewer>'s own internal chrome, not something a consumer
+          arranges — bottom-left avoids colliding with that common layout
+          without requiring every consumer to coordinate placement. The
+          toggle/legend/Clear interaction pattern itself mirrors
+          components/Model3D/Model3D.tsx's own measure-tool panel exactly
+          (see that file's header comment) for cross-component UX
+          consistency. */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute bottom-3 left-3 flex w-56 flex-col gap-2 rounded-xl border border-border bg-surface/90 p-3 text-xs text-foreground shadow-lg backdrop-blur">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium">Measure</span>
+            <button
+              type="button"
+              onClick={() => setMeasureMode((prev) => !prev)}
+              aria-pressed={measureMode}
+              className={cx(
+                "rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
+                measureMode
+                  ? "border-accent bg-accent text-white"
+                  : "border-border text-foreground hover:border-accent hover:text-accent",
+              )}
+            >
+              {measureMode ? "Measure: On" : "Measure"}
+            </button>
+          </div>
+          <ul className="flex flex-col gap-1 text-muted">
+            {measureMode ? (
+              <>
+                <li className="text-accent">Click two points to measure</li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setMeasurePoints([])}
+                    disabled={measurePoints.length === 0}
+                    className="text-foreground underline decoration-dotted underline-offset-2 disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+                  >
+                    Clear measurement
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>Toggle Measure to place points</li>
+            )}
+          </ul>
+        </div>
+      </div>
+
       {showLoading && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-sm text-white">
           Loading layers…
