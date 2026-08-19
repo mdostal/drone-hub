@@ -1,7 +1,7 @@
 id: video-annotator-core-player
 epic: video-annotator
 title: Core player -- video playback, scrub, zoom/pan
-status: pending
+status: complete
 complexity: medium
 methodology: classic
 depends_on: []
