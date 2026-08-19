@@ -49,6 +49,7 @@ const NAV_ITEMS = [
   { name: "ProcessingStatus", href: "/components/processing-status" },
   { name: "FlightCoverageAnalyzer", href: "/components/flight-coverage-analyzer" },
   { name: "TourBuilder", href: "/components/tour-builder" },
+  { name: "Gallery", href: "/components/gallery" },
 ] as const;
 
 export default function ShowcaseLayout({ children }: { children: ReactNode }) {

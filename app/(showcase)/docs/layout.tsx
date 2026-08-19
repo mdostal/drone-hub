@@ -44,6 +44,7 @@ const DOCS_SECTIONS: DocsSidebarSection[] = [
       { name: "ProcessingStatus", href: "/docs/components/processing-status" },
       { name: "FlightCoverageAnalyzer", href: "/docs/components/flight-coverage-analyzer" },
       { name: "TourBuilder", href: "/docs/components/tour-builder" },
+      { name: "Gallery", href: "/docs/components/gallery" },
     ],
   },
 ];

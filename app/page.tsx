@@ -118,6 +118,13 @@ const TOC: TocEntry[] = [
     demoLabel: "Live demo",
     docHref: "/docs/components/tour-builder",
   },
+  {
+    name: "Gallery",
+    description: "A trivial, embla-backed plain shots carousel — prev/next, arrow-key nav, and dot indicators over a fixed image list.",
+    demoHref: "/components/gallery",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/gallery",
+  },
 ];
 
 export default function Home() {

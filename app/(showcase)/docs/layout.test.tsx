@@ -31,6 +31,7 @@ describe("<DocsLayout>", () => {
       "ProcessingStatus",
       "FlightCoverageAnalyzer",
       "TourBuilder",
+      "Gallery",
     ]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }

@@ -17,7 +17,7 @@ import DocPage, { generateStaticParams } from "./page";
 const DOCS_DIR = path.join(process.cwd(), "docs", "components");
 
 describe("generateStaticParams", () => {
-  it("returns exactly the 12 hardcoded known slugs, not a directory scan", () => {
+  it("returns exactly the 13 hardcoded known slugs, not a directory scan", () => {
     // The hard constraint this story exists to enforce: a literal array,
     // not fs.readdirSync(DOCS_DIR). docs/components/ used to also contain a
     // reference/ subdirectory (removed 2026-08-08 — it held a prototype
@@ -45,6 +45,7 @@ describe("generateStaticParams", () => {
       { slug: "processing-status" },
       { slug: "flight-coverage-analyzer" },
       { slug: "tour-builder" },
+      { slug: "gallery" },
     ]);
   });
 
