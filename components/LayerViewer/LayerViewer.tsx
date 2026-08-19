@@ -104,12 +104,17 @@ import { cx } from "./cx";
  * idiomatic fit here.
  */
 
-const ESRI_WORLD_IMAGERY_URL =
+// Exported (not just module-local) so this epic's <CompareSwipe> (see its
+// own header comment for why) can build its two comparison panes' basemap
+// identically to this main map's own — same Esri imagery, same attribution
+// — without duplicating these literals and risking drift if they ever
+// change. Pure `export` additions; the values/behavior here are unchanged.
+export const ESRI_WORLD_IMAGERY_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const ESRI_ATTRIBUTION = "Esri, Maxar, Earthstar Geographics, and the GIS User Community";
+export const ESRI_ATTRIBUTION = "Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 
-const BASEMAP_SOURCE_ID = "esri-world-imagery";
-const BASEMAP_LAYER_ID = "esri-world-imagery-layer";
+export const BASEMAP_SOURCE_ID = "esri-world-imagery";
+export const BASEMAP_LAYER_ID = "esri-world-imagery-layer";
 
 // Measure tool (this epic's MeasureTool -- see this file's header comment
 // for the state-ownership rationale) -- a single GeoJSON source holding
@@ -197,7 +202,14 @@ function cogSourceUrl(url: string): string {
 let mapLibreModulesPromise: Promise<{ Map: typeof MapLibreMap }> | null = null;
 let cogProtocolRegistered = false;
 
-function loadMapLibreModules() {
+// Exported so this epic's <CompareSwipe> (its own two comparison-pane map
+// instances, constructed the same lazy way) can share this SAME
+// module-scoped promise cache / addProtocol-once guard instead of running
+// its own separate copy — avoids double-registering the "cog" protocol and
+// avoids a second, redundant dynamic import of "maplibre-gl" when both
+// components are mounted together. No behavior change for existing
+// callers (still the same function, same cache).
+export function loadMapLibreModules() {
   if (!mapLibreModulesPromise) {
     mapLibreModulesPromise = Promise.all([
       import("maplibre-gl"),
@@ -334,8 +346,15 @@ function addLayerToMap(map: MapLibreMap, layer: LayerDef) {
 
 /** Pushes a LayerDef's current toggle/opacity onto its already-added
  *  MapLibre layer(s). No-op if the layer's map layer doesn't exist yet
- *  (not added yet) or the layer is disabled (never had one added). */
-function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
+ *  (not added yet) or the layer is disabled (never had one added).
+ *
+ *  Exported so this epic's <CompareSwipe> can keep its two comparison
+ *  panes' opacity live-synced with the registry (e.g. a consumer's
+ *  <LayerControl> opacity slider) using the exact same paint-property
+ *  update path this file's own layers-sync effect uses below — not a
+ *  second, parallel implementation of "how to push a LayerDef onto a
+ *  MapLibre layer" that could drift from this one. */
+export function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
   if (layer.disabled) return;
   const visibility = layer.toggle ? "visible" : "none";
 

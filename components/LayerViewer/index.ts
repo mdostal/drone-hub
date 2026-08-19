@@ -23,6 +23,15 @@ export { LayerViewer } from "./LayerViewer";
 export type { LayerViewerProps, LayerViewerHandle } from "./LayerViewer";
 export { LayerControl } from "./LayerControl";
 export type { LayerControlProps } from "./LayerControl";
+// <CompareSwipe> — layerviewer-phase2-tools epic's swipe/compare divider.
+// A THIRD independent sibling (same pattern as LayerControl above): pass it
+// the SAME `viewerRef` given to <LayerViewer> plus the current `layers`
+// array (e.g. from onLayersChange) and two layer ids to compare. See
+// CompareSwipe.tsx's own header comment for the researched rationale on
+// why it's built the way it is (two of its own camera-synced map
+// instances + CSS clip-path — the real MapLibre-native swipe technique).
+export { CompareSwipe } from "./CompareSwipe";
+export type { CompareSwipeProps } from "./CompareSwipe";
 
 // Re-export the manifest types consumers need to build a PropertyLayers
 // manifest or type these components' props, so importers don't also need
