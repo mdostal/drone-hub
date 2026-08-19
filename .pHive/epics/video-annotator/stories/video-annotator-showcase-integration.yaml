@@ -1,7 +1,7 @@
 id: video-annotator-showcase-integration
 epic: video-annotator
 title: Docs, showcase page, root ToC entry
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [video-annotator-draw-and-export]
