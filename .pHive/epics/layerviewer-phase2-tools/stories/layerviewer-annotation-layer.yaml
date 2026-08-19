@@ -1,7 +1,7 @@
 id: layerviewer-annotation-layer
 epic: layerviewer-phase2-tools
 title: AnnotationLayer -- terra-draw point/line/polygon/freehand drawing
-status: pending
+status: complete
 complexity: medium
 methodology: classic
 depends_on: []
