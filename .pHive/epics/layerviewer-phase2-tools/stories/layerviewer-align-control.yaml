@@ -1,0 +1,88 @@
+id: layerviewer-align-control
+epic: layerviewer-phase2-tools
+title: AlignControl -- manual lat/lng nudge for no-RTK drift correction
+status: pending
+complexity: low
+methodology: classic
+depends_on: []
+
+description: |
+  CLAUDE.md's Phase-0 section flags this as load-bearing, not optional:
+  "His drone shots today are obliques... no RTK = 1-3m drift ->
+  AlignControl manual nudge is mandatory." Every georeferenced raster layer
+  in LayerViewer today (ortho/hillshade/thermal/lidar_hillshade) has no way
+  to correct for this real, known drift against the satellite base map.
+
+  Build a small control panel (matching LayerControl's visual style) with:
+  a layer selector (which registered layer is being nudged), four arrow
+  buttons (or a drag handle) to nudge that layer's rendering by small
+  lat/lng deltas, a numeric readout of the current offset in meters
+  (north/east), and a "Reset" action that zeros the offset. Offset state
+  lives in LayerViewer's own React state -- no persistence (same
+  "consuming app owns persistence" posture as AnnotationLayer) via an
+  optional `onAlignmentChange?: (layerId: string, offsetMeters: {north: number, east: number}) => void` prop.
+
+  The actual re-rendering mechanism: apply the offset to the layer's
+  georeferencing (e.g. via the COG/raster source's coordinate transform,
+  or a MapLibre GL `translate`-style paint property if the layer type
+  supports one -- confirm the correct mechanism for THIS repo's actual
+  raster layer implementation, likely @geomatico/maplibre-cog-protocol
+  or PMTiles-backed sources, during research; don't assume a generic
+  "translate" property exists without checking).
+
+acceptance_criteria:
+  - "Given a layer is selected in AlignControl, when an arrow button is clicked, then that layer's rendered position visibly shifts by a small, consistent real-world distance (verify the actual meters-per-click value is documented, not arbitrary)"
+  - "The numeric offset readout accurately reflects the cumulative nudge applied (in meters, north/east) -- verified by a real coordinate-math unit test, not just visual inspection"
+  - "Reset zeroes the offset and visibly restores the layer to its original registered position"
+  - "onAlignmentChange, when provided, is called with the correct layerId and offsetMeters on every nudge and on reset"
+  - "Nudging one layer does not affect any other layer's position"
+
+steps:
+  - id: research
+    description: Confirm the actual mechanism this repo's raster layers use for positioning (check components/LayerViewer/LayerViewer.tsx's layer-rendering code for how ortho/hillshade/thermal sources are added to the MapLibre map -- COG protocol source, PMTiles source, or plain raster source) and determine the correct way to apply a small lat/lng offset to that specific source type without breaking its existing rendering.
+    agent: researcher
+  - id: implement
+    description: Implement AlignControl (likely components/LayerViewer/AlignControl.tsx) + the offset-application mechanism confirmed by research, integrated into LayerViewer.tsx and LayerControl.tsx's existing panel.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write tests covering every acceptance criterion, including a real numeric check that the offset-to-meters math is correct (not just "state changed").
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the offset mechanism matches what research found for this repo's actual layer-source types, and that per-layer isolation (nudging one doesn't affect others) is genuinely correct.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/layerviewer-phase2-tools.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: Owns the existing raster layer registration/rendering this control needs to offset
+    - path: components/LayerViewer/LayerControl.tsx
+      purpose: Existing panel this control's UI should visually integrate alongside
+
+files_to_modify:
+  - file: components/LayerViewer/AlignControl.tsx
+    change: new file
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: integrate AlignControl + apply per-layer offset to rendering
+
+design_decisions:
+  - decision: No persistence -- expose onAlignmentChange for a consuming app to own it
+    rationale: Same no-backend-in-the-bundle posture as AnnotationLayer's onAnnotationsChange
+
+risks:
+  - severity: low
+    description: The exact mechanism to offset a COG/PMTiles-backed raster source's rendered position may not be a simple documented "translate" property
+    mitigation: Research step confirms the real mechanism against this repo's actual layer implementation before implementation starts
+
+references:
+  - path: CLAUDE.md
+    relevant_excerpt: |
+      Frame all output as visual property-intelligence, NOT survey-grade
+      (no RTK = 1-3m drift -> AlignControl manual nudge is mandatory).

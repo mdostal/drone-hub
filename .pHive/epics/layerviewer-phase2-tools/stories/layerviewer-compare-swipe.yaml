@@ -1,0 +1,75 @@
+id: layerviewer-compare-swipe
+epic: layerviewer-phase2-tools
+title: CompareSwipe -- swipe divider comparing two layers side by side
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+
+description: |
+  CLAUDE.md's original LayerViewer spec: "Compare two dates/datasets side
+  by side." A draggable vertical divider over the map -- left of the
+  divider renders one layer, right renders another (e.g. ortho vs.
+  hillshade today; two dates once a consuming app supplies dated layers).
+
+  REAL OPEN QUESTION, not a solved pattern already in this codebase: the
+  correct MapLibre-GL-native technique for a swipe compare. The closest
+  public precedent (`mapbox-gl-compare`) is built for Mapbox GL JS, not
+  MapLibre GL -- confirm during research whether it (or a maplibre fork of
+  it) is real, maintained, and MapLibre-compatible, OR whether the correct
+  approach is a CSS clip-path over two full map instances (heavier: two
+  live MapLibre GL contexts), OR a shared single map instance with two
+  paint-layer variants clipped via a runtime-updated fill-based mask. Do
+  the research before committing to an implementation -- this is flagged
+  explicitly as a real unknown in the epic's own design-discussion.md,
+  not something to guess at.
+
+  Props: `layerA: string` / `layerB: string` (layer IDs from the existing
+  layer registry), a draggable divider (mouse + touch), and the divider
+  position exposed as a controlled/uncontrolled percentage (0-100).
+
+acceptance_criteria:
+  - "Given two valid layer IDs, when CompareSwipe is active, then layer A renders left of the divider and layer B renders right of it"
+  - "Given the divider is dragged, when released, then the split position updates to match the drag position (mouse AND touch input both work)"
+  - "Given the divider is at 0% or 100%, then only one layer is fully visible (the boundary cases render correctly, not a broken/blank state)"
+  - "Toggling CompareSwipe off restores LayerViewer's normal independent per-layer opacity/toggle behavior with no leftover clip/mask artifacts"
+
+steps:
+  - id: research
+    description: Determine the real, correct MapLibre-GL-native swipe-compare technique (see the "real open question" in the description above) before writing any implementation code. Check MapLibre GL's own docs/examples for a supported clip/compare pattern, and check whether a maintained MapLibre-compatible swipe-compare library exists vs. needing a from-scratch CSS clip-path or paint-property approach.
+    agent: researcher
+  - id: implement
+    description: Implement CompareSwipe (likely components/LayerViewer/CompareSwipe.tsx) using whichever technique the research step confirmed is correct for MapLibre GL, integrated into LayerViewer.tsx.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write tests covering every acceptance criterion, including the 0%/100% boundary cases explicitly.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the implementation technique matches what research actually found (not a shortcut that diverges from the researched approach), and that toggling off leaves no visual artifacts.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/layerviewer-phase2-tools.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: Owns the map instance and the existing layer registry/toggle state CompareSwipe needs to read layer IDs from
+
+files_to_modify:
+  - file: components/LayerViewer/CompareSwipe.tsx
+    change: new file
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: integrate CompareSwipe
+
+risks:
+  - severity: medium
+    description: The correct MapLibre-native swipe-compare technique is genuinely unknown at planning time -- guessing wrong could mean a rebuild mid-story
+    mitigation: Research step is explicitly sequenced first and must confirm the technique before implementation starts, not discover the wrong approach mid-implementation
+
+references: []

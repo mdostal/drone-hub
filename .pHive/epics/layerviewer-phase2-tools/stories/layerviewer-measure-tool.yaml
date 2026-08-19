@@ -1,0 +1,95 @@
+id: layerviewer-measure-tool
+epic: layerviewer-phase2-tools
+title: MeasureTool -- click-to-measure real-world distance on the map
+status: pending
+complexity: medium
+methodology: classic
+depends_on: []
+
+description: |
+  CBA's original LayerViewer Phase 2 plan lists MeasureTool as one of four
+  still-missing tools (Measure/Annotate/Compare/Align). components/Model3D/
+  Model3D.tsx already ships a real measure tool for the 3D viewer -- match
+  its UX pattern for LayerViewer's 2D map, just with map-appropriate
+  geometry math (great-circle distance via @turf/turf's distance() function,
+  already an installed dependency, instead of Model3D's Euclidean
+  THREE.Vector3 math).
+
+  Add a "Measure" toggle button (visually consistent with LayerControl's
+  existing panel styling -- bg-surface/border-border/text-accent tokens).
+  While active: clicking the map places a point (a small circle marker);
+  a second click places a second point, draws a line between them (a
+  MapLibre GL LineLayer, styled with the --color-accent token), and shows
+  a floating label with the real-world distance in meters (use
+  turf.distance(point1, point2, {units: 'meters'}), format to 1 decimal
+  place, or km with 2 decimals when >1000m -- match the "X.XX m" / smart
+  unit formatting precedent in Model3D.tsx's formatDistance()). A third
+  click clears the old measurement and starts fresh at the new point --
+  same "third click resets" behavior Model3D's tool already has, for
+  cross-component consistency.
+
+  A "Clear measurement" action (button, disabled when no points placed) and
+  legend text ("Click two points to measure" while active, "Toggle Measure
+  to place points" while inactive) -- same wording pattern as Model3D's
+  controls legend.
+
+acceptance_criteria:
+  - "Given Measure mode is toggled on, when the map is clicked twice, then a line renders between the two points and a label shows the real-world distance in meters"
+  - "Given two points are already placed, when the map is clicked a third time, then the old measurement clears and a fresh measurement starts at the new point"
+  - "Given Measure mode is toggled off, when the map is clicked, then no measurement point is placed (map's normal pan/zoom/click behavior is unaffected)"
+  - "The distance calculation uses real great-circle distance (turf.distance), not naive pixel/screen-space distance, verified against a known real-world distance in a unit test (not just visual inspection)"
+  - "Clear measurement button is disabled when zero points are placed and clears state when clicked with 1 or 2 points placed"
+
+steps:
+  - id: research
+    description: Read components/Model3D/Model3D.tsx's MeasureController/MeasureOverlay/formatDistance implementation for the exact UX pattern to mirror (toggle button, click-vs-drag threshold if any, legend wording, clear behavior). Read components/LayerViewer/LayerViewer.tsx and LayerControl.tsx for the map instance access pattern and existing design-token usage.
+    agent: researcher
+  - id: implement
+    description: Implement the MeasureTool UI + logic inside/alongside components/LayerViewer/LayerViewer.tsx (or a new components/LayerViewer/MeasureTool.tsx if that keeps LayerViewer.tsx's size reasonable -- your call, but match this repo's existing file-organization precedent).
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write tests covering every acceptance criterion, including a real numeric check of turf.distance's output against a known real-world coordinate pair (e.g. two points ~100m apart) to confirm the distance math is genuinely correct, not just "a number renders."
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the UX genuinely mirrors Model3D's measure tool (not a divergent reinvention), design tokens match, and the distance math test is a real numeric assertion.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/layerviewer-phase2-tools.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/Model3D/Model3D.tsx
+      purpose: MeasureController/MeasureOverlay/formatDistance -- the UX pattern to mirror for cross-component consistency
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: The map instance this tool attaches to
+    - path: components/LayerViewer/LayerControl.tsx
+      purpose: Existing panel styling/token usage to match
+
+files_to_modify:
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: wire in the MeasureTool (inline or via a new sibling file)
+
+design_decisions:
+  - decision: Use @turf/turf's distance() for real great-circle distance, not screen-pixel distance
+    rationale: A map measure tool that reports pixel distance would be meaningless at different zoom levels -- real-world meters is the only correct unit
+
+risks:
+  - severity: low
+    description: None significant -- @turf/turf is a mature, already-installed dependency with a simple, well-documented distance() API
+    mitigation: n/a
+
+references:
+  - path: components/Model3D/Model3D.tsx
+    relevant_excerpt: |
+      export function formatDistance(rawDistance: number, unitsPerMeter?: number): string {
+        if (unitsPerMeter && unitsPerMeter > 0) {
+          return `${(rawDistance / unitsPerMeter).toFixed(2)} m`;
+        }
+        return `${rawDistance.toFixed(2)} units`;
+      }
