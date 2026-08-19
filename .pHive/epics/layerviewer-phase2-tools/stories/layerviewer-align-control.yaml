@@ -1,7 +1,7 @@
 id: layerviewer-align-control
 epic: layerviewer-phase2-tools
 title: AlignControl -- manual lat/lng nudge for no-RTK drift correction
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: []
