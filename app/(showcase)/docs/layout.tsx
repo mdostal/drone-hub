@@ -33,6 +33,7 @@ const DOCS_SECTIONS: DocsSidebarSection[] = [
     title: "Components",
     items: [
       { name: "VideoTour", href: "/docs/components/video-tour" },
+      { name: "VideoAnnotator", href: "/docs/components/video-annotator" },
       { name: "LayerViewer", href: "/docs/components/layer-viewer" },
       { name: "Model3D", href: "/docs/components/model3d" },
       { name: "LandOverlay", href: "/docs/components/land-overlay" },

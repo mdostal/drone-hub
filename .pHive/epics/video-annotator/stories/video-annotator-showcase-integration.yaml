@@ -1,0 +1,87 @@
+id: video-annotator-showcase-integration
+epic: video-annotator
+title: Docs, showcase page, root ToC entry
+status: pending
+complexity: low
+methodology: classic
+depends_on: [video-annotator-draw-and-export]
+
+description: |
+  Close out <VideoAnnotator> (now feature-complete on this branch: core
+  player + scrub/zoom from story 1, drawing overlay + PNG export from
+  story 2) by wiring it into the showcase/docs site, matching every other
+  shipped component's integration pattern exactly.
+
+  1. docs/components/video-annotator.md -- written to match the section
+     structure of the other docs/components/*.md files (title, one-line
+     description, props table, usage example, design notes -- including a
+     clear note on the PNG-only export scope decision).
+
+  2. app/(showcase)/components/video-annotator/page.tsx -- live demo +
+     usage snippet (CopyButton-wrapped code block, matching an existing
+     sibling showcase page's shape), fed by one of the real, rights-
+     cleared clips already in public/showcase-samples/2806-prado-tour/
+     (e.g. entry.mp4 or living.mp4 -- pick one with enough visual content
+     to make drawing/zoom demos meaningful).
+
+  3. app/(showcase)/docs/components/[slug]/page.tsx's generateStaticParams
+     hardcoded slug array: add "video-annotator". CRITICAL -- literal
+     array edit only, never a readdirSync scan (would throw EISDIR on
+     docs/components/reference/).
+
+  4. app/page.tsx's TocEntry[] array: add VideoAnnotator as the next
+     entry.
+
+  5. Run a real npm run build (not just npm run dev) to confirm both new
+     routes render/generate with zero errors -- this is the one realistic
+     way a forgotten generateStaticParams entry silently breaks
+     (production-build-only failure mode, confirmed as a real risk in this
+     repo's own history).
+
+acceptance_criteria:
+  - "Given a fresh npm run build, when it completes, then /components/video-annotator and /docs/components/video-annotator both render with zero errors"
+  - "The root / page lists VideoAnnotator as a new ToC entry, linking to both its live demo and its docs page"
+  - "The live demo plays a real 2806-prado-tour clip and lets a visitor scrub, zoom, draw an annotation, and export a PNG"
+  - "npm test still passes with the full combined suite"
+
+steps:
+  - id: implement
+    description: Implement all five integration points above.
+    agent: developer
+  - id: test
+    description: Run npm run build and npm test, confirm both clean.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm all integration points match sibling components' exact pattern and the build-time check actually ran.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/video-annotator, merge into master, and push to origin master. This closes out the epic.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: "app/(showcase)/docs/components/[slug]/page.tsx"
+      purpose: Contains the hardcoded generateStaticParams slug array -- add "video-annotator" here, never a readdirSync scan
+    - path: app/page.tsx
+      purpose: Root ToC array
+
+files_to_modify:
+  - file: docs/components/video-annotator.md
+    change: new file
+  - file: app/(showcase)/components/video-annotator/page.tsx
+    change: new file
+  - file: "app/(showcase)/docs/components/[slug]/page.tsx"
+    change: add "video-annotator" to the hardcoded slug array
+  - file: app/page.tsx
+    change: add VideoAnnotator TocEntry
+
+risks:
+  - severity: medium
+    description: Forgetting the generateStaticParams slug-array entry produces a working /components/video-annotator demo but a silent 404 on /docs/components/video-annotator, only caught by a real production build
+    mitigation: Acceptance criteria explicitly requires npm run build as the verification step
+
+references: []

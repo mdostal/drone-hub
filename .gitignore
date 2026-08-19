@@ -51,3 +51,5 @@ public/property-samples/
 !.pHive/epics/gallery/**
 !.pHive/epics/layerviewer-phase2-tools/
 !.pHive/epics/layerviewer-phase2-tools/**
+!.pHive/epics/video-annotator/
+!.pHive/epics/video-annotator/**

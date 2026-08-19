@@ -1,0 +1,19 @@
+name: video-annotator
+title: "<VideoAnnotator> -- scrub, zoom, draw, export"
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: classic
+version_bump: minor
+
+stories:
+  - id: video-annotator-core-player
+    title: Core player -- video playback, scrub, zoom/pan
+    complexity: medium
+    depends_on: []
+  - id: video-annotator-draw-and-export
+    title: Drawing overlay (shapes/points/labels) + frame export
+    complexity: medium
+    depends_on: [video-annotator-core-player]
+  - id: video-annotator-showcase-integration
+    title: Docs, showcase page, root ToC entry
+    complexity: low
+    depends_on: [video-annotator-draw-and-export]

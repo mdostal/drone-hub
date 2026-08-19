@@ -24,6 +24,7 @@ import { Markdown } from "@/components/Markdown";
 // docs/components/<slug>.md file on disk.
 const KNOWN_SLUGS = [
   "video-tour",
+  "video-annotator",
   "layer-viewer",
   "model3d",
   "land-overlay",

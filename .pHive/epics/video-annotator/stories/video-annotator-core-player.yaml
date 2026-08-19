@@ -1,0 +1,91 @@
+id: video-annotator-core-player
+epic: video-annotator
+title: Core player -- video playback, scrub, zoom/pan
+status: complete
+complexity: medium
+methodology: classic
+depends_on: []
+
+description: |
+  CLAUDE.md's original Phase-1 MVP spec for <VideoAnnotator>: "play a clip,
+  scrub, zoom, draw shapes/points/labels over the video, export." This
+  story builds the foundation: playback + scrub + zoom/pan. Drawing +
+  export land in the next story (video-annotator-draw-and-export), which
+  depends on this one's video/container plumbing.
+
+  components/VideoAnnotator/VideoAnnotator.tsx: a <video> element, reusing
+  components/VideoTour/TourStage.tsx's videoRef + playback pattern (read it
+  first). Support both a plain src (mp4) and an .m3u8 streaming source via
+  the already-installed hls.js (same conditional-load pattern VideoTour
+  likely already uses for HLS -- check, and match it, don't reinvent).
+
+  Controls: play/pause, a scrub bar (current time / duration, seekable),
+  and a zoom control -- pan + scale the video's rendered viewport via a
+  CSS transform on a wrapping container element (NOT touching the video's
+  actual decode/render resolution). Zoom via a slider or scroll-to-zoom
+  (your call, but document which), pan via click-drag while zoomed in, and
+  a "Reset zoom" action. Style controls to match this repo's existing
+  component chrome (bg-surface/border-border/text-accent tokens from
+  app/globals.css).
+
+  Props: `src: string` (video URL, mp4 or m3u8), `poster?: string`,
+  `className?`. Deliberately minimal for this story -- the next story adds
+  more props for annotations/export, don't preemptively add them here.
+
+acceptance_criteria:
+  - "Given a valid mp4 src, when VideoAnnotator mounts, then the video loads and play/pause controls work"
+  - "Given an .m3u8 src, when VideoAnnotator mounts, then hls.js is used to load it (matching VideoTour's existing conditional-load pattern for streaming sources)"
+  - "The scrub bar reflects current playback position and seeking via the scrub bar updates the video's currentTime"
+  - "Zooming in and panning shifts the visible viewport of the video without altering its decoded resolution or aspect ratio, and Reset zoom restores the 1x unzoomed view"
+  - "npm test passes with new tests for playback, scrub, and zoom/pan state"
+
+steps:
+  - id: research
+    description: Read components/VideoTour/TourStage.tsx and VideoTour.tsx for the videoRef/playback/hls.js conditional-load pattern to reuse. Check app/globals.css for exact design-token class names.
+    agent: researcher
+  - id: implement
+    description: Implement components/VideoAnnotator/VideoAnnotator.tsx (+ index.ts barrel) per the description above.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write components/VideoAnnotator/VideoAnnotator.test.tsx covering every acceptance criterion.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the hls.js pattern genuinely matches VideoTour's (not a divergent reimplementation), tokens match, and zoom/pan doesn't touch decode resolution.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/video-annotator.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/VideoTour/TourStage.tsx
+      purpose: videoRef + <video> playback pattern to reuse
+    - path: components/VideoTour/VideoTour.tsx
+      purpose: Check for an existing hls.js conditional-load pattern to match
+    - path: app/globals.css
+      purpose: Design tokens to reuse, not reinvent
+
+files_to_modify:
+  - file: components/VideoAnnotator/VideoAnnotator.tsx
+    change: new file -- core player
+  - file: components/VideoAnnotator/index.ts
+    change: new file -- barrel export
+
+design_decisions:
+  - decision: Zoom/pan via CSS transform on a wrapper, not video re-render/re-encode
+    rationale: Cheapest correct implementation -- no need to touch decode pipeline for a viewport pan/zoom
+
+risks:
+  - severity: low
+    description: hls.js integration details may differ from what VideoTour does if VideoTour turns out to only ever use plain mp4 sources
+    mitigation: Research step explicitly checks for the real existing pattern before assuming one exists to copy
+
+references:
+  - path: package.json
+    relevant_excerpt: |
+      "hls.js": "^1.5.0",

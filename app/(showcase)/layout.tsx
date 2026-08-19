@@ -38,6 +38,7 @@ import { NavStrip } from "@/components/showcase";
 // docs/components/flight-coverage-analyzer.md.
 const NAV_ITEMS = [
   { name: "VideoTour", href: "/components/video-tour" },
+  { name: "VideoAnnotator", href: "/components/video-annotator" },
   { name: "LayerViewer", href: "/components/layer-viewer" },
   { name: "Model3D", href: "/components/model3d" },
   { name: "LandOverlay", href: "/components/land-overlay" },
