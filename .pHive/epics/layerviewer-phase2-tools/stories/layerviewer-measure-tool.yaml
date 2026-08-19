@@ -1,7 +1,7 @@
 id: layerviewer-measure-tool
 epic: layerviewer-phase2-tools
 title: MeasureTool -- click-to-measure real-world distance on the map
-status: pending
+status: complete
 complexity: medium
 methodology: classic
 depends_on: []
