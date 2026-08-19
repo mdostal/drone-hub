@@ -30,6 +30,14 @@ const TOC: TocEntry[] = [
     docHref: "/docs/components/video-tour",
   },
   {
+    name: "VideoAnnotator",
+    description:
+      "Scrub, zoom, and draw shapes/points/labels over a clip, then export the current frame + annotations as a PNG.",
+    demoHref: "/components/video-annotator",
+    demoLabel: "Live demo",
+    docHref: "/docs/components/video-annotator",
+  },
+  {
     name: "LayerViewer",
     description: "Toggleable, opacity-controlled georeferenced overlays draped on a satellite base map.",
     demoHref: "/components/layer-viewer",
