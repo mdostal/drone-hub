@@ -1,7 +1,7 @@
 id: video-annotator-draw-and-export
 epic: video-annotator
 title: Drawing overlay (shapes/points/labels) + frame export
-status: pending
+status: complete
 complexity: medium
 methodology: classic
 depends_on: [video-annotator-core-player]
