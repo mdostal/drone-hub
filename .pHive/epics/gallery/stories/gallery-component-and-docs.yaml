@@ -1,7 +1,7 @@
 id: gallery-component-and-docs
 epic: gallery
 title: Build <Gallery> component + tests + docs writeup
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: []
