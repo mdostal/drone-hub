@@ -1,7 +1,7 @@
 id: generic-file-components
 epic: nav-video-pipeline-files
 title: "<FileUpload>, a file viewer/download component, <ProcessingStatus> — generic, backend-free"
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [site-nav-and-copy-buttons]

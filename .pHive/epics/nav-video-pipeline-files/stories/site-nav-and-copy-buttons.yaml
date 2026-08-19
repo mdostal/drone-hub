@@ -1,7 +1,7 @@
 id: site-nav-and-copy-buttons
 epic: nav-video-pipeline-files
 title: Persistent nav strip across showcase/doc pages + copy-to-clipboard on code blocks
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

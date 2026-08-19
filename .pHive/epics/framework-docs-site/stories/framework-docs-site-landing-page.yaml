@@ -1,7 +1,7 @@
 id: framework-docs-site-landing-page
 epic: framework-docs-site
 title: Root landing page ToC (7 entries) + retire the old /components page via redirect
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: [framework-docs-site-render-route]

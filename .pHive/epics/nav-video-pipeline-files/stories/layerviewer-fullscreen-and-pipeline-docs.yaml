@@ -1,7 +1,7 @@
 id: layerviewer-fullscreen-and-pipeline-docs
 epic: nav-video-pipeline-files
 title: LayerViewer fullscreen toggle + new /pipeline directory with WebODM-to-manifest mapping docs
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

@@ -1,7 +1,7 @@
 id: videotour-real-controls-and-sample-clip
 epic: nav-video-pipeline-files
 title: Real play/pause/scrub/speed controls for VideoTour's spin video + real sample clip
-status: pending
+status: complete
 complexity: high
 methodology: bdd
 depends_on: []

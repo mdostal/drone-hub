@@ -1,7 +1,7 @@
 id: framework-docs-site-render-route
 epic: framework-docs-site
 title: Render docs/components/*.md as real pages at /docs/components/[slug]
-status: pending
+status: complete
 complexity: medium
 methodology: bdd
 depends_on: []

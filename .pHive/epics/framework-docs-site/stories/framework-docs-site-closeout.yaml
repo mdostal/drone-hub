@@ -1,7 +1,7 @@
 id: framework-docs-site-closeout
 epic: framework-docs-site
 title: Full-suite verification, live spot-check, docs closeout
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [framework-docs-site-landing-page]

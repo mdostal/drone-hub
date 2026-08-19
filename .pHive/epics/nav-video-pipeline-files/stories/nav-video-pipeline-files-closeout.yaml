@@ -1,7 +1,7 @@
 id: nav-video-pipeline-files-closeout
 epic: nav-video-pipeline-files
 title: Full-suite verification, live spot-check, docs closeout, merge + push + deploy
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [videotour-real-controls-and-sample-clip, layerviewer-fullscreen-and-pipeline-docs, generic-file-components]
