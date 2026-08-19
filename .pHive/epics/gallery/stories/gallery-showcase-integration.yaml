@@ -1,7 +1,7 @@
 id: gallery-showcase-integration
 epic: gallery
 title: Showcase page, docs route wiring, root ToC entry
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [gallery-component-and-docs]
