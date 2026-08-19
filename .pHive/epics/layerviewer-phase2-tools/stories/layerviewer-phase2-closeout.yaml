@@ -1,7 +1,7 @@
 id: layerviewer-phase2-closeout
 epic: layerviewer-phase2-tools
 title: Docs, showcase integration, and acceptance closeout
-status: pending
+status: complete
 complexity: low
 methodology: classic
 depends_on: [layerviewer-measure-tool, layerviewer-annotation-layer, layerviewer-compare-swipe, layerviewer-align-control]
