@@ -680,6 +680,40 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   const terraDrawRef = useRef<TerraDraw | null>(null);
   const [annotationMode, setAnnotationMode] = useState<AnnotationMode | null>(null);
   const [annotations, setAnnotations] = useState<GeoJSON.Feature[]>([]);
+  // MUTUAL-EXCLUSION FIX (layerviewer-phase2-closeout epic-closeout story):
+  // Measure and Annotate both want to own a map click when active. Measure's
+  // own placement lives in a plain `map.on("click", ...)` handler (below,
+  // registered once at map construction); Annotate's placement lives inside
+  // terra-draw itself, which -- per terra-draw-maplibre-gl-adapter's real
+  // implementation (verified directly against
+  // node_modules/terra-draw-maplibre-gl-adapter/dist/*.module.js:
+  // `getMapEventElement()` returns `this._map.getCanvas()`) -- attaches its
+  // OWN native pointer listeners straight to the map's canvas element,
+  // completely independently of MapLibre's synthetic `map.on("click", ...)`
+  // event system. That means a single physical click, while Measure mode is
+  // on AND terra-draw is sitting in a drawing mode (not its idle
+  // ANNOTATION_IDLE_MODE), is consumed by BOTH mechanisms at once -- a
+  // measure point AND a drawn annotation vertex would both be placed from
+  // the same click, confirmed as a real conflict (not a hypothetical) by
+  // LayerViewer.tool-exclusivity.test.tsx before this fix landed.
+  //
+  // Fixed two ways, belt-and-suspenders:
+  //   1. UI-level mutual exclusion (handleMeasureToggleClick /
+  //      handleAnnotationModeClick below): activating one tool deactivates
+  //      the other, so a user can never have both "on" at once via the
+  //      panels' own toggle buttons.
+  //   2. A defense-in-depth gate directly in the map's click handler (this
+  //      ref, read there): even if some future code path left both flags
+  //      set simultaneously, the click handler itself refuses to place a
+  //      measure point while an annotation drawing mode is active -- so
+  //      Annotate always wins priority over Measure, never both.
+  // annotationModeRef mirrors annotationMode (read by the click handler
+  // without needing it in that effect's dependency array -- same
+  // "avoid stale closures via a ref" pattern as measureModeRef above).
+  const annotationModeRef = useRef<AnnotationMode | null>(annotationMode);
+  useEffect(() => {
+    annotationModeRef.current = annotationMode;
+  }, [annotationMode]);
 
   // Latest callbacks, read from effects without re-firing just because the
   // caller passed a new inline function each render (same pattern as
@@ -701,13 +735,37 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
     onAnnotationsChangeRef.current = onAnnotationsChange;
   }, [onAnnotationsChange]);
 
+  // Measure panel's toggle button click handler — named (not the inline
+  // arrow the button used before this epic-closeout fix) specifically so it
+  // can also enforce the Measure/Annotate mutual-exclusion described in
+  // annotationModeRef's own comment above: turning Measure ON while an
+  // annotation drawing mode is active returns terra-draw to its idle
+  // ANNOTATION_IDLE_MODE and clears annotationMode first, so the two tools
+  // are never simultaneously "on" from the panels' own buttons. Turning
+  // Measure off never touches Annotate (nothing to exclude).
+  const handleMeasureToggleClick = useCallback(() => {
+    setMeasureMode((prev) => {
+      const next = !prev;
+      if (next && annotationMode) {
+        terraDrawRef.current?.setMode(ANNOTATION_IDLE_MODE);
+        setAnnotationMode(null);
+      }
+      return next;
+    });
+  }, [annotationMode]);
+
   // Mode-switcher toolbar click handler: clicking the ALREADY-active mode's
   // button toggles annotation drawing off (back to ANNOTATION_IDLE_MODE) --
   // same "click active to turn off" toggle affordance as the Measure
   // button above -- clicking any other mode switches straight to it
   // (terra-draw's own setMode() handles stopping whichever mode was
   // previously active). No-op before terra-draw has been constructed
-  // (map not ready yet).
+  // (map not ready yet). Switching TO a drawing mode also enforces the
+  // Measure/Annotate mutual-exclusion (see annotationModeRef's own comment
+  // above): if Measure is currently on, it's turned off first — the mirror
+  // image of handleMeasureToggleClick's own exclusion above. Turning
+  // Annotate off (the `annotationMode === mode` branch) never touches
+  // Measure (nothing to exclude).
   const handleAnnotationModeClick = useCallback(
     (mode: AnnotationMode) => {
       const draw = terraDrawRef.current;
@@ -718,9 +776,10 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       } else {
         draw.setMode(mode);
         setAnnotationMode(mode);
+        if (measureMode) setMeasureMode(false);
       }
     },
-    [annotationMode],
+    [annotationMode, measureMode],
   );
 
   // Legend panel's per-row Delete button. terra-draw's own "change" event
@@ -869,8 +928,13 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       // precedent as layersRef's own re-sync there. Placement is gated on
       // measureModeRef.current (not a stale `measureMode` closure) so
       // toggling Measure on/off never needs this listener re-registered.
+      // ALSO gated on `!annotationModeRef.current` — see
+      // annotationModeRef's own comment above for why: Annotate takes
+      // priority whenever it's actively drawing, so this click handler
+      // never places a measure point on the same click terra-draw is about
+      // to consume for a new vertex.
       map.on("click", (e) => {
-        if (!measureModeRef.current) return;
+        if (!measureModeRef.current || annotationModeRef.current) return;
         const { lng, lat } = e.lngLat;
         setMeasurePoints((prev) => (prev.length >= 2 ? [{ lng, lat }] : [...prev, { lng, lat }]));
       });
@@ -1161,7 +1225,7 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
             <span className="font-medium">Measure</span>
             <button
               type="button"
-              onClick={() => setMeasureMode((prev) => !prev)}
+              onClick={handleMeasureToggleClick}
               aria-pressed={measureMode}
               className={cx(
                 "rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
