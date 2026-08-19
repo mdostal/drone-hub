@@ -1,0 +1,27 @@
+name: layerviewer-phase2-tools
+title: "LayerViewer Phase 2 tools -- Measure, Annotate, Compare, Align"
+target_codebase: /Users/mdostal/Documents/work/personal/drone-hub
+methodology: classic
+version_bump: minor
+
+stories:
+  - id: layerviewer-measure-tool
+    title: MeasureTool -- click-to-measure real-world distance on the map
+    complexity: medium
+    depends_on: []
+  - id: layerviewer-annotation-layer
+    title: AnnotationLayer -- terra-draw point/line/polygon/freehand drawing
+    complexity: medium
+    depends_on: []
+  - id: layerviewer-compare-swipe
+    title: CompareSwipe -- swipe divider comparing two layers side by side
+    complexity: medium
+    depends_on: []
+  - id: layerviewer-align-control
+    title: AlignControl -- manual lat/lng nudge for no-RTK drift correction
+    complexity: low
+    depends_on: []
+  - id: layerviewer-phase2-closeout
+    title: Docs, showcase integration, and acceptance closeout
+    complexity: low
+    depends_on: [layerviewer-measure-tool, layerviewer-annotation-layer, layerviewer-compare-swipe, layerviewer-align-control]

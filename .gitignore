@@ -49,3 +49,5 @@ public/property-samples/
 !.pHive/epics/mesh-quality-and-terrain-pipeline/**
 !.pHive/epics/gallery/
 !.pHive/epics/gallery/**
+!.pHive/epics/layerviewer-phase2-tools/
+!.pHive/epics/layerviewer-phase2-tools/**

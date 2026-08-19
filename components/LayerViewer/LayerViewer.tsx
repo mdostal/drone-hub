@@ -1,12 +1,13 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 // Type-only imports — erased entirely at compile time (isolatedModules
 // requires the explicit `type` keyword for that erasure to be guaranteed).
 // Deliberately NOT a value import: see loadMapLibreModules() below for why
 // the actual `maplibre-gl` / cog-protocol modules are loaded lazily inside
 // an effect instead of at module scope.
 import type {
+  GeoJSONSource,
   LayerSpecification,
   Map as MapLibreMap,
   RasterTileSource,
@@ -27,6 +28,44 @@ import type { GeoAnchoredModel } from "@/lib/geo-model-types";
 // createModelLayer here has no module-load-time side effect and doesn't
 // need the loadMapLibreModules()-style lazy-import treatment.
 import { createModelLayer } from "@/lib/maplibre-model-layer";
+// Also a real value import, also safe at module scope: @turf/turf's
+// distance() is pure geodesic math (haversine over a mean Earth radius) —
+// no `Worker`/`window`/WebGL touched at all, unlike the maplibre-gl/
+// cog-protocol modules above, so it needs none of loadMapLibreModules()'s
+// lazy-import treatment.
+import { distance as turfDistance } from "@turf/turf";
+// Annotation tool (this epic's AnnotationLayer -- see ANNOTATION_IDLE_MODE's
+// comment below and the map-creation effect's "Annotation tool" block for
+// where these get wired up). Real value imports, statically -- NOT deferred
+// into loadMapLibreModules() the way maplibre-gl/@geomatico/maplibre-cog-protocol
+// are, because neither of these two packages has maplibre-gl's
+// Worker-at-module-load problem: `terra-draw`'s compiled dist has zero
+// `window`/`document` references anywhere (verified directly against
+// node_modules/terra-draw/dist/terra-draw.module.js, not just its .d.ts),
+// and `terra-draw-maplibre-gl-adapter`'s only `document`/`Image` touches
+// (its marker-icon resizeImage helper) live inside a METHOD, not at module
+// scope (verified the same way) -- exactly the "safe to import statically"
+// bar createModelLayer/turfDistance above already clear.
+import {
+  TerraDraw,
+  TerraDrawFreehandMode,
+  TerraDrawLineStringMode,
+  TerraDrawPointMode,
+  TerraDrawPolygonMode,
+  TerraDrawRenderMode,
+} from "terra-draw";
+// terra-draw's own core package deliberately ships no map-library-specific
+// adapter (only an abstract base one) -- this is the real, separate
+// "buy compute, own the viewer" npm package (peer deps terra-draw ^1.0.0 +
+// maplibre-gl >=4, both satisfied by this repo's package.json) that hooks
+// terra-draw into an ALREADY-EXISTING `maplibre-gl` `Map` instance (the one
+// this component already owns via mapRef, constructed above -- NOT a
+// second map of its own): its constructor just takes `{ map }` and calls
+// `map.addSource`/`map.addLayer` against it, per its own guide
+// (github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md),
+// which is why it's initialized inside the 'load' handler below, same
+// timing as every other map.addSource/addLayer call in this file.
+import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import { cx } from "./cx";
 
 /**
@@ -65,12 +104,69 @@ import { cx } from "./cx";
  * idiomatic fit here.
  */
 
-const ESRI_WORLD_IMAGERY_URL =
+// Exported (not just module-local) so this epic's <CompareSwipe> (see its
+// own header comment for why) can build its two comparison panes' basemap
+// identically to this main map's own — same Esri imagery, same attribution
+// — without duplicating these literals and risking drift if they ever
+// change. Pure `export` additions; the values/behavior here are unchanged.
+export const ESRI_WORLD_IMAGERY_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const ESRI_ATTRIBUTION = "Esri, Maxar, Earthstar Geographics, and the GIS User Community";
+export const ESRI_ATTRIBUTION = "Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 
-const BASEMAP_SOURCE_ID = "esri-world-imagery";
-const BASEMAP_LAYER_ID = "esri-world-imagery-layer";
+export const BASEMAP_SOURCE_ID = "esri-world-imagery";
+export const BASEMAP_LAYER_ID = "esri-world-imagery-layer";
+
+// Measure tool (this epic's MeasureTool -- see this file's header comment
+// for the state-ownership rationale) -- a single GeoJSON source holding
+// 0-2 placed Point features plus (once both are placed) one connecting
+// LineString feature, backing two MapLibre layers below. One source shared
+// by both layers rather than one source per layer: a `circle` layer only
+// ever renders Point/MultiPoint geometry from its source and a `line`
+// layer only ever renders LineString/MultiLineString geometry, so mixing
+// both feature types in one source is safe -- each layer simply ignores
+// the geometry type it doesn't draw.
+const MEASURE_SOURCE_ID = "layerviewer-measure";
+const MEASURE_POINTS_LAYER_ID = "layerviewer-measure-points";
+const MEASURE_LINE_LAYER_ID = "layerviewer-measure-line";
+/** Accent color for the measure tool's point/line MapLibre paint
+ *  properties -- this epic's design token (app/globals.css's
+ *  --color-accent, #e8590c). Hardcoded rather than read from CSS because
+ *  these are MapLibre GL paint values, not DOM/Tailwind classes -- MapLibre
+ *  has no notion of a CSS custom property. Keep in sync with --color-accent
+ *  if that token's value ever changes. Mirrors components/Model3D/
+ *  Model3D.tsx's identical MEASURE_ACCENT_COLOR constant/rationale, for
+ *  cross-component consistency of the measure tool's look. */
+const MEASURE_ACCENT_COLOR = "#e8590c";
+
+// Annotation tool (this epic's AnnotationLayer -- see this file's header
+// comment for the "why import terra-draw statically" rationale). These are
+// terra-draw's OWN built-in mode name strings, not invented here -- verified
+// at runtime (each mode class assigns `this.mode = "point"` / "linestring" /
+// "polygon" / "freehand" / "render" internally; the .d.ts only types `mode`
+// as `string`, so this was checked against the compiled dist output, not
+// just the type declarations) -- `draw.setMode(...)` below is called with
+// these exact strings.
+export type AnnotationMode = "point" | "linestring" | "polygon" | "freehand";
+/** terra-draw's own display-only "idle" mode (`TerraDrawRenderMode`) --
+ *  placed annotations still render, but no map interaction starts a new
+ *  one. Registered as one of this component's terra-draw modes and set
+ *  active whenever the mode-switcher toolbar has no drawing mode selected,
+ *  so the map ALWAYS has a valid active terra-draw mode (required by
+ *  terra-draw) without that mode ever being a drawing one -- mirrors the
+ *  measure tool's own `if (!measureModeRef.current) return;` idle gate,
+ *  just enforced by terra-draw itself instead of a boolean check here. */
+const ANNOTATION_IDLE_MODE = "render";
+/** One row per drawing mode in the mode-switcher toolbar, in display order.
+ *  Deliberately excludes terra-draw's other built-in modes (circle,
+ *  rectangle, sector, sensor, select, marker, ...) -- the story's brief
+ *  asks for "point / line / polygon / freehand at minimum" and no more. */
+const ANNOTATION_MODE_LABELS: Record<AnnotationMode, string> = {
+  point: "Point",
+  linestring: "Line",
+  polygon: "Polygon",
+  freehand: "Freehand",
+};
+const ANNOTATION_MODE_ORDER: AnnotationMode[] = ["point", "linestring", "polygon", "freehand"];
 
 function mapSourceId(layerId: string): string {
   return `layer-${layerId}`;
@@ -106,7 +202,14 @@ function cogSourceUrl(url: string): string {
 let mapLibreModulesPromise: Promise<{ Map: typeof MapLibreMap }> | null = null;
 let cogProtocolRegistered = false;
 
-function loadMapLibreModules() {
+// Exported so this epic's <CompareSwipe> (its own two comparison-pane map
+// instances, constructed the same lazy way) can share this SAME
+// module-scoped promise cache / addProtocol-once guard instead of running
+// its own separate copy — avoids double-registering the "cog" protocol and
+// avoids a second, redundant dynamic import of "maplibre-gl" when both
+// components are mounted together. No behavior change for existing
+// callers (still the same function, same cache).
+export function loadMapLibreModules() {
   if (!mapLibreModulesPromise) {
     mapLibreModulesPromise = Promise.all([
       import("maplibre-gl"),
@@ -243,8 +346,15 @@ function addLayerToMap(map: MapLibreMap, layer: LayerDef) {
 
 /** Pushes a LayerDef's current toggle/opacity onto its already-added
  *  MapLibre layer(s). No-op if the layer's map layer doesn't exist yet
- *  (not added yet) or the layer is disabled (never had one added). */
-function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
+ *  (not added yet) or the layer is disabled (never had one added).
+ *
+ *  Exported so this epic's <CompareSwipe> can keep its two comparison
+ *  panes' opacity live-synced with the registry (e.g. a consumer's
+ *  <LayerControl> opacity slider) using the exact same paint-property
+ *  update path this file's own layers-sync effect uses below — not a
+ *  second, parallel implementation of "how to push a LayerDef onto a
+ *  MapLibre layer" that could drift from this one. */
+export function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
   if (layer.disabled) return;
   const visibility = layer.toggle ? "visible" : "none";
 
@@ -265,6 +375,68 @@ function updateLayerOnMap(map: MapLibreMap, layer: LayerDef) {
       map.setPaintProperty(lineId, "line-opacity", layer.opacity);
     }
   }
+}
+
+/** A single measure-tool point, in geographic (not screen-pixel)
+ *  coordinates — lng/lat plain fields (not MapLibre's own `LngLat` class
+ *  instance) so this stays a plain, serializable value with no MapLibre
+ *  dependency, same "bare {x,y,z}, not THREE.Vector3" precedent as
+ *  components/Model3D/Model3D.tsx's `Point3`. */
+export interface MeasurePoint {
+  lng: number;
+  lat: number;
+}
+
+/** Real great-circle distance between two measure points, in meters —
+ *  `@turf/turf`'s `distance()` (haversine over a mean Earth radius), NOT
+ *  naive screen-pixel distance, which would be meaningless at different
+ *  zoom levels (CBA's own rationale for this tool). Pure and
+ *  MapLibre-independent — see LayerViewer.test.tsx for a numeric check
+ *  against a known real-world coordinate pair (not part of <LayerViewer>'s
+ *  public API; not re-exported from index.ts, same precedent as
+ *  buildLayerMapConfig/resolveManifest above). */
+export function measureDistanceMeters(a: MeasurePoint, b: MeasurePoint): number {
+  return turfDistance([a.lng, a.lat], [b.lng, b.lat], { units: "meters" });
+}
+
+/** Formats a meters distance for the measure tool's floating label — meters
+ *  to 1 decimal place under 1000m, kilometers to 2 decimals at/above
+ *  1000m. Mirrors components/Model3D/Model3D.tsx's `formatDistance()`
+ *  smart-unit-formatting precedent (there: raw units vs. real meters given
+ *  an optional scale hint; here: meters vs. km, since real-world distance
+ *  is always known on a georeferenced map — there's no "no known scale"
+ *  case to guard against). */
+export function formatMeasureDistance(meters: number): string {
+  if (meters >= 1000) {
+    return `${(meters / 1000).toFixed(2)} km`;
+  }
+  return `${meters.toFixed(1)} m`;
+}
+
+/** Builds the GeoJSON FeatureCollection the measure tool's MapLibre source
+ *  (MEASURE_SOURCE_ID) is kept in sync with: one Point feature per placed
+ *  point, plus — once both points are placed — one LineString feature
+ *  connecting them. Pure and MapLibre-independent — see
+ *  LayerViewer.test.tsx for direct unit coverage, same "pull pure logic
+ *  out of the browser-API-dependent shell" precedent as
+ *  buildLayerMapConfig/resolveManifest above. */
+export function buildMeasureFeatureCollection(points: MeasurePoint[]): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = points.map((point) => ({
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [point.lng, point.lat] as [number, number] },
+    properties: {},
+  }));
+  if (points.length === 2) {
+    features.push({
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: points.map((point) => [point.lng, point.lat] as [number, number]),
+      },
+      properties: {},
+    });
+  }
+  return { type: "FeatureCollection", features };
 }
 
 /** Pure(ish) manifest resolution: given a `PropertyLayers | string` prop
@@ -367,6 +539,18 @@ export interface LayerViewerProps {
   onLayersChange?: (layers: LayerDef[]) => void;
   /** Fired if the manifest fails to load. */
   onLoadError?: (message: string) => void;
+  /** Annotation tool (this epic's AnnotationLayer): fired with the CURRENT
+   *  full list of placed annotation features (points/lines/polygons/
+   *  freehand shapes) every time it changes -- an annotation placed,
+   *  edited, or deleted via the legend panel's per-row Delete button. This
+   *  repo has no backend anywhere (CLAUDE.md), so <LayerViewer> owns no
+   *  persistence of its own -- this is the escape hatch a consuming app
+   *  uses to own that itself (localStorage, a database, wherever), same
+   *  "the viewer doesn't own state it shouldn't" pattern as
+   *  `onLayersChange` above. Features are plain GeoJSON (terra-draw's own
+   *  `getSnapshot()` output), not a terra-draw-specific shape, so a
+   *  consumer never needs to depend on terra-draw's types directly. */
+  onAnnotationsChange?: (features: GeoJSON.Feature[]) => void;
   /** Fired whenever fullscreen state changes (user-initiated via the
    *  handle's `toggleFullscreen()`, OR externally — e.g. the browser's own
    *  "Esc to exit fullscreen" affordance, which bypasses the handle
@@ -387,7 +571,7 @@ export interface LayerViewerProps {
 }
 
 export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(function LayerViewer(
-  { manifest, models, onLayersChange, onLoadError, onFullscreenChange, className },
+  { manifest, models, onLayersChange, onLoadError, onFullscreenChange, onAnnotationsChange, className },
   ref,
 ) {
   const [propertyLayers, setPropertyLayers] = useState<PropertyLayers | null>(null);
@@ -426,6 +610,111 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   }, [models]);
   const addedModelIdsRef = useRef<Set<string>>(new Set());
 
+  // Measure tool (this epic's MeasureTool — see MEASURE_SOURCE_ID's own
+  // comment for the shared-source rationale). `measurePoints` is the
+  // source of truth (0-2 points); `measureMode` gates whether a map click
+  // places a new point at all — the map's normal pan/zoom/click behavior
+  // is otherwise completely unaffected. Mirrors components/Model3D/
+  // Model3D.tsx's measureMode/points state and "a third click clears the
+  // old measurement and starts fresh at the new point" behavior, for
+  // cross-component UX consistency.
+  const [measureMode, setMeasureMode] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState<MeasurePoint[]>([]);
+  // Screen-pixel position of the floating distance label
+  // (`map.project()`'d from the two points' midpoint), recomputed on every
+  // 'move' (pan/zoom/rotate) so the label tracks the map instead of
+  // drifting. Deliberately NOT a `maplibregl.Popup` — a Popup's own default
+  // chrome (white background, tip arrow, close button) would have to be
+  // fought/overridden to use this epic's design tokens (bg-surface/
+  // border-border/text-accent, matching <LayerControl>'s panel look)
+  // instead of just applying them directly to a plain positioned div, the
+  // same way Model3D's drei-<Html>-based label does.
+  const [measureLabelPos, setMeasureLabelPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Read by the map's 'click' listener (registered once, at map
+  // construction, see the map-creation effect below) without needing
+  // `measureMode` in that effect's dependency array — same "avoid stale
+  // closures via a ref" pattern as layersRef/modelsRef above.
+  const measureModeRef = useRef(measureMode);
+  useEffect(() => {
+    measureModeRef.current = measureMode;
+  }, [measureMode]);
+  // Read by updateMeasureLabelPosition (below) so that callback can stay a
+  // stable identity (empty deps) while still always reading the CURRENT
+  // points — same pattern as layersRef.
+  const measurePointsRef = useRef<MeasurePoint[]>([]);
+  useEffect(() => {
+    measurePointsRef.current = measurePoints;
+  }, [measurePoints]);
+
+  // Recomputes measureLabelPos from the CURRENT measurePoints (via the ref
+  // above). Called both from the map's 'move' listener (registered once at
+  // map construction, so it needs a stable function identity) and directly
+  // whenever measurePoints itself changes (the sync effect below) — panning
+  // isn't the only thing that should reposition/hide the label; placing or
+  // clearing points must too.
+  const updateMeasureLabelPosition = useCallback(() => {
+    const map = mapRef.current;
+    const points = measurePointsRef.current;
+    if (!map || points.length !== 2) {
+      setMeasureLabelPos(null);
+      return;
+    }
+    const midpoint = { lng: (points[0].lng + points[1].lng) / 2, lat: (points[0].lat + points[1].lat) / 2 };
+    const projected = map.project([midpoint.lng, midpoint.lat]);
+    setMeasureLabelPos({ x: projected.x, y: projected.y });
+  }, []);
+
+  // Annotation tool (this epic's AnnotationLayer -- see this file's header
+  // comment + ANNOTATION_IDLE_MODE's comment above for the full rationale).
+  // `terraDrawRef` holds the live TerraDraw instance, created once inside
+  // the map's 'load' handler below (never re-created for the life of this
+  // map instance). `annotationMode` is which drawing mode the mode-switcher
+  // toolbar currently has active -- `null` means terra-draw is sitting in
+  // its ANNOTATION_IDLE_MODE, same "off" meaning as the measure tool's
+  // `measureMode === false`. `annotations` is the live list of placed
+  // features, kept in sync from terra-draw's own "change" event (its own
+  // store is the source of truth -- this state is a read-only mirror of it
+  // for the legend panel to render + for the onAnnotationsChange callback
+  // below, not a second source of truth terra-draw has to be told about).
+  const terraDrawRef = useRef<TerraDraw | null>(null);
+  const [annotationMode, setAnnotationMode] = useState<AnnotationMode | null>(null);
+  const [annotations, setAnnotations] = useState<GeoJSON.Feature[]>([]);
+  // MUTUAL-EXCLUSION FIX (layerviewer-phase2-closeout epic-closeout story):
+  // Measure and Annotate both want to own a map click when active. Measure's
+  // own placement lives in a plain `map.on("click", ...)` handler (below,
+  // registered once at map construction); Annotate's placement lives inside
+  // terra-draw itself, which -- per terra-draw-maplibre-gl-adapter's real
+  // implementation (verified directly against
+  // node_modules/terra-draw-maplibre-gl-adapter/dist/*.module.js:
+  // `getMapEventElement()` returns `this._map.getCanvas()`) -- attaches its
+  // OWN native pointer listeners straight to the map's canvas element,
+  // completely independently of MapLibre's synthetic `map.on("click", ...)`
+  // event system. That means a single physical click, while Measure mode is
+  // on AND terra-draw is sitting in a drawing mode (not its idle
+  // ANNOTATION_IDLE_MODE), is consumed by BOTH mechanisms at once -- a
+  // measure point AND a drawn annotation vertex would both be placed from
+  // the same click, confirmed as a real conflict (not a hypothetical) by
+  // LayerViewer.tool-exclusivity.test.tsx before this fix landed.
+  //
+  // Fixed two ways, belt-and-suspenders:
+  //   1. UI-level mutual exclusion (handleMeasureToggleClick /
+  //      handleAnnotationModeClick below): activating one tool deactivates
+  //      the other, so a user can never have both "on" at once via the
+  //      panels' own toggle buttons.
+  //   2. A defense-in-depth gate directly in the map's click handler (this
+  //      ref, read there): even if some future code path left both flags
+  //      set simultaneously, the click handler itself refuses to place a
+  //      measure point while an annotation drawing mode is active -- so
+  //      Annotate always wins priority over Measure, never both.
+  // annotationModeRef mirrors annotationMode (read by the click handler
+  // without needing it in that effect's dependency array -- same
+  // "avoid stale closures via a ref" pattern as measureModeRef above).
+  const annotationModeRef = useRef<AnnotationMode | null>(annotationMode);
+  useEffect(() => {
+    annotationModeRef.current = annotationMode;
+  }, [annotationMode]);
+
   // Latest callbacks, read from effects without re-firing just because the
   // caller passed a new inline function each render (same pattern as
   // VideoTour's onRoomChangeRef).
@@ -441,6 +730,68 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
   useEffect(() => {
     onFullscreenChangeRef.current = onFullscreenChange;
   }, [onFullscreenChange]);
+  const onAnnotationsChangeRef = useRef(onAnnotationsChange);
+  useEffect(() => {
+    onAnnotationsChangeRef.current = onAnnotationsChange;
+  }, [onAnnotationsChange]);
+
+  // Measure panel's toggle button click handler — named (not the inline
+  // arrow the button used before this epic-closeout fix) specifically so it
+  // can also enforce the Measure/Annotate mutual-exclusion described in
+  // annotationModeRef's own comment above: turning Measure ON while an
+  // annotation drawing mode is active returns terra-draw to its idle
+  // ANNOTATION_IDLE_MODE and clears annotationMode first, so the two tools
+  // are never simultaneously "on" from the panels' own buttons. Turning
+  // Measure off never touches Annotate (nothing to exclude).
+  const handleMeasureToggleClick = useCallback(() => {
+    setMeasureMode((prev) => {
+      const next = !prev;
+      if (next && annotationMode) {
+        terraDrawRef.current?.setMode(ANNOTATION_IDLE_MODE);
+        setAnnotationMode(null);
+      }
+      return next;
+    });
+  }, [annotationMode]);
+
+  // Mode-switcher toolbar click handler: clicking the ALREADY-active mode's
+  // button toggles annotation drawing off (back to ANNOTATION_IDLE_MODE) --
+  // same "click active to turn off" toggle affordance as the Measure
+  // button above -- clicking any other mode switches straight to it
+  // (terra-draw's own setMode() handles stopping whichever mode was
+  // previously active). No-op before terra-draw has been constructed
+  // (map not ready yet). Switching TO a drawing mode also enforces the
+  // Measure/Annotate mutual-exclusion (see annotationModeRef's own comment
+  // above): if Measure is currently on, it's turned off first — the mirror
+  // image of handleMeasureToggleClick's own exclusion above. Turning
+  // Annotate off (the `annotationMode === mode` branch) never touches
+  // Measure (nothing to exclude).
+  const handleAnnotationModeClick = useCallback(
+    (mode: AnnotationMode) => {
+      const draw = terraDrawRef.current;
+      if (!draw) return;
+      if (annotationMode === mode) {
+        draw.setMode(ANNOTATION_IDLE_MODE);
+        setAnnotationMode(null);
+      } else {
+        draw.setMode(mode);
+        setAnnotationMode(mode);
+        if (measureMode) setMeasureMode(false);
+      }
+    },
+    [annotationMode, measureMode],
+  );
+
+  // Legend panel's per-row Delete button. terra-draw's own "change" event
+  // (registered where the TerraDraw instance is constructed below) is what
+  // actually updates `annotations` state + fires onAnnotationsChange --
+  // this just tells terra-draw's store to remove the feature, the same
+  // "terra-draw's store is the source of truth" precedent as the mode
+  // click handler above.
+  const handleDeleteAnnotation = useCallback((id: GeoJSON.Feature["id"]) => {
+    if (id === undefined) return;
+    terraDrawRef.current?.removeFeatures([id]);
+  }, []);
 
   // Read by the handle's isFullscreen() — a ref (not just the `document`
   // global directly) so it stays consistent with getLayers()'s "read
@@ -510,6 +861,22 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
     }
   }, [layers, propertyLayers]);
 
+  // Sync the measure tool's placed points onto the map: rebuild the
+  // MEASURE_SOURCE_ID GeoJSON source's data (buildMeasureFeatureCollection
+  // above) and reposition the floating distance label. Guarded on
+  // mapReadyRef same as the layers-sync effect above — no-op before the
+  // map's 'load' has fired; the 'load' handler below re-syncs from
+  // measurePointsRef.current for exactly the same "a click landed before
+  // load fired" reason layersRef gets a re-sync there.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && mapReadyRef.current) {
+      const source = map.getSource(MEASURE_SOURCE_ID) as GeoJSONSource | undefined;
+      source?.setData(buildMeasureFeatureCollection(measurePoints));
+    }
+    updateMeasureLabelPosition();
+  }, [measurePoints, updateMeasureLabelPosition]);
+
   // Create the map exactly once, as soon as the manifest has resolved and
   // the container div exists. Adds the Esri satellite basemap immediately,
   // then (on 'load') each non-disabled layer's initial source/layer.
@@ -554,6 +921,25 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
       });
       mapRef.current = map;
 
+      // Measure tool: registered here (not inside 'load') so a genuine
+      // click landing between map construction and 'load' firing isn't
+      // lost — the 'load' handler below re-syncs the map's measure source
+      // from measurePointsRef.current for exactly that reason, same
+      // precedent as layersRef's own re-sync there. Placement is gated on
+      // measureModeRef.current (not a stale `measureMode` closure) so
+      // toggling Measure on/off never needs this listener re-registered.
+      // ALSO gated on `!annotationModeRef.current` — see
+      // annotationModeRef's own comment above for why: Annotate takes
+      // priority whenever it's actively drawing, so this click handler
+      // never places a measure point on the same click terra-draw is about
+      // to consume for a new vertex.
+      map.on("click", (e) => {
+        if (!measureModeRef.current || annotationModeRef.current) return;
+        const { lng, lat } = e.lngLat;
+        setMeasurePoints((prev) => (prev.length >= 2 ? [{ lng, lat }] : [...prev, { lng, lat }]));
+      });
+      map.on("move", updateMeasureLabelPosition);
+
       map.on("load", () => {
         for (const layer of layersRef.current) {
           // disabled:true → NO MapLibre source/layer added at all. Real
@@ -571,12 +957,95 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           map.addLayer(createModelLayer(model));
           addedModelIdsRef.current.add(model.id);
         }
+        // Measure tool's own GeoJSON source + point/line layers — added
+        // once here (not lazily on first click) so MEASURE_SOURCE_ID
+        // always exists for the sync effect above to setData() against.
+        // Added AFTER the property/model layers so measure markers/line
+        // render on top of the imagery/models a user is actively
+        // measuring against.
+        map.addSource(MEASURE_SOURCE_ID, {
+          type: "geojson",
+          data: buildMeasureFeatureCollection(measurePointsRef.current),
+        });
+        map.addLayer({
+          id: MEASURE_LINE_LAYER_ID,
+          type: "line",
+          source: MEASURE_SOURCE_ID,
+          paint: { "line-color": MEASURE_ACCENT_COLOR, "line-width": 2 },
+        });
+        map.addLayer({
+          id: MEASURE_POINTS_LAYER_ID,
+          type: "circle",
+          source: MEASURE_SOURCE_ID,
+          paint: {
+            "circle-radius": 5,
+            "circle-color": MEASURE_ACCENT_COLOR,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+
+        // Annotation tool: TerraDraw attached directly to THIS already-
+        // constructed `map` instance via TerraDrawMapLibreGLAdapter (see
+        // this file's header comment) -- not a second map of its own. The
+        // adapter's own register() call (triggered by draw.start() below)
+        // adds three more GeoJSON sources/layers of ITS own (default
+        // "td-point"/"td-linestring"/"td-polygon" prefixed ids) on top of
+        // this same map, after the property/model/measure layers above so
+        // placed annotations render on top of the imagery being annotated
+        // -- same ordering rationale as the measure tool's own layers.
+        // Constructed here (inside 'load', not at map construction time)
+        // per the adapter's own guide, which calls out that its register()
+        // needs the style to have already loaded.
+        const draw = new TerraDraw({
+          adapter: new TerraDrawMapLibreGLAdapter({ map }),
+          modes: [
+            new TerraDrawPointMode(),
+            new TerraDrawLineStringMode(),
+            new TerraDrawPolygonMode(),
+            new TerraDrawFreehandMode(),
+            // Unlike the drawing modes above, TerraDrawRenderMode's
+            // constructor requires a `styles` option (even if empty) —
+            // an empty object keeps its defaults, which is all this idle
+            // mode needs (it never lets a user draw, so its own styling
+            // never actually gets used for a NEW feature — only for
+            // re-rendering whatever the drawing modes already placed).
+            new TerraDrawRenderMode({ styles: {} }),
+          ],
+        });
+        draw.start();
+        // Idle by default -- see ANNOTATION_IDLE_MODE's own comment above
+        // for why a plain map click must not start drawing until a
+        // consumer picks a mode from the toolbar.
+        draw.setMode(ANNOTATION_IDLE_MODE);
+        // terra-draw's own store is the single source of truth for placed
+        // annotations (see handleAnnotationModeClick/handleDeleteAnnotation
+        // above) -- every create/update/delete/styling change re-reads the
+        // full current snapshot rather than trying to diff the event's own
+        // ids/type payload, which keeps this in sync regardless of WHICH
+        // terra-draw internal codepath caused the change (a toolbar-driven
+        // draw, a legend-panel delete, or any future programmatic
+        // addFeatures/removeFeatures call).
+        draw.on("change", () => {
+          const snapshot = draw.getSnapshot() as GeoJSON.Feature[];
+          setAnnotations(snapshot);
+          onAnnotationsChangeRef.current?.(snapshot);
+        });
+        terraDrawRef.current = draw;
+
         mapReadyRef.current = true;
         // Re-sync in case a toggle/opacity change (via the imperative handle)
         // landed between map construction and 'load' firing.
         for (const layer of layersRef.current) {
           updateLayerOnMap(map, layer);
         }
+        // Same re-sync for the measure tool: a click landing between map
+        // construction and 'load' firing already updated React state (and
+        // therefore measurePointsRef.current), but the source didn't exist
+        // yet for the sync effect above to write into.
+        const measureSource = map.getSource(MEASURE_SOURCE_ID) as GeoJSONSource | undefined;
+        measureSource?.setData(buildMeasureFeatureCollection(measurePointsRef.current));
+        updateMeasureLabelPosition();
       });
 
       // Auto-fit the view to the first raster/cog layer's real geographic
@@ -608,13 +1077,24 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           if (mapRef.current.getLayer(id)) mapRef.current.removeLayer(id);
         }
         addedModelIdsRef.current.clear();
+        // Annotation tool: stop() (not just dropping the ref) triggers the
+        // adapter's own unregister(), which removes ITS "td-*" sources/
+        // layers from this map — same "don't just drop the reference, tear
+        // down what was actually added to the map" rigor as the model
+        // layers above. Must run BEFORE mapRef.current.remove() below,
+        // while the map instance stop()/unregister() writes into is still
+        // alive.
+        if (terraDrawRef.current) {
+          terraDrawRef.current.stop();
+          terraDrawRef.current = null;
+        }
         mapRef.current.remove();
         mapRef.current = null;
       }
       mapReadyRef.current = false;
       firstFitDoneRef.current = false;
     };
-  }, [propertyLayers]);
+  }, [propertyLayers, updateMeasureLabelPosition]);
 
   // Add/remove model layers on every `models` prop change, once the map is
   // ready. Diffed by id against addedModelIdsRef so an already-added entry
@@ -707,6 +1187,136 @@ export const LayerViewer = forwardRef<LayerViewerHandle, LayerViewerProps>(funct
           height instead of filling the viewport). Percentage sizing via
           h-full/w-full doesn't depend on which position scheme wins. */}
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
+
+      {/* Measure tool floating distance label — screen-pixel positioned via
+          measureLabelPos (see that state's own comment for why this is a
+          plain div, not a maplibregl.Popup). pointer-events-none so it
+          never intercepts map clicks — a third click landing under the
+          label should still reset the measurement, not be swallowed by it.
+          Styled to match Model3D's own floating measure label exactly
+          (rounded-md border border-border bg-surface/90 ... text-accent
+          shadow-lg) for cross-component consistency. */}
+      {measureLabelPos && measurePoints.length === 2 && (
+        <div
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-surface/90 px-2 py-1 text-xs font-medium text-accent shadow-lg"
+          style={{ left: measureLabelPos.x, top: measureLabelPos.y }}
+        >
+          {formatMeasureDistance(measureDistanceMeters(measurePoints[0], measurePoints[1]))}
+        </div>
+      )}
+
+      {/* Measure tool panel — toggle + legend + Clear action, styled with
+          the same design tokens <LayerControl> uses for its own panel
+          (bg-surface/90, border-border, rounded-xl, backdrop-blur — see
+          LayerControl.tsx). Positioned bottom-left, deliberately not
+          top-right: this repo's own showcase page places a
+          consumer-rendered <LayerControl> + Fullscreen button top-right
+          (app/(showcase)/components/layer-viewer/page.tsx) and this panel
+          is <LayerViewer>'s own internal chrome, not something a consumer
+          arranges — bottom-left avoids colliding with that common layout
+          without requiring every consumer to coordinate placement. The
+          toggle/legend/Clear interaction pattern itself mirrors
+          components/Model3D/Model3D.tsx's own measure-tool panel exactly
+          (see that file's header comment) for cross-component UX
+          consistency. */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute bottom-3 left-3 flex w-56 flex-col gap-2 rounded-xl border border-border bg-surface/90 p-3 text-xs text-foreground shadow-lg backdrop-blur">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium">Measure</span>
+            <button
+              type="button"
+              onClick={handleMeasureToggleClick}
+              aria-pressed={measureMode}
+              className={cx(
+                "rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
+                measureMode
+                  ? "border-accent bg-accent text-white"
+                  : "border-border text-foreground hover:border-accent hover:text-accent",
+              )}
+            >
+              {measureMode ? "Measure: On" : "Measure"}
+            </button>
+          </div>
+          <ul className="flex flex-col gap-1 text-muted">
+            {measureMode ? (
+              <>
+                <li className="text-accent">Click two points to measure</li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setMeasurePoints([])}
+                    disabled={measurePoints.length === 0}
+                    className="text-foreground underline decoration-dotted underline-offset-2 disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+                  >
+                    Clear measurement
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>Toggle Measure to place points</li>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {/* Annotation tool panel — mode-switcher toolbar (point/line/polygon/
+          freehand) + a legend/list panel of placed annotations with a
+          per-row delete button, styled with the exact same design tokens
+          as the Measure panel above / <LayerControl>'s own panel
+          (bg-surface/90, border-border, rounded-xl, backdrop-blur).
+          Positioned top-left, deliberately distinct from both the Measure
+          panel's bottom-left slot and the right-hand
+          Fullscreen-button+<LayerControl> column a consumer typically
+          renders (see this repo's own showcase page) — same "this is
+          <LayerViewer>'s own internal chrome, avoid colliding with common
+          consumer layouts" reasoning as the Measure panel's own placement
+          comment above. */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute left-3 top-3 flex max-h-[60vh] w-56 min-h-0 flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-surface/90 p-3 text-xs text-foreground shadow-lg backdrop-blur">
+          <span className="font-medium">Annotate</span>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Annotation drawing mode">
+            {ANNOTATION_MODE_ORDER.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => handleAnnotationModeClick(mode)}
+                aria-pressed={annotationMode === mode}
+                className={cx(
+                  "rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
+                  annotationMode === mode
+                    ? "border-accent bg-accent text-white"
+                    : "border-border text-foreground hover:border-accent hover:text-accent",
+                )}
+              >
+                {ANNOTATION_MODE_LABELS[mode]}
+              </button>
+            ))}
+          </div>
+          {annotationMode && <span className="text-accent">Click the map to draw</span>}
+          {annotations.length === 0 ? (
+            <span className="text-muted">No annotations yet</span>
+          ) : (
+            <ul aria-label="Placed annotations" className="flex flex-col gap-1 text-muted">
+              {annotations.map((feature) => (
+                <li key={String(feature.id)} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate capitalize text-foreground">
+                    {feature.geometry.type}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteAnnotation(feature.id)}
+                    aria-label={`Delete ${feature.geometry.type} annotation`}
+                    className="shrink-0 text-foreground underline decoration-dotted underline-offset-2 hover:text-accent"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {showLoading && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-sm text-white">
           Loading layers…

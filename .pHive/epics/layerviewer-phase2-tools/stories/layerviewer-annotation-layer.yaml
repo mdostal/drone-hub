@@ -1,0 +1,92 @@
+id: layerviewer-annotation-layer
+epic: layerviewer-phase2-tools
+title: AnnotationLayer -- terra-draw point/line/polygon/freehand drawing
+status: complete
+complexity: medium
+methodology: classic
+depends_on: []
+
+description: |
+  CLAUDE.md's original LayerViewer spec: "Annotate -- draw shapes/points/
+  labels on the imagery." terra-draw@^1.0.0 has been an installed, unused
+  dependency since scaffolding, specifically for this.
+
+  Real gap found during planning: terra-draw's core package ships only an
+  abstract base.adapter -- no MapLibre-specific adapter. Add the real,
+  compatible npm package terra-draw-maplibre-gl-adapter@1.4.1 (peer deps:
+  terra-draw ^1.0.0 -- satisfied; maplibre-gl >=4 -- this repo has
+  maplibre-gl@^4.7.0, satisfied) to package.json as a new dependency.
+
+  Build a small toolbar (point / line / polygon / freehand mode buttons,
+  matching LayerControl's existing panel visual style) that switches
+  terra-draw's active drawing mode. Placed annotations render on the map
+  via terra-draw itself. Add a simple legend/list panel showing placed
+  annotations with a per-annotation delete action.
+
+  Deliberately do NOT add server-side persistence -- this framework repo
+  has no backend. Instead expose an optional
+  `onAnnotationsChange?: (features: GeoJSON.Feature[]) => void` prop so a
+  consuming app can own persistence (matches this repo's established "own
+  the viewer, buy only compute" / no-backend-in-the-bundle posture --
+  see CLAUDE.md's stack section).
+
+acceptance_criteria:
+  - "Given the point mode is active, when the map is clicked, then a point annotation is placed and appears in the legend/list"
+  - "Given the line or polygon mode is active, when the user clicks multiple points and completes the shape (per terra-draw's own interaction convention -- confirm the exact completion gesture from its docs/types), then that shape renders on the map and appears in the legend/list"
+  - "Given an annotation exists in the legend/list, when its delete action is clicked, then it's removed from both the map and the list"
+  - "Given onAnnotationsChange is provided, when annotations are added or removed, then it's called with the current full feature set"
+  - "Switching between draw modes (point/line/polygon/freehand) does not lose previously-placed annotations"
+
+steps:
+  - id: research
+    description: Read terra-draw's own README/type definitions (node_modules/terra-draw/dist/terra-draw.d.ts) and terra-draw-maplibre-gl-adapter's README (fetch via npm view or its GitHub repo) for the real integration API -- constructor shape, mode names, event subscription for "feature added/removed", and how it attaches to an existing MapLibre GL map instance (this repo's LayerViewer.tsx already owns its own map instance -- terra-draw needs to attach to that same instance, not create a new one).
+    agent: researcher
+  - id: implement
+    description: Add terra-draw-maplibre-gl-adapter to package.json. Implement the AnnotationLayer toolbar + terra-draw wiring + legend/delete UI, likely as components/LayerViewer/AnnotationLayer.tsx, integrated into LayerViewer.tsx.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Write tests covering every acceptance criterion. terra-draw's real map-interaction behavior may not be fully testable in jsdom (same real constraint Model3D's WebGL work hit) -- if so, mock terra-draw's public API surface the same way the gallery-component-and-docs story's Gallery.test.tsx mocked embla-carousel-react (a deterministic fake honoring the same contract), so tests verify AnnotationLayer's own wiring rather than re-testing terra-draw's internals.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm the mode toolbar matches LayerControl's visual style, onAnnotationsChange fires correctly, and no server-side persistence was accidentally introduced (scope check).
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit on branch feat/layerviewer-phase2-tools.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: components/LayerViewer/LayerViewer.tsx
+      purpose: Owns the MapLibre GL map instance terra-draw must attach to
+    - path: components/LayerViewer/LayerControl.tsx
+      purpose: Visual style precedent for the new toolbar/legend panel
+    - path: package.json
+      purpose: terra-draw ^1.0.0 already present; terra-draw-maplibre-gl-adapter needs to be added
+
+files_to_modify:
+  - file: package.json
+    change: add terra-draw-maplibre-gl-adapter@^1.4.1 dependency
+  - file: components/LayerViewer/AnnotationLayer.tsx
+    change: new file -- the toolbar + terra-draw wiring + legend
+  - file: components/LayerViewer/LayerViewer.tsx
+    change: integrate AnnotationLayer
+
+design_decisions:
+  - decision: No server-side persistence -- expose onAnnotationsChange for a consuming app to own it
+    rationale: This framework repo has no backend of any kind (CLAUDE.md's "own the viewer, buy only compute" posture) -- same precedent as every other component here
+
+risks:
+  - severity: medium
+    description: terra-draw-maplibre-gl-adapter is a genuinely new, previously-unused dependency pairing in this codebase -- its real integration API may have rough edges not visible from a README skim
+    mitigation: The research step budgets real time to read terra-draw's own type definitions and confirm the exact attach-to-existing-map-instance API before implementation starts
+
+references:
+  - path: package.json
+    relevant_excerpt: |
+      "terra-draw": "^1.0.0",
+      "@turf/turf": "^7.1.0",

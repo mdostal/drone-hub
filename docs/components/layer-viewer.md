@@ -240,6 +240,191 @@ new shape instead; see that file directly for the current assertions.
   isn't rejected, just not needed at this data scale yet), `@turf/turf` and `terra-draw`
   (Measure/Annotate, Phase 2).
 
+## Phase 2 tools — Measure · Annotate · Compare · Align
+
+**Shipped 2026-08-18 (`layerviewer-phase2-tools` epic).** CBA's Phase 2 line item —
+`MeasureTool` + `AnnotationLayer` + `CompareSwipe` + `AlignControl` — landed as four
+stories on `feat/layerviewer-phase2-tools`, closed out by this doc update + the live
+showcase wiring + the Measure/Annotate integration check below. This supersedes the
+"Acceptance criteria" section's older "Measure, Annotate, Compare, Align ... explicitly
+out of scope" framing — see that section's own updated header line.
+
+Two different composition shapes, deliberately:
+
+- **Measure and Annotate live INSIDE `<LayerViewer>` itself** — their own state
+  (`measureMode`/`measurePoints`, `annotationMode`/`annotations`), their own floating
+  panels, their own MapLibre sources/layers, all added directly in `LayerViewer.tsx`.
+  Reason: both need to intercept clicks on `<LayerViewer>`'s OWN map, and both are
+  small enough (a GeoJSON source + two layers; one `TerraDraw` instance) that a
+  separate sibling component wouldn't buy any real independence — a consumer can't
+  meaningfully mount one without the other's map anyway.
+- **Compare and Align are SEPARATE sibling components** (`<CompareSwipe>`,
+  `<AlignControl>`), same "independent, plug-and-play sibling positioned by the
+  consumer" pattern `<LayerControl>` already established (see this doc's "Behavior"
+  section / `index.ts`'s wiring comment). Reason: both own a SECOND, independently
+  camera-synced MapLibre `Map` instance of their own (a comparison pane, a "ghost"
+  pane) — real, separate pieces of chrome a consumer may or may not want mounted,
+  not something `<LayerViewer>`'s own click-handling needs to know about at all.
+
+### Measure — `measureMode`/`measurePoints` (built into `<LayerViewer>`)
+
+Click-to-measure real-world distance, via `@turf/turf`'s `distance()` (haversine over a
+mean-Earth-radius — a visual tool, not a survey instrument, matching CLAUDE.md's "visual
+property-intelligence, NOT survey-grade" framing everywhere else in this doc). A
+bottom-left floating panel toggles Measure on/off; while on, the first two map clicks
+place points (rendered via a shared GeoJSON source/circle+line layer pair,
+`MEASURE_SOURCE_ID`), and a floating label — positioned via `map.project()`, re-computed
+on every `move` so it tracks pan/zoom — shows the live great-circle distance
+(`formatMeasureDistance`: meters under 1km, km at/above). A third click clears the old
+measurement and starts fresh at the new point; an explicit "Clear measurement" action is
+also available. Mirrors `<Model3D>`'s own measure tool (`components/Model3D/Model3D.tsx`)
+pixel-for-pixel in UX and accent color (`#e8590c`) for cross-component consistency.
+Toggling Measure off leaves any already-placed points on the map (only new placement
+stops) — same "off means stop interacting, not erase" semantics as Annotate below.
+
+Pure math (`measureDistanceMeters`, `formatMeasureDistance`,
+`buildMeasureFeatureCollection`) is exported and unit-tested independently of any
+MapLibre instance — see `LayerViewer.test.tsx`. The click-to-place wiring itself is a
+full-render suite, `LayerViewer.measure.test.tsx` (real `maplibre-gl` mocked, per this
+doc's "Tech" section's `next/dynamic({ssr:false})` note — `maplibre-gl` needs `Worker`,
+which jsdom doesn't implement).
+
+### Annotate — `annotationMode`/`annotations` (built into `<LayerViewer>`)
+
+Draw point/line/polygon/freehand annotations directly on the map, via `terra-draw` +
+`terra-draw-maplibre-gl-adapter` — the real, separate "buy compute, own the viewer" npm
+package this doc's "Stack / plugins" precedent (CLAUDE.md) calls for, hooked onto
+`<LayerViewer>`'s ALREADY-EXISTING `Map` instance (not a second map of its own — contrast
+with Compare/Align below). A top-left floating panel offers a four-button mode-switcher
+toolbar (Point/Line/Polygon/Freehand) plus a legend list of placed annotations with a
+per-row Delete action. Clicking a mode button switches terra-draw into it; clicking the
+already-active one returns terra-draw to its own built-in idle `TerraDrawRenderMode`
+(placed shapes still render, but no new interaction starts) — the map ALWAYS has a valid
+active terra-draw mode (required by terra-draw) without that mode ever being a drawing
+one while the toolbar shows nothing selected.
+
+terra-draw's own store is the single source of truth for placed features — every
+create/update/delete re-reads `draw.getSnapshot()` on its `"change"` event rather than
+diffing the event payload, so the legend panel and `onAnnotationsChange` callback (plain
+GeoJSON features, not terra-draw-specific types — this repo has no backend of its own,
+CLAUDE.md, so persistence is entirely a consuming app's job) stay correct regardless of
+which internal terra-draw codepath caused the change. Unmounting calls `draw.stop()`
+(triggers the adapter's own `unregister()`, removing its `td-*` sources/layers), not just
+dropping the JS reference — same cleanup rigor the model-layer diffing already uses
+elsewhere in `LayerViewer.tsx`.
+
+Full-render suite: `LayerViewer.annotate.test.tsx`. terra-draw's real pointer-driven
+drawing internals are mocked out (not reproducible/relevant under jsdom — see that file's
+header comment) — this suite verifies `<LayerViewer>`'s OWN wiring around it (does a
+toolbar click call `setMode()` correctly, does a `"change"` event update the legend +
+fire the callback, does Delete call `removeFeatures()`), not terra-draw's own internals.
+
+**Measure/Annotate click-ownership — the required integration check (not assumed):**
+both tools want to own a map click when active. Researched directly (not guessed): terra-
+draw-maplibre-gl-adapter attaches its OWN native pointer listeners straight to the map's
+canvas element (`getMapEventElement()` returns `this._map.getCanvas()` — verified against
+the installed package's compiled dist, not just its `.d.ts`), completely independently of
+MapLibre's synthetic `map.on("click", ...)` event system that Measure's own click handler
+is registered on. Before the `layerviewer-phase2-closeout` fix, a single physical click
+with Measure on AND an annotation drawing mode active was consumed by BOTH mechanisms at
+once — a measure point placed AND (in a real browser) a terra-draw vertex drawn from the
+same click. Confirmed as a real, reproducible conflict (a failing test, not a hypothetical
+written in prose) before being fixed two ways, belt-and-suspenders:
+
+1. **UI-level mutual exclusion.** Turning Measure on while an annotation drawing mode is
+   active returns terra-draw to idle and clears the toolbar's selection first; switching
+   to an annotation drawing mode while Measure is on turns Measure off first. The two
+   tools can never both be "on" via their own panel buttons.
+2. **Defense-in-depth in the click handler itself.** `<LayerViewer>`'s map `"click"`
+   listener gates on `!measureModeRef.current || annotationModeRef.current` — Annotate
+   always takes priority over Measure even if some future code path left both flags set
+   simultaneously, so Measure never double-handles a click Annotate is (in a real
+   browser) about to consume.
+
+Regression-covered by `LayerViewer.tool-exclusivity.test.tsx`, which fails without the
+fix (re-confirmed directly by reverting the fix and re-running that suite, not just
+assumed from reading the code) and passes with it: activating one tool turns the other
+off (both directions), and a click while both would otherwise be eligible only ever
+reaches one tool's state.
+
+### Compare — `<CompareSwipe>` (separate sibling component)
+
+A draggable vertical divider comparing two already-registered layers side by side.
+Researched directly against real MapLibre-ecosystem precedent before building (see
+`CompareSwipe.tsx`'s own header comment for the full trail): MapLibre GL has no paint/
+filter/mask primitive that clips one layer to a screen-space rectangle — every real
+implementation of this pattern (`@maplibre/maplibre-gl-compare`, `maplibre-gl-swipe`)
+reaches for a SECOND `Map` instance clipped via CSS `clip-path`, camera-mirrored from the
+first. `<CompareSwipe>` follows the same technique, scoped to fit this component family
+specifically: it owns exactly two of its OWN small `Map` instances (not "before/after,
+whole scene" the way the precedents are) — one rendering only `layerA` + the shared Esri
+basemap, one rendering only `layerB` + the same basemap, both built via the exact same
+`buildLayerMapConfig` the main `<LayerViewer>` map uses (so a compared layer renders
+identically to its real-map appearance). The right/`layerB` pane sits on top and is the
+one CSS-`clip-path`-ed to the divider position; the left/`layerA` pane underneath is
+always full-bleed, which is what makes both the 0% and 100% divider positions render
+exactly one layer edge-to-edge with no blank strip or seam.
+
+Camera is mirrored ONE-DIRECTIONALLY from the real `<LayerViewer>` map (read via
+`viewerRef.current.getMap()`, the same ref a consumer already passes to `<LayerViewer>`)
+on every `"move"` — both panes are `interactive: false` with `pointer-events: none` on
+their DOM except the divider handle, so all real panning/zooming still happens on the
+actual map underneath. `<CompareSwipe>` never calls `setLayoutProperty`/`setPaintProperty`
+on `<LayerViewer>`'s own map — a consumer "turns Compare off" by simply not rendering it,
+which tears down only `<CompareSwipe>`'s own two extra `Map` instances, leaving nothing to
+restore on the real map. The divider itself supports drag (Pointer Events, unified mouse/
+touch/pen) and keyboard (arrow keys ±2%, Shift+arrow ±10%, Home/End to the extremes),
+`role="slider"` with the live position as `aria-valuenow`.
+
+Full-render suite: `CompareSwipe.test.tsx` (a minimal fake `LayerViewerHandle` — just
+`getMap()` — since `<CompareSwipe>` never touches terra-draw/the model-layer engine at
+all, unlike `<LayerViewer>`'s own suites).
+
+### Align — `<AlignControl>` (separate sibling component)
+
+A manual GPS-drift alignment nudge — CLAUDE.md's Phase-0 "no RTK = 1-3m drift" problem,
+solved directly rather than deferred. Researched directly against this repo's own
+installed `maplibre-gl` style spec (`node_modules/@maplibre/maplibre-gl-style-spec/src/
+reference/v8.json`, not assumed/remembered) before building: `paint_raster` has no
+`raster-translate` property (unlike `paint_fill`/`paint_line`, which DO have `fill-
+translate`/`line-translate` — but those only exist for geojson layer types, and the real
+drift problem is specifically about raster ortho/hillshade/thermal imagery). MapLibre GL
+has no native per-layer positional-offset mechanism for raster layers at all, full stop —
+a real, well-known limitation matching the public "add a georeferenced image" workaround
+every MapLibre/Mapbox write-up on this reaches for (a separate `image`/canvas source,
+not available here without abandoning tiled COG rendering).
+
+`<AlignControl>` reuses `<CompareSwipe>`'s own "second, independently-cameraed `Map`
+instance" technique instead: a single small "ghost" pane, rendering ONLY the currently-
+selected layer (via the same shared `buildLayerMapConfig`), camera-mirrored from the real
+map on every move EXCEPT its center is shifted by the NEGATIVE of the desired offset — so
+content geographically at the ghost map's center renders on screen exactly `offsetMeters`
+away from where it sits on the real map (`computeGhostCenter`, numerically verified in
+`AlignControl.test.tsx`, including that a north-nudge shifts the ghost camera SOUTH, not
+north). The real map's own copy of the selected layer is hidden (`visibility: none`, via
+`buildLayerMapConfig`'s own computed layer ids) for as long as its offset is non-zero, and
+restored the moment the offset returns to zero, the selection changes, or the component
+unmounts — via the exported `updateLayerOnMap`, which respects the registry's own current
+`toggle`/`opacity` rather than hardcoding visible, so this never fights a sibling
+`<LayerControl>`.
+
+A bottom-right panel offers a layer selector (every non-disabled entry with a real `url`),
+a 4-direction D-pad nudging the selection by `ALIGN_STEP_METERS` (0.25m per click — small
+enough that correcting 1-3m of real-world drift takes a handful of clicks, not one
+imprecise jump), a live `north/east` meters readout, and a Reset action. Offsets are
+tracked per-layer (`Record<string, AlignOffset>`) — switching the selector back to a
+previously-nudged layer restores its own accumulated offset, not zero. `onAlignmentChange`
+fires the current cumulative offset on every nudge/Reset — same "the viewer doesn't own
+persistence it shouldn't" escape-hatch pattern as `<LayerViewer>`'s own
+`onAnnotationsChange`/`onLayersChange`.
+
+Full-render suite: `AlignControl.test.tsx`, in two tiers — pure numeric checks
+(`metersToLngLatOffset`/`computeGhostCenter`/`nudgeOffset`/`isZeroOffset`, no React or
+MapLibre at all) first, then full-render specs against a fake `Map` (mirrors
+`CompareSwipe.test.tsx`'s harness, extended since `<AlignControl>` — unlike
+`<CompareSwipe>` — also mutates the real map's own layer visibility, not just reads its
+camera).
+
 ## The gated-route convention
 
 `<LayerViewer>` mounts at `/properties/[slug]`, extending the same gating pattern
@@ -270,8 +455,13 @@ rediscovered as a surprise later — not silently passed through as if it were s
 
 ## Acceptance criteria
 
-Scoped to this epic (P1: `<LayerViewer>` + `<LayerControl>` on sample data) only. Measure,
-Annotate, Compare, Align, and `<Model3D>` are explicitly out of scope — see Phase fit.
+Scoped to this epic (P1: `<LayerViewer>` + `<LayerControl>` on sample data) only.
+`<Model3D>` is a separate epic, out of scope here — see Phase fit. **Measure, Annotate,
+Compare, and Align were originally scoped OUT of this P1 checklist ("explicitly out of
+scope — see Phase fit") — that framing is now superseded: all four shipped as the
+`layerviewer-phase2-tools` epic (see "Phase 2 tools" above) and are proven against this
+same sample dataset at the live `/components/layer-viewer` showcase. The checklist below
+is kept as-is (P1's own original scope), not rewritten to claim it always covered Phase 2.
 
 - [x] Renders a MapLibre GL map with the Esri World Imagery satellite basemap as the base
       layer, independent of the layer registry.
@@ -377,10 +567,15 @@ holds.
   proven against real public sample data (sample COG ortho, hillshade/DEM, synthetic
   parcel boundary), mounted at a gated `/properties/[slug]` route. The thermal slot exists
   in the registry as a `disabled: true` stub with no map rendering.
-- **P2:** `MeasureTool` (terra-draw + turf → distance/area), `AnnotationLayer` (draw/
-  persist shapes to `annotations.json`), `CompareSwipe` (two-date before/after swipe),
-  `AlignControl` (manual affine nudge — the no-RTK workaround), and 2.5D DSM drape. Not
-  specified or scoped by this document.
+- **P2 — shipped 2026-08-18 (`layerviewer-phase2-tools` epic):** `MeasureTool` (terra-draw
+  + turf → distance) and `AnnotationLayer` (terra-draw point/line/polygon/freehand,
+  session-only — no `annotations.json` persistence; `onAnnotationsChange` is the escape
+  hatch for a consumer that wants its own) built directly into `<LayerViewer>`;
+  `CompareSwipe` (two-layer swipe divider, not specifically a two-date before/after — any
+  two registered layers) and `AlignControl` (manual per-layer nudge — the no-RTK
+  workaround) as separate sibling components. See "Phase 2 tools" above for the full
+  writeup, including the required Measure/Annotate click-ownership integration check. 2.5D
+  DSM drape was NOT part of this epic — still unscoped.
 - **P3:** `<Model3D>` (glTF mesh + point-cloud viewer) — a **separate epic**, not planned
   here.
 - **P4 (per CBA):** thermal activation — flip `disabled: false` on the existing stub once

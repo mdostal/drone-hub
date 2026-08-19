@@ -1,0 +1,72 @@
+id: layerviewer-phase2-closeout
+epic: layerviewer-phase2-tools
+title: Docs, showcase integration, and acceptance closeout
+status: pending
+complexity: low
+methodology: classic
+depends_on: [layerviewer-measure-tool, layerviewer-annotation-layer, layerviewer-compare-swipe, layerviewer-align-control]
+
+description: |
+  Close out the epic once all four tools (MeasureTool, AnnotationLayer,
+  CompareSwipe, AlignControl) are merged into feat/layerviewer-phase2-tools:
+
+  1. Update docs/components/layer-viewer.md with a section on each of the
+     four new tools (matching this doc's existing section-structure
+     conventions).
+  2. Wire all four into app/(showcase)/components/layer-viewer/page.tsx's
+     live demo so a visitor can actually try Measure/Annotate/Compare/Align,
+     not just read about them.
+  3. Update the LayerViewer controls legend (LayerControl.tsx or wherever
+     the existing "Drag to orbit / Scroll to zoom"-style legend text lives
+     for this component) to mention the new tools' toggle buttons.
+  4. Run the FULL test suite + a real npm run build (not just dev) to
+     confirm all four new tools integrate cleanly together with no
+     conflicts (e.g. Measure mode and Annotate mode both trying to own map
+     click events at the same time -- confirm they're mutually exclusive
+     or cleanly co-existing, don't leave that unresolved).
+  5. Merge feat/layerviewer-phase2-tools into master and push.
+
+acceptance_criteria:
+  - "docs/components/layer-viewer.md documents all four new tools with the same section depth/quality as its existing sections"
+  - "The live showcase demo at /components/layer-viewer lets a visitor toggle and use all four tools"
+  - "Given Measure mode and Annotate mode are both available, when one is toggled on, then map clicks are routed to exactly one tool at a time (no double-handling, no silent conflict) -- this is a real integration check, not assumed from each tool's own isolated tests"
+  - "npm run build completes with zero errors and npm test passes with the full combined suite (not just each tool's own isolated tests)"
+  - "feat/layerviewer-phase2-tools is merged into master and pushed to origin"
+
+steps:
+  - id: implement
+    description: Perform the five closeout actions described above.
+    agent: developer
+  - id: test
+    description: Run the full npm test suite and a real npm run build. Manually verify (or write an integration test for) the Measure/Annotate mutual-exclusivity behavior specifically.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Confirm docs quality matches sibling components' docs, the showcase demo genuinely exposes all four tools (not just imports them unused), and the mode-conflict behavior is real and tested, not assumed.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Merge feat/layerviewer-phase2-tools into master and push to origin master.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/personal/drone-hub
+  key_files:
+    - path: docs/components/layer-viewer.md
+      purpose: Docs file to extend with the four new tool sections
+    - path: "app/(showcase)/components/layer-viewer/page.tsx"
+      purpose: Showcase demo to wire all four tools into
+
+files_to_modify:
+  - file: docs/components/layer-viewer.md
+    change: add sections for MeasureTool/AnnotationLayer/CompareSwipe/AlignControl
+  - file: "app/(showcase)/components/layer-viewer/page.tsx"
+    change: wire in all four tools to the live demo
+
+risks:
+  - severity: medium
+    description: Measure and Annotate modes may both try to own map click-handling simultaneously if not explicitly coordinated, causing confusing double-behavior
+    mitigation: Acceptance criteria explicitly requires this be checked and resolved, not left as an assumption
+
+references: []

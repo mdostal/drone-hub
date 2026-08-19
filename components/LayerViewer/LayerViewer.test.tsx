@@ -16,7 +16,14 @@
 // final report for the full breakdown.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LayerDef, PropertyLayers } from "@/lib/layer-types";
-import { buildLayerMapConfig, isWrapperFullscreen, resolveManifest } from "./LayerViewer";
+import {
+  buildLayerMapConfig,
+  buildMeasureFeatureCollection,
+  formatMeasureDistance,
+  isWrapperFullscreen,
+  measureDistanceMeters,
+  resolveManifest,
+} from "./LayerViewer";
 
 function makeLayer(overrides: Partial<LayerDef> & Pick<LayerDef, "id" | "type">): LayerDef {
   return {
@@ -214,5 +221,114 @@ describe("resolveManifest", () => {
     expect(resolved.layers[0].url).toBe(
       "https://tools.mdostal.com/framework/layer-viewer-samples/2806-prado/ortho.tif",
     );
+  });
+});
+
+// Measure tool specs (layerviewer-phase2-tools epic's MeasureTool story).
+// measureDistanceMeters wraps @turf/turf's distance() — the whole point of
+// this tool is REAL great-circle distance, not screen-pixel distance, so
+// this is checked against a known real-world coordinate pair, not just "a
+// number comes out".
+describe("measureDistanceMeters", () => {
+  it("computes ~1 nautical mile for two points 1 arcminute of latitude apart -- a known real-world distance (the nautical mile's own textbook definition)", () => {
+    // The nautical mile is DEFINED as the length of one minute of arc of
+    // latitude along a meridian: exactly 1852m under the modern
+    // international definition. turf.distance() uses a haversine formula
+    // over a mean *spherical* Earth radius (6371008.8m), not the WGS84
+    // ellipsoid the international definition is actually pinned to, so the
+    // two don't match to the millimeter -- but they agree to within ~0.1%,
+    // which is exactly the tolerance a "did we wire up real geodesic math,
+    // not screen pixels" check needs.
+    const a = { lng: -122.4, lat: 37.0 };
+    const b = { lng: -122.4, lat: 37.0 + 1 / 60 };
+    const distance = measureDistanceMeters(a, b);
+    expect(distance).toBeGreaterThan(1840);
+    expect(distance).toBeLessThan(1865);
+  });
+
+  it("computes ~111.2km for two points exactly 1 degree of longitude apart at the equator -- another known real-world constant", () => {
+    // 1 degree of longitude at the equator, over turf's mean Earth radius
+    // (6371008.8m): radius * (pi/180) ≈ 111,195m. A second independent,
+    // textbook-known real-world distance fact, at a totally different
+    // scale than the nautical-mile check above.
+    const a = { lng: 0, lat: 0 };
+    const b = { lng: 1, lat: 0 };
+    const distance = measureDistanceMeters(a, b);
+    expect(distance).toBeGreaterThan(111000);
+    expect(distance).toBeLessThan(111400);
+  });
+
+  it("returns 0 for two identical points", () => {
+    const point = { lng: -122.4, lat: 37.0 };
+    expect(measureDistanceMeters(point, point)).toBe(0);
+  });
+
+  it("is symmetric (order of points doesn't matter)", () => {
+    const a = { lng: -122.4, lat: 37.0 };
+    const b = { lng: -122.41, lat: 37.02 };
+    expect(measureDistanceMeters(a, b)).toBeCloseTo(measureDistanceMeters(b, a));
+  });
+});
+
+describe("formatMeasureDistance", () => {
+  it("labels sub-1000m distances in meters, to 1 decimal place", () => {
+    expect(formatMeasureDistance(42.567)).toBe("42.6 m");
+  });
+
+  it("labels exactly 1000m in kilometers (the >= boundary), to 2 decimal places", () => {
+    expect(formatMeasureDistance(1000)).toBe("1.00 km");
+  });
+
+  it("labels distances over 1000m in kilometers, to 2 decimal places", () => {
+    expect(formatMeasureDistance(1853.25)).toBe("1.85 km");
+  });
+
+  it("labels a zero distance in meters", () => {
+    expect(formatMeasureDistance(0)).toBe("0.0 m");
+  });
+});
+
+describe("buildMeasureFeatureCollection", () => {
+  it("produces an empty FeatureCollection for zero points", () => {
+    expect(buildMeasureFeatureCollection([])).toEqual({ type: "FeatureCollection", features: [] });
+  });
+
+  it("produces a single Point feature for one placed point -- no line yet", () => {
+    const result = buildMeasureFeatureCollection([{ lng: -122.4, lat: 37.0 }]);
+    expect(result.features).toHaveLength(1);
+    expect(result.features[0]).toEqual({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [-122.4, 37.0] },
+      properties: {},
+    });
+  });
+
+  it("produces two Point features plus a connecting LineString for two placed points", () => {
+    const a = { lng: -122.4, lat: 37.0 };
+    const b = { lng: -122.41, lat: 37.02 };
+    const result = buildMeasureFeatureCollection([a, b]);
+
+    expect(result.features).toHaveLength(3);
+    expect(result.features[0]).toEqual({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [a.lng, a.lat] },
+      properties: {},
+    });
+    expect(result.features[1]).toEqual({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [b.lng, b.lat] },
+      properties: {},
+    });
+    expect(result.features[2]).toEqual({
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [a.lng, a.lat],
+          [b.lng, b.lat],
+        ],
+      },
+      properties: {},
+    });
   });
 });
