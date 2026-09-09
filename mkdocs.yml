@@ -1,0 +1,38 @@
+site_name: drone-hub
+site_description: >-
+  Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.
+site_url: https://mdostal.github.io/drone-hub/
+repo_url: https://github.com/mdostal/drone-hub
+repo_name: mdostal/drone-hub
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.top
+    - navigation.sections
+    - navigation.instant
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - tables
+  - toc:
+      permalink: true
+plugins:
+  - search
