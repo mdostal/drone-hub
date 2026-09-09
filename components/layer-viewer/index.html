@@ -1,0 +1,1922 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.">
+      
+      
+      
+        <link rel="canonical" href="https://mdostal.github.io/drone-hub/components/layer-viewer/">
+      
+      
+        <link rel="prev" href="../land-overlay/">
+      
+      
+        <link rel="next" href="../minecraft-export/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title><LayerViewer> — georeferenced layer map viewer (hive spec) - drone-hub</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#layerviewer-georeferenced-layer-map-viewer-hive-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="drone-hub" class="md-header__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            drone-hub
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="drone-hub" class="md-nav__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    drone-hub
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drone-hub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CBA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drone platform — cost-benefit analysis + build plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileList&gt; — file viewer / download list (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileUpload&gt; — drag-and-drop / click-to-browse file picker (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flight-coverage-analyzer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FlightCoverageAnalyzer&gt; — nadir-grid overlap judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Gallery&gt; — plain shots carousel (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-overlay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-a-typed-layer-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — a typed layer registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — a typed layer registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sample-data-provenance-publiclayer-viewer-samples2806-prado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample data provenance (public/layer-viewer-samples/2806-prado/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-tools-measure-annotate-compare-align" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 tools — Measure · Annotate · Compare · Align
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2 tools — Measure · Annotate · Compare · Align">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#measure-measuremodemeasurepoints-built-into-layerviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure — measureMode/measurePoints (built into &lt;LayerViewer&gt;)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotate-annotationmodeannotations-built-into-layerviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotate — annotationMode/annotations (built into &lt;LayerViewer&gt;)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-compareswipe-separate-sibling-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare — &lt;CompareSwipe&gt; (separate sibling component)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#align-aligncontrol-separate-sibling-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Align — &lt;AlignControl&gt; (separate sibling component)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-gated-route-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gated-route convention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The gated-route convention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#known-limitation-flagged-not-solved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known limitation — flagged, not solved
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#importable-standalone-audit-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importable standalone — audit finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update-nadir-oblique-orbit-real-tree-canopy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update — nadir + oblique orbit, real tree canopy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minecraft-export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minecraft export — real .schem download for &lt;VoxelTerrain&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model3d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;ProcessingStatus&gt; — presentational job-status indicator (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;TourBuilder&gt; — visual tour.json authoring tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-annotator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoAnnotator&gt; — scrub, zoom, draw, and export a single annotated frame (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voxel-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VoxelTerrain&gt; + &lt;VoxelStructure&gt; — blocky voxel terrain renderer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-a-typed-layer-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — a typed layer registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — a typed layer registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sample-data-provenance-publiclayer-viewer-samples2806-prado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample data provenance (public/layer-viewer-samples/2806-prado/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-tools-measure-annotate-compare-align" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 tools — Measure · Annotate · Compare · Align
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2 tools — Measure · Annotate · Compare · Align">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#measure-measuremodemeasurepoints-built-into-layerviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure — measureMode/measurePoints (built into &lt;LayerViewer&gt;)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotate-annotationmodeannotations-built-into-layerviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotate — annotationMode/annotations (built into &lt;LayerViewer&gt;)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-compareswipe-separate-sibling-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare — &lt;CompareSwipe&gt; (separate sibling component)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#align-aligncontrol-separate-sibling-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Align — &lt;AlignControl&gt; (separate sibling component)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-gated-route-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gated-route convention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The gated-route convention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#known-limitation-flagged-not-solved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known limitation — flagged, not solved
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#importable-standalone-audit-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importable standalone — audit finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update-nadir-oblique-orbit-real-tree-canopy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update — nadir + oblique orbit, real tree canopy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="layerviewer-georeferenced-layer-map-viewer-hive-spec"><code>&lt;LayerViewer&gt;</code> — georeferenced layer map viewer (hive spec)<a class="headerlink" href="#layerviewer-georeferenced-layer-map-viewer-hive-spec" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Drape a <strong>georeferenced ortho / thermal</strong> over a <strong>satellite map base</strong>, and let the
+operator <strong>toggle layers on/off with opacity</strong> — visual ortho · thermal · LiDAR
+hillshade/heightmap · contours · parcel boundary. <strong>This layer toggle is the killer
+feature</strong> (see root <code>CLAUDE.md</code>). Plug-and-play, importable into any app.</p>
+</blockquote>
+<p><strong>Update (operator, 2026-08-08):</strong> drone-hub carries no gating of any kind — every
+reference below to <code>middleware.ts</code>, <code>lib/gate.ts</code>, a passcode gate, or the real
+<code>drone.mdostal.com</code> client platform describes the separate, private <code>personal-drone</code>
+platform (which pulls this component in), not this repo. <code>app/properties/[slug]/page.tsx</code>
+(the gated route this doc originally documented) was deleted; the component itself is
+demonstrated at the public <code>/components/layer-viewer</code> showcase page. Kept as historical
+record of the design decisions below, which are otherwise unaffected.</p>
+<p><strong>Design discussion (RESOLVED architecture — read first):</strong>
+<code>.pHive/epics/layer-viewer/docs/design-discussion.md</code> — this doc documents those
+decisions, it does not re-derive them.</p>
+<h2 id="why-operator-intent-honor-this">Why (operator intent — honor this)<a class="headerlink" href="#why-operator-intent-honor-this" title="Permanent link">&para;</a></h2>
+<p>Hammer Missions (hub.hammermissions.com) is the reference: a drone data viewer where you
+drape imagery over a map base and flip layers on and off. Per <code>CLAUDE.md</code>, of everything
+that reference does, <strong>the layer toggle is called out explicitly as the killer feature</strong> —
+not the 3D viewer, not annotation, not compare. <code>&lt;LayerViewer&gt;</code> is CLAUDE.md's "the core"
+component and CBA's <code>MapLayerViewer</code> — the first plug-and-play component the hive kickoff
+brief says to ship.</p>
+<p>The operator (solo fractional CTO, DJI Mini 5 Pro, no thermal, no RTK) needs this to work
+against <strong>real public sample geospatial data now</strong>, proven end-to-end, so that when real
+Prado/Omaha nadir-pass data comes back from WebODM it drops in as new manifest entries —
+no rework. (The Phase-0 nadir-grid-pass blocker only blocks <em>real</em> data; it never blocked
+building and testing the components — see CLAUDE.md's 2026-08-07 correction and
+design-discussion.md §0.)</p>
+<h2 id="the-model-a-typed-layer-registry">The model — a typed layer registry<a class="headerlink" href="#the-model-a-typed-layer-registry" title="Permanent link">&para;</a></h2>
+<p>See <code>lib/layer-types.ts</code> (built by a concurrent story in this same epic — see note below).
+CBA's plug-and-play framing: <code>MapLayerViewer</code> is "MapLibre driven by a typed layer
+registry <code>{id,type,url,opacity,toggle}</code>."</p>
+<p>The registry's resolved shape (design-discussion.md §2.1), reproduced verbatim:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">LayerDef</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'raster'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">'geojson'</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">opacity</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">toggle</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">disabled?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">legend?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">format</span><span class="o">?:</span><span class="w"> </span><span class="s1">'cog'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">'xyz'</span><span class="p">;</span><span class="w"> </span><span class="c1">// raster only, defaults to 'cog'</span>
+<span class="w">  </span><span class="nx">style?</span><span class="o">:</span><span class="w"> </span><span class="kt">LayerStyle</span><span class="p">;</span><span class="w"> </span><span class="c1">// geojson only, added by layerviewer-sample-dataset-overhaul — see below</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">LayerStyle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">fillColor?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">lineColor?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">lineOnly?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="c1">// true → line only, no fill (e.g. contours)</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">PropertyLayers</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">slug</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="kt">LayerDef</span><span class="p">[];</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong><code>style</code> (added 2026-08-08, <code>layerviewer-sample-dataset-overhaul</code>):</strong> an optional,
+purely-additive visual-style override for <code>type: 'geojson'</code> layers, consumed by
+<code>buildLayerMapConfig</code> (<code>components/LayerViewer/LayerViewer.tsx</code>). Omitted (the case for
+every <code>LayerDef</code> written before this field existed — all 5 showcase pages,
+<code>lib/layer-types.test.ts</code>, <code>LayerViewer.test.tsx</code>'s fixtures) falls through to the exact
+same hardcoded green <code>#22c55e</code> fill+line treatment this function always used — confirmed
+directly by re-running those existing suites unmodified after the field landed, not just
+assumed from "optional fields are additive" in the abstract. <code>lineOnly: true</code> renders only
+the line layer (no fill at all) — used by the new <code>contours</code> layer below so it reads as
+thin elevation-contour lines, not a filled area like the parcel boundary.</p>
+<p>Key points, resolved by design-discussion.md and grill, not re-derived here:</p>
+<ul>
+<li><code>type</code> is exactly <code>'raster' | 'geojson'</code> — <strong>not</strong> a divergent <code>'raster-cog'</code> /
+  <code>'raster-tiles'</code> split. This matches CBA's own thermal-stub example literally.</li>
+<li>Raster layers additionally carry <code>format?: 'cog' | 'xyz'</code> (default <code>'cog'</code>), so
+  <code>&lt;LayerViewer&gt;</code> knows which MapLibre source builder to use. Ortho and hillshade layers
+  in this epic are <code>raster</code> + <code>cog</code>.</li>
+<li><code>url</code> is <code>string | null</code>. <code>null</code> is valid and expected for a <code>disabled: true</code> stub (the
+  thermal slot — no data exists yet, so there's nothing to hold a URL).</li>
+<li>The satellite basemap itself is <strong>not</strong> a registry entry — it's the map's base, handled
+  separately from the layer list.</li>
+<li><code>PropertyLayers</code> (<code>{slug, title, layers}</code>) is the per-property manifest, analogous to
+  <code>video-tour</code>'s <code>Tour</code> type — one manifest per property, folder-per-property convention
+  (<code>public/layer-viewer-samples/&lt;slug&gt;/</code> for this epic's sample data).</li>
+</ul>
+<h3 id="sample-data-provenance-publiclayer-viewer-samples2806-prado">Sample data provenance (<code>public/layer-viewer-samples/2806-prado/</code>)<a class="headerlink" href="#sample-data-provenance-publiclayer-viewer-samples2806-prado" title="Permanent link">&para;</a></h3>
+<p>Not real 2806 Prado data — the Phase-0 nadir-pass blocker still applies to real imagery.</p>
+<p><strong>Updated 2026-08-08 (<code>layerviewer-sample-dataset-overhaul</code>): the entire sample dataset
+was replaced, together, as one coherent regenerate.</strong> The original <code>ortho.tif</code> (below,
+kept as historical record) turned out to be a <strong>single-band uint16</strong> rio-tiler test
+fixture, not real RGB imagery — MapLibre drew it with no stretch/normalization, producing
+a near-solid-black shape on both <code>/components/layer-viewer</code> and <code>/components/land-overlay</code>
+(confirmed live via Playwright screenshot). Separately, the original <code>hillshade.tif</code> was
+continental-scale (~1823 m/pixel over a ~1,000km × 950km extent) while <code>parcel.geojson</code>'s
+rectangle was ~120m × 100m — about 1/15th of a <em>single</em> hillshade pixel — making it
+unusable as a source for parcel-scale thermal/contours layers. Rather than patch either
+file in isolation (which would leave the ortho/hillshade/boundary/duck registered to
+different locations or scales), every layer was regenerated together at ONE new, real,
+small-scale location:</p>
+<ul>
+<li><strong><code>ortho.tif</code></strong> — <strong>real</strong>, a genuine 3-band RGB drone orthophoto: a crop of
+  <a href="https://map.openaerialmap.org/">"Strata Solar entrance (June 25, 2021)"</a>, captured with
+  a DJI Mini 2 (the same DJI Mini product line as the operator's own Mini 5 Pro),
+  originally published on <a href="https://openaerialmap.org/">OpenAerialMap</a> under
+  <strong>CC-BY 4.0</strong> (attribution: "Designing on a juicy cup", via OpenAerialMap). Downloaded
+  from OpenAerialMap's public S3 bucket
+  (<code>s3://oin-hotosm/60d664d2c700c600080d5529/0/60d664d2c700c600080d552a.tif</code>, original
+  EPSG:32617/UTM zone 17N, ~1cm/pixel, 9858×14500px), cropped to a ~48m × 59m interior
+  window clear of the source flight-footprint's ragged edges (a paved road, trees, and a
+  graded dirt/gravel field — genuinely recognizable aerial imagery, not survey-grade or
+  property-specific), downsampled, then reprojected to EPSG:3857 (<code>rio warp --dst-crs
+  EPSG:3857 --resampling bilinear</code>) and re-cogged (<code>rio cogeo create</code> + <code>rio cogeo
+  validate</code>) — the same established convention as the original ortho's own later
+  reprojection (see <code>docs/components/land-overlay.md</code>'s "Fixed" section). The crop's real
+  WGS84 extent is <code>[-81.2683, 33.3503, -81.2680, 33.3509]</code> (near Charlotte, NC/SC —
+  <strong>not</strong> 2806 Prado or Omaha; per this story's own instructions, wherever the real
+  sourced imagery naturally falls becomes the new sample location, rather than forcing it
+  to match a fictional address).</li>
+<li><strong><code>hillshade.tif</code></strong> — <strong>synthetic</strong>, regenerated at the ortho's exact new extent/CRS/
+  pixel grid (not reused from the old continental-scale file): a procedural elevation
+  field (gradient + ridge sinusoid + smoothed noise via <code>rasterio</code>/<code>numpy</code>/<code>scipy</code>),
+  rendered through a real slope/aspect hillshade formula (illumination from
+  azimuth 315°/altitude 45°, a standard GIS convention), single-band uint8, COG'd via
+  <code>rio-cogeo</code>. Still <strong>not</strong> real elevation/LiDAR data — flagged via
+  <code>legend: "synthetic placeholder — not real elevation data"</code>.</li>
+<li><strong><code>thermal.tif</code></strong> — <strong>new, synthetic</strong>, an INDEPENDENTLY-VARIED procedural intensity
+  field (a separate gradient+noise pass, deliberately NOT derived from the same array
+  <code>hillshade.tif</code> uses — sharing one source would make toggling between them trace
+  identical terrain under different palettes), LUT-mapped through an ironbow colormap
+  (black → purple → red → orange → yellow → white) into a 3-band RGB uint8 COG at the
+  same extent. <code>layers.json</code>'s <code>thermal</code> entry is now <strong>live</strong> (<code>disabled</code> removed,
+  <code>url: "thermal.tif"</code>), <code>toggle: false</code> by default, legend
+  <code>"synthetic placeholder — not real radiometric data"</code> (same wording convention as
+  <code>hillshade.tif</code>'s, adapted for radiometric data).</li>
+<li><strong><code>contours.geojson</code></strong> — <strong>new</strong>, real contour lines derived from <code>hillshade.tif</code>'s own
+  underlying elevation field (<code>skimage.measure.find_contours</code> at 6 elevation levels,
+  simplified via <code>skimage.measure.approximate_polygon</code>, pixel coordinates converted
+  through the COG's real affine transform to WGS84 lon/lat), as a GeoJSON
+  <code>FeatureCollection</code> of <code>LineString</code> features. Rendered via the new <code>style: { lineColor:
+  "#38bdf8", lineOnly: true }</code> (see <code>style</code> above) — thin accent-colored lines, no fill,
+  visually distinct from the boundary's green fill+line. Legend
+  <code>"synthetic placeholder — not real elevation data"</code> (derived from the synthetic DEM
+  above, not real elevation data). <code>scikit-image</code> was used as a one-time data-prep tool
+  (<code>pip install scikit-image</code>, not a runtime npm dependency, not committed) — matches this
+  repo's established "pipeline tools live outside the bundle" pattern.</li>
+<li><strong><code>parcel.geojson</code></strong> — <strong>synthetic placeholder</strong>, re-anchored to the new ortho's real
+  extent (a rectangle covering ~90% of <code>ortho.tif</code>'s WGS84 bounds, centered on it). Still
+  not tied to any real address or parcel record — flagged via <code>properties.placeholder:
+  true</code> and a <code>properties.note</code> in the GeoJSON itself.</li>
+</ul>
+<p><code>app/(showcase)/components/land-overlay/page.tsx</code>'s sample duck anchor moved to the new
+parcel's centroid (<code>lat: 33.350613554313604, lon: -81.2681617934123</code>) as a required
+cascading change — CLAUDE.md's own "#1 registration gate" (boundary + ortho + model all
+register to one grid) would otherwise break.</p>
+<hr />
+<p><strong>Historical record — the ORIGINAL sample data (superseded 2026-08-08 above, kept for
+context):</strong></p>
+<ul>
+<li><code>ortho.tif</code> was downloaded verbatim from rio-tiler's own test-fixture COG
+  (<code>tests/fixtures/cog.tif</code> in <code>cogeotiff/rio-tiler</code>) — a genuine, valid, tiled/overview'd
+  COG, but <strong>single-band uint16</strong>, not real RGB imagery, and its footprint fell in the
+  high Arctic (rio-tiler's synthetic test data), not anywhere near a real property.
+  Reprojected from EPSG:32621 to EPSG:3857 on 2026-08-08 to fix a
+  <code>@geomatico/maplibre-cog-protocol</code> bounds bug — see
+  <code>docs/components/land-overlay.md</code>'s "Fixed" section — but the single-band-uint16 defect
+  (the actual cause of the near-black render) was only fixed by this section's full
+  replacement above.</li>
+<li><code>hillshade.tif</code> (original) was continental-scale (~1823 m/pixel), also superseded above.</li>
+<li><code>parcel.geojson</code> (original) was a ~120m × 100m rectangle at the old Arctic location.</li>
+</ul>
+<p><strong>CBA's canonical thermal-stub example</strong> (this WAS the shape of every thermal entry
+before a radiometric-adjacent synthetic layer existed; kept as historical record — the
+real sample manifest's <code>thermal</code> entry no longer matches this shape, see above):</p>
+<div class="highlight"><pre><span></span><code>type:'raster', legend:'ironbow', disabled:true, url:null
+</code></pre></div>
+<p><strong>Sync check (docs-acceptance-closeout story, pre-2026-08-08):</strong> diffed field-by-field
+against the landed <code>lib/layer-types.ts</code>. No drift at the time — <code>LayerDef</code> and
+<code>PropertyLayers</code> above matched the shipped interfaces exactly. The CBA thermal-stub
+example above also matched the sample manifest's <code>thermal</code> entry byte-for-byte at the
+time, asserted verbatim in <code>public/layer-viewer-samples/2806-prado/manifest.test.ts</code>'s
+"matches CBA's exact thermal stub shape" spec — <strong>that spec was rewritten by
+<code>layerviewer-sample-dataset-overhaul</code></strong> (thermal is now live, not a stub) to assert the
+new shape instead; see that file directly for the current assertions.</p>
+<h2 id="behavior">Behavior<a class="headerlink" href="#behavior" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Map renders.</strong> <code>&lt;LayerViewer&gt;</code> mounts a MapLibre GL map with the <strong>Esri World
+   Imagery</strong> satellite basemap (free, no token) as the base layer — always present,
+   never part of the registry.</li>
+<li><strong>Each non-disabled <code>LayerDef</code> becomes a MapLibre source/layer:</strong></li>
+<li><code>type: 'raster'</code> (<code>format: 'cog'</code>, the case this epic exercises) → added via
+     <code>@geomatico/maplibre-cog-protocol</code>, which registers a <code>cog://</code> protocol MapLibre can
+     source a raster layer from directly.</li>
+<li><code>type: 'geojson'</code> → added as a plain MapLibre <code>geojson</code> source + a matching
+     fill/line layer (e.g. the parcel boundary).</li>
+<li>Initial visibility and paint opacity come from the registry's <code>toggle</code> and
+     <code>opacity</code> fields.</li>
+<li><strong><code>disabled: true</code> entries get NO map source/layer at all</strong> — <code>&lt;LayerViewer&gt;</code>
+   explicitly skips the add-source/add-layer step for them (there is no data to render).
+   This is the thermal-stub behavior: the entry exists in the registry and renders as an
+   inert row in <code>&lt;LayerControl&gt;</code> (greyed out, toggle non-functional), but nothing is
+   added to the map. Not a "layer with opacity 0" — genuinely absent from the map's
+   source list.</li>
+<li><strong><code>&lt;LayerControl&gt;</code></strong> renders one row per <code>LayerDef</code> (a shadcn toggle + opacity slider
+   per CBA) — including disabled entries, which render greyed-out and inert rather than
+   being omitted from the list. This is the visible "killer feature" UI: flipping a
+   toggle or dragging an opacity slider updates the corresponding MapLibre layer's
+   <code>visibility</code>/<code>opacity</code> paint property live. Toggling/opacity has no effect on a
+   disabled entry's row (there's no underlying map layer for it to control).</li>
+</ol>
+<h2 id="tech">Tech<a class="headerlink" href="#tech" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>MapLibre GL</strong> — the map engine (already a dep, <code>maplibre-gl</code>).</li>
+<li><strong><code>@geomatico/maplibre-cog-protocol</code></strong> — COG raster source builder (already a dep,
+  locked in <code>package.json</code>, unused before this epic — its first real exercise).</li>
+<li><strong>Plain MapLibre <code>geojson</code> source</strong> — for boundary/vector layers, no extra dep.</li>
+<li><strong>Esri World Imagery</strong> — the satellite basemap, free, no token required.</li>
+<li><strong><code>next/dynamic({ ssr: false })</code></strong> — <code>&lt;LayerViewer&gt;</code> is a heavy client-only viewer like
+  every other viewer in this stack; it must not attempt to render on the server.</li>
+<li>Not used by this epic despite being locked in <code>package.json</code>: <code>pmtiles</code> (CBA's target
+  pipeline tiles to PMTiles for large datasets; this epic's sample/real COGs are small
+  enough that the raw-COG path via <code>maplibre-cog-protocol</code> is the right fit — PMTiles
+  isn't rejected, just not needed at this data scale yet), <code>@turf/turf</code> and <code>terra-draw</code>
+  (Measure/Annotate, Phase 2).</li>
+</ul>
+<h2 id="phase-2-tools-measure-annotate-compare-align">Phase 2 tools — Measure · Annotate · Compare · Align<a class="headerlink" href="#phase-2-tools-measure-annotate-compare-align" title="Permanent link">&para;</a></h2>
+<p><strong>Shipped 2026-08-18 (<code>layerviewer-phase2-tools</code> epic).</strong> CBA's Phase 2 line item —
+<code>MeasureTool</code> + <code>AnnotationLayer</code> + <code>CompareSwipe</code> + <code>AlignControl</code> — landed as four
+stories on <code>feat/layerviewer-phase2-tools</code>, closed out by this doc update + the live
+showcase wiring + the Measure/Annotate integration check below. This supersedes the
+"Acceptance criteria" section's older "Measure, Annotate, Compare, Align ... explicitly
+out of scope" framing — see that section's own updated header line.</p>
+<p>Two different composition shapes, deliberately:</p>
+<ul>
+<li><strong>Measure and Annotate live INSIDE <code>&lt;LayerViewer&gt;</code> itself</strong> — their own state
+  (<code>measureMode</code>/<code>measurePoints</code>, <code>annotationMode</code>/<code>annotations</code>), their own floating
+  panels, their own MapLibre sources/layers, all added directly in <code>LayerViewer.tsx</code>.
+  Reason: both need to intercept clicks on <code>&lt;LayerViewer&gt;</code>'s OWN map, and both are
+  small enough (a GeoJSON source + two layers; one <code>TerraDraw</code> instance) that a
+  separate sibling component wouldn't buy any real independence — a consumer can't
+  meaningfully mount one without the other's map anyway.</li>
+<li><strong>Compare and Align are SEPARATE sibling components</strong> (<code>&lt;CompareSwipe&gt;</code>,
+  <code>&lt;AlignControl&gt;</code>), same "independent, plug-and-play sibling positioned by the
+  consumer" pattern <code>&lt;LayerControl&gt;</code> already established (see this doc's "Behavior"
+  section / <code>index.ts</code>'s wiring comment). Reason: both own a SECOND, independently
+  camera-synced MapLibre <code>Map</code> instance of their own (a comparison pane, a "ghost"
+  pane) — real, separate pieces of chrome a consumer may or may not want mounted,
+  not something <code>&lt;LayerViewer&gt;</code>'s own click-handling needs to know about at all.</li>
+</ul>
+<h3 id="measure-measuremodemeasurepoints-built-into-layerviewer">Measure — <code>measureMode</code>/<code>measurePoints</code> (built into <code>&lt;LayerViewer&gt;</code>)<a class="headerlink" href="#measure-measuremodemeasurepoints-built-into-layerviewer" title="Permanent link">&para;</a></h3>
+<p>Click-to-measure real-world distance, via <code>@turf/turf</code>'s <code>distance()</code> (haversine over a
+mean-Earth-radius — a visual tool, not a survey instrument, matching CLAUDE.md's "visual
+property-intelligence, NOT survey-grade" framing everywhere else in this doc). A
+bottom-left floating panel toggles Measure on/off; while on, the first two map clicks
+place points (rendered via a shared GeoJSON source/circle+line layer pair,
+<code>MEASURE_SOURCE_ID</code>), and a floating label — positioned via <code>map.project()</code>, re-computed
+on every <code>move</code> so it tracks pan/zoom — shows the live great-circle distance
+(<code>formatMeasureDistance</code>: meters under 1km, km at/above). A third click clears the old
+measurement and starts fresh at the new point; an explicit "Clear measurement" action is
+also available. Mirrors <code>&lt;Model3D&gt;</code>'s own measure tool (<code>components/Model3D/Model3D.tsx</code>)
+pixel-for-pixel in UX and accent color (<code>#e8590c</code>) for cross-component consistency.
+Toggling Measure off leaves any already-placed points on the map (only new placement
+stops) — same "off means stop interacting, not erase" semantics as Annotate below.</p>
+<p>Pure math (<code>measureDistanceMeters</code>, <code>formatMeasureDistance</code>,
+<code>buildMeasureFeatureCollection</code>) is exported and unit-tested independently of any
+MapLibre instance — see <code>LayerViewer.test.tsx</code>. The click-to-place wiring itself is a
+full-render suite, <code>LayerViewer.measure.test.tsx</code> (real <code>maplibre-gl</code> mocked, per this
+doc's "Tech" section's <code>next/dynamic({ssr:false})</code> note — <code>maplibre-gl</code> needs <code>Worker</code>,
+which jsdom doesn't implement).</p>
+<h3 id="annotate-annotationmodeannotations-built-into-layerviewer">Annotate — <code>annotationMode</code>/<code>annotations</code> (built into <code>&lt;LayerViewer&gt;</code>)<a class="headerlink" href="#annotate-annotationmodeannotations-built-into-layerviewer" title="Permanent link">&para;</a></h3>
+<p>Draw point/line/polygon/freehand annotations directly on the map, via <code>terra-draw</code> +
+<code>terra-draw-maplibre-gl-adapter</code> — the real, separate "buy compute, own the viewer" npm
+package this doc's "Stack / plugins" precedent (CLAUDE.md) calls for, hooked onto
+<code>&lt;LayerViewer&gt;</code>'s ALREADY-EXISTING <code>Map</code> instance (not a second map of its own — contrast
+with Compare/Align below). A top-left floating panel offers a four-button mode-switcher
+toolbar (Point/Line/Polygon/Freehand) plus a legend list of placed annotations with a
+per-row Delete action. Clicking a mode button switches terra-draw into it; clicking the
+already-active one returns terra-draw to its own built-in idle <code>TerraDrawRenderMode</code>
+(placed shapes still render, but no new interaction starts) — the map ALWAYS has a valid
+active terra-draw mode (required by terra-draw) without that mode ever being a drawing
+one while the toolbar shows nothing selected.</p>
+<p>terra-draw's own store is the single source of truth for placed features — every
+create/update/delete re-reads <code>draw.getSnapshot()</code> on its <code>"change"</code> event rather than
+diffing the event payload, so the legend panel and <code>onAnnotationsChange</code> callback (plain
+GeoJSON features, not terra-draw-specific types — this repo has no backend of its own,
+CLAUDE.md, so persistence is entirely a consuming app's job) stay correct regardless of
+which internal terra-draw codepath caused the change. Unmounting calls <code>draw.stop()</code>
+(triggers the adapter's own <code>unregister()</code>, removing its <code>td-*</code> sources/layers), not just
+dropping the JS reference — same cleanup rigor the model-layer diffing already uses
+elsewhere in <code>LayerViewer.tsx</code>.</p>
+<p>Full-render suite: <code>LayerViewer.annotate.test.tsx</code>. terra-draw's real pointer-driven
+drawing internals are mocked out (not reproducible/relevant under jsdom — see that file's
+header comment) — this suite verifies <code>&lt;LayerViewer&gt;</code>'s OWN wiring around it (does a
+toolbar click call <code>setMode()</code> correctly, does a <code>"change"</code> event update the legend +
+fire the callback, does Delete call <code>removeFeatures()</code>), not terra-draw's own internals.</p>
+<p><strong>Measure/Annotate click-ownership — the required integration check (not assumed):</strong>
+both tools want to own a map click when active. Researched directly (not guessed): terra-
+draw-maplibre-gl-adapter attaches its OWN native pointer listeners straight to the map's
+canvas element (<code>getMapEventElement()</code> returns <code>this._map.getCanvas()</code> — verified against
+the installed package's compiled dist, not just its <code>.d.ts</code>), completely independently of
+MapLibre's synthetic <code>map.on("click", ...)</code> event system that Measure's own click handler
+is registered on. Before the <code>layerviewer-phase2-closeout</code> fix, a single physical click
+with Measure on AND an annotation drawing mode active was consumed by BOTH mechanisms at
+once — a measure point placed AND (in a real browser) a terra-draw vertex drawn from the
+same click. Confirmed as a real, reproducible conflict (a failing test, not a hypothetical
+written in prose) before being fixed two ways, belt-and-suspenders:</p>
+<ol>
+<li><strong>UI-level mutual exclusion.</strong> Turning Measure on while an annotation drawing mode is
+   active returns terra-draw to idle and clears the toolbar's selection first; switching
+   to an annotation drawing mode while Measure is on turns Measure off first. The two
+   tools can never both be "on" via their own panel buttons.</li>
+<li><strong>Defense-in-depth in the click handler itself.</strong> <code>&lt;LayerViewer&gt;</code>'s map <code>"click"</code>
+   listener gates on <code>!measureModeRef.current || annotationModeRef.current</code> — Annotate
+   always takes priority over Measure even if some future code path left both flags set
+   simultaneously, so Measure never double-handles a click Annotate is (in a real
+   browser) about to consume.</li>
+</ol>
+<p>Regression-covered by <code>LayerViewer.tool-exclusivity.test.tsx</code>, which fails without the
+fix (re-confirmed directly by reverting the fix and re-running that suite, not just
+assumed from reading the code) and passes with it: activating one tool turns the other
+off (both directions), and a click while both would otherwise be eligible only ever
+reaches one tool's state.</p>
+<h3 id="compare-compareswipe-separate-sibling-component">Compare — <code>&lt;CompareSwipe&gt;</code> (separate sibling component)<a class="headerlink" href="#compare-compareswipe-separate-sibling-component" title="Permanent link">&para;</a></h3>
+<p>A draggable vertical divider comparing two already-registered layers side by side.
+Researched directly against real MapLibre-ecosystem precedent before building (see
+<code>CompareSwipe.tsx</code>'s own header comment for the full trail): MapLibre GL has no paint/
+filter/mask primitive that clips one layer to a screen-space rectangle — every real
+implementation of this pattern (<code>@maplibre/maplibre-gl-compare</code>, <code>maplibre-gl-swipe</code>)
+reaches for a SECOND <code>Map</code> instance clipped via CSS <code>clip-path</code>, camera-mirrored from the
+first. <code>&lt;CompareSwipe&gt;</code> follows the same technique, scoped to fit this component family
+specifically: it owns exactly two of its OWN small <code>Map</code> instances (not "before/after,
+whole scene" the way the precedents are) — one rendering only <code>layerA</code> + the shared Esri
+basemap, one rendering only <code>layerB</code> + the same basemap, both built via the exact same
+<code>buildLayerMapConfig</code> the main <code>&lt;LayerViewer&gt;</code> map uses (so a compared layer renders
+identically to its real-map appearance). The right/<code>layerB</code> pane sits on top and is the
+one CSS-<code>clip-path</code>-ed to the divider position; the left/<code>layerA</code> pane underneath is
+always full-bleed, which is what makes both the 0% and 100% divider positions render
+exactly one layer edge-to-edge with no blank strip or seam.</p>
+<p>Camera is mirrored ONE-DIRECTIONALLY from the real <code>&lt;LayerViewer&gt;</code> map (read via
+<code>viewerRef.current.getMap()</code>, the same ref a consumer already passes to <code>&lt;LayerViewer&gt;</code>)
+on every <code>"move"</code> — both panes are <code>interactive: false</code> with <code>pointer-events: none</code> on
+their DOM except the divider handle, so all real panning/zooming still happens on the
+actual map underneath. <code>&lt;CompareSwipe&gt;</code> never calls <code>setLayoutProperty</code>/<code>setPaintProperty</code>
+on <code>&lt;LayerViewer&gt;</code>'s own map — a consumer "turns Compare off" by simply not rendering it,
+which tears down only <code>&lt;CompareSwipe&gt;</code>'s own two extra <code>Map</code> instances, leaving nothing to
+restore on the real map. The divider itself supports drag (Pointer Events, unified mouse/
+touch/pen) and keyboard (arrow keys ±2%, Shift+arrow ±10%, Home/End to the extremes),
+<code>role="slider"</code> with the live position as <code>aria-valuenow</code>.</p>
+<p>Full-render suite: <code>CompareSwipe.test.tsx</code> (a minimal fake <code>LayerViewerHandle</code> — just
+<code>getMap()</code> — since <code>&lt;CompareSwipe&gt;</code> never touches terra-draw/the model-layer engine at
+all, unlike <code>&lt;LayerViewer&gt;</code>'s own suites).</p>
+<h3 id="align-aligncontrol-separate-sibling-component">Align — <code>&lt;AlignControl&gt;</code> (separate sibling component)<a class="headerlink" href="#align-aligncontrol-separate-sibling-component" title="Permanent link">&para;</a></h3>
+<p>A manual GPS-drift alignment nudge — CLAUDE.md's Phase-0 "no RTK = 1-3m drift" problem,
+solved directly rather than deferred. Researched directly against this repo's own
+installed <code>maplibre-gl</code> style spec (<code>node_modules/@maplibre/maplibre-gl-style-spec/src/
+reference/v8.json</code>, not assumed/remembered) before building: <code>paint_raster</code> has no
+<code>raster-translate</code> property (unlike <code>paint_fill</code>/<code>paint_line</code>, which DO have <code>fill-
+translate</code>/<code>line-translate</code> — but those only exist for geojson layer types, and the real
+drift problem is specifically about raster ortho/hillshade/thermal imagery). MapLibre GL
+has no native per-layer positional-offset mechanism for raster layers at all, full stop —
+a real, well-known limitation matching the public "add a georeferenced image" workaround
+every MapLibre/Mapbox write-up on this reaches for (a separate <code>image</code>/canvas source,
+not available here without abandoning tiled COG rendering).</p>
+<p><code>&lt;AlignControl&gt;</code> reuses <code>&lt;CompareSwipe&gt;</code>'s own "second, independently-cameraed <code>Map</code>
+instance" technique instead: a single small "ghost" pane, rendering ONLY the currently-
+selected layer (via the same shared <code>buildLayerMapConfig</code>), camera-mirrored from the real
+map on every move EXCEPT its center is shifted by the NEGATIVE of the desired offset — so
+content geographically at the ghost map's center renders on screen exactly <code>offsetMeters</code>
+away from where it sits on the real map (<code>computeGhostCenter</code>, numerically verified in
+<code>AlignControl.test.tsx</code>, including that a north-nudge shifts the ghost camera SOUTH, not
+north). The real map's own copy of the selected layer is hidden (<code>visibility: none</code>, via
+<code>buildLayerMapConfig</code>'s own computed layer ids) for as long as its offset is non-zero, and
+restored the moment the offset returns to zero, the selection changes, or the component
+unmounts — via the exported <code>updateLayerOnMap</code>, which respects the registry's own current
+<code>toggle</code>/<code>opacity</code> rather than hardcoding visible, so this never fights a sibling
+<code>&lt;LayerControl&gt;</code>.</p>
+<p>A bottom-right panel offers a layer selector (every non-disabled entry with a real <code>url</code>),
+a 4-direction D-pad nudging the selection by <code>ALIGN_STEP_METERS</code> (0.25m per click — small
+enough that correcting 1-3m of real-world drift takes a handful of clicks, not one
+imprecise jump), a live <code>north/east</code> meters readout, and a Reset action. Offsets are
+tracked per-layer (<code>Record&lt;string, AlignOffset&gt;</code>) — switching the selector back to a
+previously-nudged layer restores its own accumulated offset, not zero. <code>onAlignmentChange</code>
+fires the current cumulative offset on every nudge/Reset — same "the viewer doesn't own
+persistence it shouldn't" escape-hatch pattern as <code>&lt;LayerViewer&gt;</code>'s own
+<code>onAnnotationsChange</code>/<code>onLayersChange</code>.</p>
+<p>Full-render suite: <code>AlignControl.test.tsx</code>, in two tiers — pure numeric checks
+(<code>metersToLngLatOffset</code>/<code>computeGhostCenter</code>/<code>nudgeOffset</code>/<code>isZeroOffset</code>, no React or
+MapLibre at all) first, then full-render specs against a fake <code>Map</code> (mirrors
+<code>CompareSwipe.test.tsx</code>'s harness, extended since <code>&lt;AlignControl&gt;</code> — unlike
+<code>&lt;CompareSwipe&gt;</code> — also mutates the real map's own layer visibility, not just reads its
+camera).</p>
+<h2 id="the-gated-route-convention">The gated-route convention<a class="headerlink" href="#the-gated-route-convention" title="Permanent link">&para;</a></h2>
+<p><code>&lt;LayerViewer&gt;</code> mounts at <code>/properties/[slug]</code>, extending the same gating pattern
+<code>video-tour</code> shipped for <code>/tours/[slug]</code>:</p>
+<ul>
+<li><code>middleware.ts</code>'s matcher is extended to also cover <code>/properties/*</code>.</li>
+<li><code>lib/gate.ts</code> provides the same cookie-based, fails-closed passcode gate.</li>
+<li>The route mounts <code>&lt;LayerViewer&gt;</code> via <code>next/dynamic({ ssr: false })</code>, same as
+  <code>video-tour</code>'s heavy-player convention.</li>
+</ul>
+<p><strong>Generalization required, not a copy-paste:</strong> <code>lib/gate.ts</code>'s <code>sanitizeNextPath</code>
+hardcoded <code>next.startsWith("/tours")</code>, falling back to <code>/tours</code> for anything else. Left
+as-is, a <code>/properties/[slug]</code> passcode redirect would silently bounce the user to
+<code>/tours</code> instead of back to their property. This epic generalizes <code>sanitizeNextPath</code> to
+accept any gated prefix (checked against the same prefix list the middleware matcher
+uses), not just add <code>/properties</code> on top of the old hardcoded check.</p>
+<h3 id="known-limitation-flagged-not-solved">Known limitation — flagged, not solved<a class="headerlink" href="#known-limitation-flagged-not-solved" title="Permanent link">&para;</a></h3>
+<p>Gating stays <strong>one global passcode/cookie for the whole app</strong>, covering both <code>/tours/*</code>
+and <code>/properties/*</code>. <code>CLAUDE.md</code>'s phrasing ("until Mathew explicitly flips a given
+tour/dataset public") implies <strong>per-dataset</strong> control — this implementation does <strong>not</strong>
+provide that; every gated property and tour shares one switch. This is acceptable for now
+(it matches what <code>video-tour</code> already shipped, and there is exactly one operator), but is
+a real gap if this ever needs to share different properties with different people (e.g. a
+client who should only see their own property). Documented here explicitly so it isn't
+rediscovered as a surprise later — not silently passed through as if it were solved.</p>
+<h2 id="acceptance-criteria">Acceptance criteria<a class="headerlink" href="#acceptance-criteria" title="Permanent link">&para;</a></h2>
+<p>Scoped to this epic (P1: <code>&lt;LayerViewer&gt;</code> + <code>&lt;LayerControl&gt;</code> on sample data) only.
+<code>&lt;Model3D&gt;</code> is a separate epic, out of scope here — see Phase fit. **Measure, Annotate,
+Compare, and Align were originally scoped OUT of this P1 checklist ("explicitly out of
+scope — see Phase fit") — that framing is now superseded: all four shipped as the
+<code>layerviewer-phase2-tools</code> epic (see "Phase 2 tools" above) and are proven against this
+same sample dataset at the live <code>/components/layer-viewer</code> showcase. The checklist below
+is kept as-is (P1's own original scope), not rewritten to claim it always covered Phase 2.</p>
+<ul>
+<li>[x] Renders a MapLibre GL map with the Esri World Imagery satellite basemap as the base
+      layer, independent of the layer registry.
+  Verified: <code>LayerViewer.tsx</code>'s map-creation effect constructs the MapLibre <code>Map</code> with the
+  Esri World Imagery raster source/layer (<code>ESRI_WORLD_IMAGERY_URL</code>, <code>BASEMAP_SOURCE_ID</code>/
+  <code>BASEMAP_LAYER_ID</code>) unconditionally — before any registry layer is added, and regardless
+  of whether <code>layers</code> is empty.</li>
+<li>[x] Loads a <code>PropertyLayers</code> manifest and renders each non-disabled <code>LayerDef</code> as a
+      MapLibre source/layer: <code>raster</code>/<code>cog</code> via <code>@geomatico/maplibre-cog-protocol</code>,
+      <code>geojson</code> via a plain MapLibre geojson source.
+  Verified: <code>resolveManifest()</code> fetches-or-passes-through the manifest; <code>loadMapLibreModules()</code>
+  registers the <code>cog://</code> protocol via <code>maplibregl.addProtocol("cog", cogModule.cogProtocol)</code>
+  from <code>@geomatico/maplibre-cog-protocol</code>; <code>buildLayerMapConfig()</code>/<code>addLayerToMap()</code> build a
+  <code>cog://</code>-prefixed raster source for <code>raster</code>/<code>cog</code> layers and a plain
+  <code>{type:"geojson", data:url}</code> source + fill/line layer pair for <code>geojson</code> layers. Unit-covered
+  by <code>LayerViewer.test.tsx</code>'s <code>buildLayerMapConfig</code> cases (raster+cog, raster+xyz, geojson);
+  live-verified end-to-end against the real Prado manifest in the core-components story's
+  Playwright pass (all four manifest layers — ortho, hillshade, boundary, thermal — loaded).</li>
+<li>[x] <code>disabled: true</code> entries (the thermal stub) add no MapLibre source/layer, but do
+      render an inert, greyed-out row in <code>&lt;LayerControl&gt;</code>.
+  Verified: <code>buildLayerMapConfig()</code> returns <code>null</code> for <code>disabled: true</code> (unit-tested); the
+  <code>map.on("load")</code> handler explicitly <code>continue</code>s past disabled layers before ever calling
+  <code>addLayerToMap</code>, so <code>map.addSource</code>/<code>addLayer</code> never runs for them. <code>LayerControl.tsx</code>
+  still renders their row (<code>opacity-40</code>, <code>aria-disabled="true"</code>, disabled checkbox + slider,
+  unfocusable) — covered by <code>LayerControl.test.tsx</code>'s disabled-row tests.</li>
+<li>[x] <code>&lt;LayerControl&gt;</code> renders one row per <code>LayerDef</code> with a toggle and an opacity slider;
+      toggling/opacity changes are reflected live on the map for non-disabled layers.
+  Verified: <code>LayerControl.tsx</code> renders one toggle+slider row per layer, in manifest order
+  (<code>LayerControl.test.tsx</code>). The live-map-update half of this (<code>toggleLayer</code>/<code>setOpacity</code> on
+  <code>LayerViewerHandle</code> → state update → <code>updateLayerOnMap</code> → <code>setLayoutProperty</code>/
+  <code>setPaintProperty</code>) can't run under jsdom (<code>maplibre-gl</code> needs the <code>Worker</code> global, which
+  jsdom doesn't implement — see <code>LayerViewer.test.tsx</code>'s header comment), so it was verified
+  live instead: the core-components story's Playwright pass against a real
+  <code>next build &amp;&amp; next start</code> server clicked the hillshade toggle (unchecked → checked) and
+  dragged the ortho opacity slider (→ 0.4), confirming both round-trips actually repaint the
+  map. Real but manual verification, not automated regression coverage — a gap worth noting,
+  not hiding.</li>
+<li>[x] Ships against real public sample data (a real COG ortho, a synthetic hillshade/DEM
+      COG, and a synthetic parcel-boundary GeoJSON) under
+      <code>public/layer-viewer-samples/&lt;slug&gt;/</code> — not mocks.
+  Wording corrected: the original phrasing read as if the hillshade were real sample data
+  alongside the ortho; it is a <strong>synthetic placeholder</strong>, not real elevation/LiDAR data —
+  see "Sample data provenance" above, which this bullet now matches. Verified: all three
+  files exist under <code>public/layer-viewer-samples/2806-prado/</code> as real files (not mocked in
+  code) and are validated by <code>public/layer-viewer-samples/2806-prado/manifest.test.ts</code>
+  (TIFF magic bytes, <code>rio-cogeo</code> strict COG validation when available, GeoJSON
+  polygon well-formedness) — re-confirmed directly during this closeout pass (<code>rasterio</code>:
+  both COGs share <code>EPSG:32621</code> and an identical bounding box; <code>ortho.tif</code> is single-band
+  <code>uint16</code>, <code>hillshade.tif</code> single-band <code>uint8</code>, matching the provenance notes).
+  <strong>Update, 2026-08-08:</strong> both COGs were subsequently reprojected to <code>EPSG:3857</code> to fix
+  a bounds-misreporting bug — see the "Fixed" section this doc points to above. The
+  <code>EPSG:32621</code> CRS this checklist entry verified is no longer current; the bounding box
+  and hillshade pixel dimensions/value range also changed as a result. Re-verify against
+  the live files if precise CRS/extent numbers matter for future work.
+  <strong>Update, 2026-08-08 (<code>layerviewer-sample-dataset-overhaul</code>):</strong> the sample dataset is
+  now FIVE files, not three — <code>ortho.tif</code> (real, replacing the single-band-uint16
+  fixture), <code>hillshade.tif</code> (regenerated at the new extent), <code>thermal.tif</code> (new, live),
+  <code>contours.geojson</code> (new), and <code>parcel.geojson</code> (re-anchored) — all at one new,
+  internally-consistent real location. See "Sample data provenance" above for the current
+  source/license of each file; this bullet's older verification details above are
+  superseded.</li>
+<li>[x] Mounted at a gated route, <code>/properties/[slug]</code>, via <code>next/dynamic({ ssr: false })</code>,
+      behind the same passcode gate as <code>/tours/[slug]</code> (<code>middleware.ts</code> + <code>lib/gate.ts</code>,
+      with <code>sanitizeNextPath</code> generalized to handle both prefixes correctly).
+  Verified: <code>app/properties/[slug]/page.tsx</code> loads <code>&lt;LayerViewer&gt;</code> via
+  <code>dynamic(..., { ssr: false })</code>; <code>middleware.ts</code>'s <code>config.matcher</code> includes
+  <code>/properties/:path*</code> (with a dev-time drift guard against <code>lib/gate.ts</code>'s
+  <code>GATED_PATH_MATCHERS</code>); <code>lib/gate.ts</code>'s <code>sanitizeNextPath</code> is generalized over
+  <code>GATED_PATH_PREFIXES = ["/tours", "/properties"]</code> rather than hardcoding <code>/tours</code>.
+  Live-verified: no cookie → 307 to <code>/enter-passcode?next=%2Fproperties%2F2806-prado</code>;
+  correct passcode submitted through the real form → lands back on the property page with
+  the layers rendered.</li>
+<li>[x] Importable standalone into personal-site: <code>&lt;LayerViewer&gt;</code>/<code>&lt;LayerControl&gt;</code> and
+      everything they transitively import carry no dependency on <code>app/</code>, <code>middleware.ts</code>,
+      or <code>lib/gate.ts</code>.
+  Verified — see "Importable standalone — audit finding" below.</li>
+<li>[x] Passes <code>npm run build</code>.
+  Verified: clean <code>npm run build</code> (Next.js 15.5.23), <code>/properties/[slug]</code> present as a
+  dynamic route in the output. Re-verified after this closeout story deleted the now-
+  redundant <code>app/dev-preview-layers/</code> throwaway route (superseded by the real
+  <code>/properties/[slug]</code> route — confirmed via repo-wide grep that nothing else referenced
+  it first): build and <code>npm test</code> (92/92 passing, 11 test files, spanning both the
+  <code>video-tour</code> and <code>layer-viewer</code> epics with no regressions) both stayed green.</li>
+</ul>
+<h3 id="importable-standalone-audit-finding">Importable standalone — audit finding<a class="headerlink" href="#importable-standalone-audit-finding" title="Permanent link">&para;</a></h3>
+<p>Walked <code>components/LayerViewer/index.ts</code>'s full export surface (<code>LayerViewer</code>,
+<code>LayerControl</code>, plus the re-exported <code>lib/layer-types.ts</code> types) and every file it
+transitively imports: <code>LayerViewer.tsx</code>, <code>LayerControl.tsx</code>, <code>cx.ts</code>, <code>lib/layer-types.ts</code>,
+plus the lazily-<code>import()</code>ed <code>maplibre-gl</code> and <code>@geomatico/maplibre-cog-protocol</code> npm
+packages. Clean: nothing pulls from <code>app/</code>, <code>middleware.ts</code>, or <code>lib/gate.ts</code>.
+<code>index.ts</code>'s own header comment documents this as the intended contract ("copy this folder
+into a standalone consumer like personal-site — everything it transitively imports is
+scoped to this folder + lib/layer-types.ts, no app/ or gating deps") and the code matches
+the claim. <code>app/properties/[slug]/page.tsx</code> is a one-way consumer of this family (imports
+<em>from</em> <code>components/LayerViewer</code>, not the reverse) and itself carries zero gating logic —
+gating is enforced upstream by <code>middleware.ts</code>. The "plug-and-play" bar from <code>CLAUDE.md</code>
+holds.</p>
+<h2 id="phase-fit">Phase fit<a class="headerlink" href="#phase-fit" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>P1 (this epic):</strong> <code>&lt;LayerViewer&gt;</code> + <code>&lt;LayerControl&gt;</code> on the typed layer registry,
+  proven against real public sample data (sample COG ortho, hillshade/DEM, synthetic
+  parcel boundary), mounted at a gated <code>/properties/[slug]</code> route. The thermal slot exists
+  in the registry as a <code>disabled: true</code> stub with no map rendering.</li>
+<li><strong>P2 — shipped 2026-08-18 (<code>layerviewer-phase2-tools</code> epic):</strong> <code>MeasureTool</code> (terra-draw</li>
+<li>turf → distance) and <code>AnnotationLayer</code> (terra-draw point/line/polygon/freehand,
+  session-only — no <code>annotations.json</code> persistence; <code>onAnnotationsChange</code> is the escape
+  hatch for a consumer that wants its own) built directly into <code>&lt;LayerViewer&gt;</code>;
+  <code>CompareSwipe</code> (two-layer swipe divider, not specifically a two-date before/after — any
+  two registered layers) and <code>AlignControl</code> (manual per-layer nudge — the no-RTK
+  workaround) as separate sibling components. See "Phase 2 tools" above for the full
+  writeup, including the required Measure/Annotate click-ownership integration check. 2.5D
+  DSM drape was NOT part of this epic — still unscoped.</li>
+<li><strong>P3:</strong> <code>&lt;Model3D&gt;</code> (glTF mesh + point-cloud viewer) — a <strong>separate epic</strong>, not planned
+  here.</li>
+<li><strong>P4 (per CBA):</strong> thermal activation — flip <code>disabled: false</code> on the existing stub once
+  a radiometric sensor is acquired; zero component rework required, by design.</li>
+</ul>
+<h2 id="real-data-update-2806-prado-real-georeferenced-fix-story">Real data update (2806 Prado, real georeferenced-fix story)<a class="headerlink" href="#real-data-update-2806-prado-real-georeferenced-fix-story" title="Permanent link">&para;</a></h2>
+<p>The sample ortho/hillshade/contours are no longer synthetic placeholders — they're the
+operator's own real 2806 Prado St nadir-grid photogrammetry: a real OpenDroneMap
+reconstruction (99% frame alignment) reprojected to EPSG:3857 (<code>rio warp</code> + <code>rio cogeo
+create</code>/<code>validate</code>, the same pipeline <code>/pipeline/README.md</code> documents), with hillshade and
+2.5m contours derived directly from the real reconstructed DSM. Released for public use by
+the property's owner (full release rights) — distinct from the separate professional
+real-estate-shoot photos CLAUDE.md's stricter release-forms rule still covers. <code>parcel.geojson</code>
+stays an approximate reconstruction-footprint placeholder (not a real recorded parcel), and
+<code>thermal</code> reverted to a <code>disabled: true</code> stub (no radiometric sensor exists) — see
+<code>public/layer-viewer-samples/2806-prado/manifest.test.ts</code> for the exact assertions. A real,
+important bug was found and fixed getting here: the first ODM run had <code>has_gps: false</code>
+(frame extraction via <code>ffmpeg -vf fps=1</code> didn't carry GPS EXIF into the extracted JPGs), so
+it reconstructed correctly relatively but anchored at a bogus location. Fixed by injecting
+real per-frame GPS (from <code>exiftool -ee -G3 -json -n</code>) into the extracted frames before
+re-running ODM.</p>
+<h3 id="v2-update-nadir-oblique-orbit-real-tree-canopy">v2 update — nadir + oblique orbit, real tree canopy<a class="headerlink" href="#v2-update-nadir-oblique-orbit-real-tree-canopy" title="Permanent link">&para;</a></h3>
+<p>That first fixed run (now called v1 locally) was still nadir-only — both flight passes
+pointed straight down, and the property's 100+ ft trees rendered as smeared, streaked
+texture in the ortho. Reprocessing the same nadir-only source at progressively higher
+quality settings produced no meaningful improvement, which confirmed this was never a
+processing-quality problem: a straight-down camera can only ever see a tree's canopy top,
+never its sides, at any point-cloud density. v2 adds a real oblique orbit clip (<code>0023</code>,
+gimbal tilted ~45-60°, ~3 min circling the property, already present in the flight's own
+catalog — no reflight needed) to the same reconstruction. No merge step required: every
+clip already carries its own embedded GPS, so the oblique frames just join the same image
+pool as the nadir grid for one ODM run. 260 of 264 total frames reconstructed; real,
+visible improvement in the tree canopy (coherent leaf/branch texture, not perfect, but no
+longer streaked). <code>hillshade.tif</code>/<code>contours.geojson</code> were regenerated from v2's DSM in
+lockstep, same "one atomic dataset" discipline as the original COG-bounds fix.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.instant", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

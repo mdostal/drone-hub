@@ -1,0 +1,1686 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.">
+      
+      
+      
+        <link rel="canonical" href="https://mdostal.github.io/drone-hub/components/model3d/">
+      
+      
+        <link rel="prev" href="../minecraft-export/">
+      
+      
+        <link rel="next" href="../processing-status/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title><Model3D> — glTF mesh viewer (hive spec) - drone-hub</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#model3d-gltf-mesh-viewer-hive-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="drone-hub" class="md-header__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            drone-hub
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="drone-hub" class="md-nav__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    drone-hub
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drone-hub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CBA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drone platform — cost-benefit analysis + build plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileList&gt; — file viewer / download list (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileUpload&gt; — drag-and-drop / click-to-browse file picker (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flight-coverage-analyzer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FlightCoverageAnalyzer&gt; — nadir-grid overlap judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Gallery&gt; — plain shots carousel (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-overlay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layer-viewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minecraft-export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minecraft export — real .schem download for &lt;VoxelTerrain&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-modeldef-deliberately-minimal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — ModelDef, deliberately minimal
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — ModelDef, deliberately minimal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliberately-deferred-scale-position-geo-anchoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliberately deferred: scale, position, geo-anchoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measure-tool-controls-legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure tool + controls legend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tech">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#r3fdrei-dependency-correction-why-the-version-bump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        r3f/drei dependency correction — why the version bump
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-data-publicmodel3d-samplesduckmodelglb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample data — public/model3d-samples/duck/model.glb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-showcase-page-public-not-gated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The showcase page — public, not gated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#measure-tool-controls-legend-acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure tool + controls legend — acceptance criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update-nadir-oblique-orbit-real-tree-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update — nadir + oblique orbit, real tree geometry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;ProcessingStatus&gt; — presentational job-status indicator (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;TourBuilder&gt; — visual tour.json authoring tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-annotator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoAnnotator&gt; — scrub, zoom, draw, and export a single annotated frame (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voxel-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VoxelTerrain&gt; + &lt;VoxelStructure&gt; — blocky voxel terrain renderer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-modeldef-deliberately-minimal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — ModelDef, deliberately minimal
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — ModelDef, deliberately minimal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliberately-deferred-scale-position-geo-anchoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliberately deferred: scale, position, geo-anchoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measure-tool-controls-legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure tool + controls legend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tech">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#r3fdrei-dependency-correction-why-the-version-bump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        r3f/drei dependency correction — why the version bump
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-data-publicmodel3d-samplesduckmodelglb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample data — public/model3d-samples/duck/model.glb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-showcase-page-public-not-gated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The showcase page — public, not gated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#measure-tool-controls-legend-acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measure tool + controls legend — acceptance criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update-nadir-oblique-orbit-real-tree-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update — nadir + oblique orbit, real tree geometry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="model3d-gltf-mesh-viewer-hive-spec"><code>&lt;Model3D&gt;</code> — glTF mesh viewer (hive spec)<a class="headerlink" href="#model3d-gltf-mesh-viewer-hive-spec" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Orbit a <strong>3D mesh</strong> (glTF/glb) rendered straight from photogrammetry output — CBA's
+Phase-3 <code>Model3DViewer</code>. Plug-and-play, importable into any app, publicly showcased.</p>
+</blockquote>
+<p><strong>Update (operator, 2026-08-08):</strong> drone-hub carries no gating of any kind — every
+reference below to <code>middleware.ts</code>, <code>lib/gate.ts</code>, <code>GATED_PATH_PREFIXES</code>, or a passcode
+gate describes an architecture that no longer exists in this repo (kept as historical
+record). This component's showcase page was always public/ungated, so nothing about its
+behavior changed — the correction is that NOTHING else in this repo is gated either now.</p>
+<p><strong>Design discussion (RESOLVED architecture — read first):</strong>
+<code>.pHive/epics/model3d/docs/design-discussion.md</code> — this doc documents those decisions,
+it does not re-derive them.</p>
+<h2 id="why-operator-intent-honor-this">Why (operator intent — honor this)<a class="headerlink" href="#why-operator-intent-honor-this" title="Permanent link">&para;</a></h2>
+<p>CBA's target pipeline (nadir passes → WebODM/OpenDroneMap → orthomosaic + DSM + point
+cloud + glTF mesh) produces a mesh alongside the ortho <code>&lt;LayerViewer&gt;</code> drapes on the map.
+<code>&lt;Model3D&gt;</code> is the component that renders that mesh on its own — "view an interactive 3D
+model (point cloud + mesh), orbit it" from <code>CLAUDE.md</code>'s Hammer Missions reference list.
+This epic ships the <strong>glTF/mesh half</strong> of that (CBA's Phase 3); point-cloud rendering
+(potree) is a later phase, not built here.</p>
+<p>This epic also shipped a second, cross-cutting thing alongside <code>&lt;Model3D&gt;</code> itself: the
+<strong>component-framework showcase site</strong> (<code>app/(showcase)/components/</code>) — a public,
+shadcn-style page-per-component pattern, proven against <code>&lt;Model3D&gt;</code> (built fresh) and
+retrofitted onto <code>&lt;VideoTour&gt;</code>/<code>&lt;LayerViewer&gt;</code> (already shipped) in the same epic. See
+<code>.pHive/CONTEXT.md</code>'s "Showcase-site pattern" entry for that as a standing convention —
+this doc covers <code>&lt;Model3D&gt;</code> the component; the showcase pattern itself is documented
+there since it applies to every component, not just this one.</p>
+<h2 id="the-model-modeldef-deliberately-minimal">The model — <code>ModelDef</code>, deliberately minimal<a class="headerlink" href="#the-model-modeldef-deliberately-minimal" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">ModelDef</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="cm">/** How many raw glTF units equal one real-world meter, for the measure</span>
+<span class="cm">   *  tool's distance label. Optional, absent by default (including for the</span>
+<span class="cm">   *  sample duck) — see "Measure tool + controls legend" below. */</span>
+<span class="w">  </span><span class="nx">unitsPerMeter?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">Model3DProps</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">model</span><span class="o">:</span><span class="w"> </span><span class="kt">ModelDef</span><span class="p">;</span>
+<span class="w">  </span><span class="cm">/** Fired if the glTF fails to load (bad url, network error, parse error). */</span>
+<span class="w">  </span><span class="nx">onLoadError</span><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">className?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>That's the whole registry entry — <code>{id, url, title}</code>, plus one narrow, additive
+exception added by the <code>brand-theming-and-viewer-polish</code> epic's measure tool
+(<code>unitsPerMeter?</code>, covered below). This matches what's actually shipped in
+<code>components/Model3D/Model3D.tsx</code>; there is no separate manifest file for P1 (a single
+sample model, hardcoded inline on the showcase page — see "Sample data" below), unlike
+<code>&lt;LayerViewer&gt;</code>'s <code>PropertyLayers</code>/<code>&lt;VideoTour&gt;</code>'s <code>Tour</code>, which both do have a
+manifest-file convention. A single-model P1 scope didn't warrant one; if a future epic
+needs to list multiple models per property, that's the point to add one.</p>
+<p><code>unitsPerMeter</code> is still not a scale/position/geo-anchoring <em>transform</em> field — it
+doesn't move, resize, or reorient the mesh in any scene. It only feeds the measure
+tool's distance-label formatting (see below). The "no scale/position/geo-anchoring on
+<code>ModelDef</code>" rule from the original epic (next section) is about placement, and stays
+intact.</p>
+<h3 id="deliberately-deferred-scale-position-geo-anchoring">Deliberately deferred: scale, position, geo-anchoring<a class="headerlink" href="#deliberately-deferred-scale-position-geo-anchoring" title="Permanent link">&para;</a></h3>
+<p><code>ModelDef</code> intentionally does <strong>not</strong> carry <code>scale</code>, <code>position</code>, or any geo-anchoring
+field (lat/lon/alt). This was flagged by grill during planning and resolved explicitly
+in <code>design-discussion.md</code> §2.3 / §6.2, and repeated as a hard <code>do_not</code> in
+<code>model3d-component.yaml</code>:</p>
+<blockquote>
+<p>Do not add scale/position/geo-anchoring fields to ModelDef in this epic — explicitly
+deferred to the land-overlay epic's own type, per the design discussion.</p>
+</blockquote>
+<p>Why: a <code>position</code> field could mean two genuinely different things — <strong>scene-space</strong>
+placement (where this mesh sits within its own free-floating <code>&lt;Canvas&gt;</code>, e.g. offsetting
+multiple meshes in one scene) or <strong>geo-space</strong> anchoring (lat/lon/alt draping the mesh
+onto <code>&lt;LayerViewer&gt;</code>'s map, CBA's 2.5D-drape direction). Which one a future epic actually
+needs isn't decided yet — the <strong>land-overlay</strong> epic (next in the confirmed priority order
+after this one, per <code>design-discussion.md</code> §0) is where that gets resolved, with its own
+new type built for whichever semantics it turns out to need. Guessing now risks shipping
+the wrong shape and having to break <code>ModelDef</code>'s consumers to fix it. P1's viewer only
+ever renders one free-floating mesh in its own scene, auto-framed by <code>&lt;Bounds&gt;</code> — there's
+no placement decision to make yet that guessing on <code>ModelDef</code> would actually serve.</p>
+<h2 id="behavior">Behavior<a class="headerlink" href="#behavior" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Mounts a <code>@react-three/fiber</code> <code>&lt;Canvas&gt;</code></strong> with a fixed default camera
+   (<code>position: [3, 3, 3]</code>, <code>fov: 50</code>) and a small three-light rig (ambient + two
+   directional) — enough to read an arbitrary untextured or lightly-textured mesh
+   without per-model lighting configuration.</li>
+<li><strong>Loads the glTF/glb at <code>model.url</code></strong> via drei's <code>useGLTF</code> inside a <code>&lt;Suspense&gt;</code>
+   boundary (<code>GltfScene</code> renders <code>gltf.scene</code> as a single <code>&lt;primitive&gt;</code>, so it works for
+   both a single-mesh glTF and a multi-node hierarchy without assuming a shape). While
+   the fetch/decode is in flight, <code>&lt;Suspense&gt;</code>'s fallback renders a small wireframe box
+   placeholder (<code>LoadingPlaceholder</code>) inside the canvas — DOM can't render inside a
+   <code>&lt;Canvas&gt;</code>'s r3f tree, so this has to be r3f JSX, not a spinner overlay.</li>
+<li><strong>Auto-frames the mesh</strong> with drei's <code>&lt;Bounds fit clip observe margin={1.2}&gt;</code> wrapping
+   <code>&lt;GltfScene&gt;</code> — fits the camera to the mesh's bounding box on mount (<code>fit</code>), pushes the
+   camera's near/far planes so the mesh isn't clipped (<code>clip</code>), re-fits if the mesh's own
+   bounds change later, e.g. a swapped <code>model.url</code> (<code>observe</code>), and leaves a little
+   breathing room around the mesh rather than a tight crop (<code>margin={1.2}</code>). This is what
+   makes an arbitrary glTF of unknown scale/units/origin render "reasonably framed"
+   without <code>ModelDef</code> needing a <code>scale</code>/<code>position</code> field to compensate.</li>
+<li><strong>Orbit/zoom/pan</strong> via drei's <code>&lt;OrbitControls makeDefault /&gt;</code>. <code>makeDefault</code> registers
+   these controls as the r3f store's active controls instance, which is what <code>&lt;Bounds&gt;</code>'s
+   internal camera-fit animation targets through <code>useThree().controls</code> — without it,
+   <code>&lt;Bounds&gt;</code>'s auto-fit and <code>&lt;OrbitControls&gt;</code> fight over the camera instead of
+   cooperating on mount.</li>
+<li><strong>Load/parse failures are caught, not fatal to the page.</strong> <code>useGLTF</code>'s Suspense-throw
+   only covers the pending-promise case, not a rejected one (bad url, 404, malformed
+   file) — <code>ModelErrorBoundary</code>, a class component (error boundaries have no hook
+   equivalent), catches that and calls <code>onLoadError</code>, rendering nothing rather than
+   unmounting the whole viewer with an uncaught error.</li>
+</ol>
+<h2 id="measure-tool-controls-legend">Measure tool + controls legend<a class="headerlink" href="#measure-tool-controls-legend" title="Permanent link">&para;</a></h2>
+<p><strong>Shipped by the <code>brand-theming-and-viewer-polish</code> epic's <code>model3d-measure-tool-and-
+legend</code> story.</strong> This corrects <code>README.md</code>/<code>app/page.tsx</code>'s pre-existing "orbit-and-
+measure" copy, which had been describing an unbuilt feature since <code>&lt;Model3D&gt;</code> first
+shipped — see <code>design-discussion.md §2</code>'s research note for that history. It also
+corrects this doc's own prior claim that measure was "explicitly deferred" — that was
+true for the original <code>model3d</code> epic (P1, glTF viewer only) but is no longer true of
+the component as it exists today.</p>
+<ol>
+<li><strong>A "Measure" toggle button</strong> lives in the on-canvas controls legend (see below).
+   Clicking it flips <code>measureMode</code> on/off; the button's own label and styling reflect
+   the state (<code>"Measure"</code> vs. <code>"Measure: On"</code>, accent-filled when active).</li>
+<li><strong>Click-to-place two points, via raycasting against the loaded mesh.</strong>
+   <code>MeasureController</code> (a <code>&lt;Canvas&gt;</code>-level component with no visual output of its own)
+   listens for native <code>pointerdown</code>/<code>pointerup</code> on the canvas's own DOM element — not
+   r3f's per-object synthetic pointer events — and only registers a placement when the
+   gesture qualifies as a genuine click: less than <code>CLICK_MAX_MOVEMENT_PX</code> (6px) of
+   on-screen movement between down and up, completed within <code>CLICK_MAX_DURATION_MS</code>
+   (500ms). A drag (or a long press) is ignored, so measure mode can be left on without
+   ever fighting <code>&lt;OrbitControls&gt;</code> for the same drag gesture — <code>MeasureController</code> never
+   calls <code>stopPropagation</code>/<code>preventDefault</code>, so <code>OrbitControls</code>' own native listeners on
+   that same canvas element see every drag event untouched. A qualifying click converts
+   the pointer position to normalized device coordinates, raycasts against the loaded
+   scene graph (reported up via <code>GltfScene</code>'s <code>onSceneReady</code>), and reports the first
+   hit's world-space point up to <code>&lt;Model3D&gt;</code>'s own state.</li>
+<li><strong>The distance line + midpoint label.</strong> Once two points are placed, <code>MeasureOverlay</code>
+   renders a small accent-colored sphere at each point, an accent-colored <code>Line</code>
+   connecting them (drei's <code>&lt;Line&gt;</code>), and a floating label at the segment's midpoint
+   (drei's <code>&lt;Html&gt;</code>, a DOM portal) showing the distance. <strong>The label is deliberately
+   "X.XX units", not a fabricated real-world unit</strong> — <code>formatDistance()</code>
+   (<code>components/Model3D/Model3D.tsx</code>) only prints <code>"X.XX m"</code> if the caller's <code>ModelDef</code>
+   supplies <code>unitsPerMeter</code> (a raw-glTF-units-per-real-meter scale hint); absent, as it
+   is for the sample duck (there is no known real-world scale for it, and none in
+   general for <code>&lt;Model3D&gt;</code> until a real photogrammetry pipeline supplies one), it stays
+   labeled <code>"units"</code>. This matches this repo's established honesty-about-precision
+   convention — the same reasoning <code>CLAUDE.md</code>'s "visual property-intelligence, not
+   survey-grade" framing applies to <code>&lt;LayerViewer&gt;</code>'s ortho output, and the same reasoning
+   behind every synthetic sample layer's <code>legend: "synthetic placeholder — not real ..."</code>
+   wording: never imply a precision or ground-truth the data doesn't actually have.</li>
+<li><strong>A grill-flagged placement constraint: measure geometry renders OUTSIDE <code>&lt;Bounds&gt;</code>,
+   as a <code>&lt;Canvas&gt;</code>-level sibling, never as its child.</strong> <code>&lt;Bounds fit clip observe
+   margin={1.2}&gt;</code> recomputes the camera's fit from the bounding box of everything it
+   wraps; placing <code>MeasureOverlay</code>'s markers/line <em>inside</em> it would grow that box with
+   every new point and trigger an unwanted camera re-frame/zoom mid-measurement — exactly
+   the "camera doesn't unexpectedly re-frame" requirement <code>design-discussion.md §3c</code>
+   calls out explicitly. <code>&lt;Bounds&gt;</code>'s own wrapping <code>&lt;group&gt;</code> applies no transform of its
+   own (verified by reading <code>@react-three/drei</code>'s <code>Bounds.js</code> directly, not assumed), so
+   world-space points raycast against the mesh <em>inside</em> <code>&lt;Bounds&gt;</code> still line up correctly
+   with markers rendered <em>outside</em> it — no coordinate conversion needed. Live-verified via
+   Playwright: placing two points produced a distance label with the duck staying
+   pixel-identical in position/scale (camera did not move).</li>
+<li><strong>Clearing a measurement — two ways, both real.</strong> Placing a third point (once two are
+   already placed) discards the old pair and starts a fresh measurement at the new
+   point (<code>handlePlacePoint</code>'s <code>prev.length &gt;= 2 ? [point] : [...prev, point]</code> reset).
+   Independently, the legend's <strong>"Clear measurement" button</strong> (visible only while measure
+   mode is on, disabled/greyed when there are no points to clear) resets the same state
+   on demand without requiring a third click. Both call the same <code>setPoints</code> reset under
+   the hood — there is no separate "undo one point" affordance, only "start over."</li>
+<li><strong>The on-canvas controls legend.</strong> A small fixed-corner panel (top-right, absolutely
+   positioned within <code>&lt;Model3D&gt;</code>'s own container, not a separate page element — "a little
+   legend on the side," per the operator's own request) always lists the always-available
+   controls (<code>Drag to orbit</code>, <code>Scroll to zoom</code>) plus the Measure toggle button, and — only
+   while measure mode is active — <code>Click two points to measure</code> and the Clear button
+   described above. Styled via this epic's design tokens (<code>bg-surface/90</code>, <code>border-border</code>,
+   <code>text-foreground</code>, <code>text-accent</code> from <code>app/globals.css</code>'s <code>@theme</code> block — see
+   <code>.pHive/CONTEXT.md</code>'s design-token entry), with a <code>backdrop-blur</code> so it stays legible
+   over an arbitrary mesh/background. The legend's outer wrapper is <code>pointer-events-none</code>
+   (only the panel itself is <code>pointer-events-auto</code>), so it never intercepts orbit/measure
+   clicks over the rest of the canvas.</li>
+</ol>
+<p>The marker-sphere radius (<code>markerRadius</code> state) is computed from the loaded mesh's own
+bounding-box diagonal (<code>handleSceneReady</code>, 1% of the diagonal, falling back to a fixed
+<code>0.02</code> for an empty/degenerate box) rather than hardcoded, so a marker reads sensibly
+whether the glTF is duck-scale (tens of units) or a future real photogrammetry mesh at a
+totally different scale.</p>
+<h2 id="tech">Tech<a class="headerlink" href="#tech" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>@react-three/fiber</code></strong> (<code>^9.7.0</code>) — the WebGL/Canvas React renderer.</li>
+<li><strong><code>@react-three/drei</code></strong> (<code>^10.7.8</code>) — <code>useGLTF</code>, <code>&lt;Bounds&gt;</code>, <code>&lt;OrbitControls&gt;</code> (both
+  locked dependencies, unused until this epic — its first real exercise).</li>
+<li><strong><code>three</code></strong> (<code>^0.169.0</code>) — unchanged; satisfies both packages' peer range.</li>
+<li><strong><code>next/dynamic({ ssr: false })</code></strong> — <code>&lt;Model3D&gt;</code> is a heavy client-only viewer (WebGL
+  canvas, texture/geometry decoding) like every other viewer in this stack; no
+  server-only APIs are touched at module scope, but it must still not attempt to render
+  on the server. Every real usage in this repo (the showcase page; the now-deleted
+  dev-preview route) mounts it this way.</li>
+<li><strong>Not used by this epic despite being CBA's eventual target:</strong> potree / point-cloud
+  rendering (COPC/LAZ) — CBA phases that in after the glTF-mesh path is proven; nothing
+  in <code>components/Model3D/</code> assumes or blocks it.</li>
+</ul>
+<h3 id="r3fdrei-dependency-correction-why-the-version-bump">r3f/drei dependency correction — why the version bump<a class="headerlink" href="#r3fdrei-dependency-correction-why-the-version-bump" title="Permanent link">&para;</a></h3>
+<p><code>model3d-component.yaml</code> scaffolded this epic against <code>@react-three/fiber ^8.17.0</code> +
+<code>@react-three/drei ^9.114.0</code> (the versions locked in <code>package.json</code> when the epic was
+planned). Both were bumped during <code>model3d-component</code> to <code>@react-three/fiber ^9.7.0</code> +
+<code>@react-three/drei ^10.7.8</code>. Reason, verified empirically (not assumed): <code>@react-three/
+fiber</code> v8 bundles its own react-reconciler host config written against pre-React-19
+internals — it crashes the instant <code>&lt;Canvas&gt;</code> mounts under React 19
+(<code>Cannot read properties of undefined (reading 'ReactCurrentOwner')</code>), and this can't be
+patched by pointing it at a newer <code>react-reconciler</code> either, because reconciler 0.31+
+needs a <code>resolveUpdatePriority</code> host-config hook that v8's compiled renderer never
+implements. No combination of <code>react-reconciler</code> version satisfies both React 19's
+internals and v8's host config at once. <code>@react-three/fiber</code> v9 is pmndrs' from-scratch
+React-19 rewrite (its own bundled reconciler, no external <code>react-reconciler</code> dependency)
+and is what actually renders and accepts <code>&lt;OrbitControls&gt;</code> input under <code>react ^19.0.0</code> —
+confirmed via live Playwright verification, not just "it type-checks." <code>drei</code> v10 is the
+matching major for <code>@react-three/fiber</code> v9 (drei versions its majors alongside fiber's).
+<code>three ^0.169.0</code> didn't need to move — it already satisfied both packages' peer ranges.
+This correction is recorded in <code>package.json</code>'s own <code>_model3d_component_note</code> field as
+well as here.</p>
+<p><code>.npmrc</code>'s <code>legacy-peer-deps=true</code> (already present from the <code>video-tour-app-shell-
+scaffold</code> story's <code>@react-three/fiber</code>-vs-React-19 workaround) covers <code>drei</code>'s peer
+constraints too — re-verified during this epic, not just assumed to carry over.</p>
+<h2 id="sample-data-publicmodel3d-samplesduckmodelglb">Sample data — <code>public/model3d-samples/duck/model.glb</code><a class="headerlink" href="#sample-data-publicmodel3d-samplesduckmodelglb" title="Permanent link">&para;</a></h2>
+<p>A small (~120KB) public-domain glTF from Khronos's own <code>glTF-Sample-Models</code> repo
+(<code>Duck.glb</code>, CC0-equivalent license per that repo) — chosen because it's small, a real
+binary glTF (not a synthetic placeholder), and exercises the exact loader path
+(<code>useGLTF</code> → <code>&lt;primitive object={gltf.scene}&gt;</code>) a real WebODM-exported mesh will use
+later. No rights issue: not property photogrammetry, not tied to any address or person.
+There is no manifest file alongside it — the showcase page hardcodes the <code>ModelDef</code>
+inline (<code>{ id: "duck", url: "/model3d-samples/duck/model.glb", title: "Duck (sample
+glTF)" }</code>), per the "no manifest file for a single-model P1 scope" decision above.</p>
+<h2 id="the-showcase-page-public-not-gated">The showcase page — public, not gated<a class="headerlink" href="#the-showcase-page-public-not-gated" title="Permanent link">&para;</a></h2>
+<p><code>&lt;Model3D&gt;</code> is demoed at <code>/components/model3d</code>
+(<code>app/(showcase)/components/model3d/page.tsx</code>), part of the <code>app/(showcase)/components/</code>
+route group — deliberately <strong>outside</strong> <code>lib/gate.ts</code>'s <code>GATED_PATH_PREFIXES</code>
+(<code>["/tours", "/properties"]</code>) and <code>middleware.ts</code>'s <code>config.matcher</code>
+(<code>["/tours/:path*", "/properties/:path*"]</code>). No passcode redirect; the page loads and
+renders the sample duck directly. This is safe specifically because the sample glTF is
+public-domain and carries no property/rights sensitivity — see <code>.pHive/CONTEXT.md</code>'s
+public-safe-demo-data rule for why this isn't a blanket license for every showcase page
+to skip gating without its own rights check.</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Model3D</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">"@/components/Model3D"</span><span class="p">;</span>
+
+<span class="p">&lt;</span><span class="nt">Model3D</span>
+<span class="w">  </span><span class="na">model</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">"duck"</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s2">"/model3d-samples/duck/model.glb"</span><span class="p">,</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s2">"Duck (sample glTF)"</span><span class="w"> </span><span class="p">}}</span>
+<span class="p">/&gt;</span>
+</code></pre></div>
+<h2 id="acceptance-criteria">Acceptance criteria<a class="headerlink" href="#acceptance-criteria" title="Permanent link">&para;</a></h2>
+<p>The first block below is scoped to the original <code>model3d</code> epic (P1: <code>&lt;Model3D&gt;</code> on a
+single sample glTF, plus the showcase-site pattern) — point-cloud rendering and
+scale/position/geo-anchoring <em>placement</em> were, and remain, explicitly out of scope, see
+Phase fit. <strong>Measure is no longer out of scope</strong> — the original P1 scoping here read
+"Measure... explicitly deferred"; that was accurate when this doc was first written but
+is now stale. The real, shipped measure tool + controls legend (from the
+<code>brand-theming-and-viewer-polish</code> epic) is documented above under "Measure tool +
+controls legend," with its own acceptance criteria in the second block below.</p>
+<ul>
+<li>[x] Given a glTF/glb url, when <code>&lt;Model3D&gt;</code> mounts, then the mesh renders visibly in the
+      canvas, reasonably framed (not off-screen/invisibly tiny/huge).
+  Verified: <code>Model3D.tsx</code> wraps <code>&lt;GltfScene&gt;</code> in drei's <code>&lt;Bounds fit clip observe
+  margin={1.2}&gt;</code>, which auto-fits the camera to the loaded mesh's bounding box on mount
+  and re-fits on bounds changes — not a fixed camera guessing at an arbitrary model's
+  scale. <code>model3d-component</code>'s Playwright pass confirmed the duck sample renders visibly
+  and centered against the real running app (WebGL needs a real browser context; this
+  can't be verified under jsdom — see <code>Model3D.test.tsx</code>'s header comment).</li>
+<li>[x] Given mouse drag/scroll on the canvas, when performed, then <code>&lt;OrbitControls&gt;</code>
+      actually rotates/zooms the view (verified live, not just that the prop is wired).
+  Verified: <code>&lt;OrbitControls makeDefault /&gt;</code> is mounted inside the same <code>&lt;Canvas&gt;</code>;
+  <code>makeDefault</code> registers it as the r3f store's active controls instance, which is what
+  <code>&lt;Bounds&gt;</code>'s internal camera-fit animation targets via <code>useThree().controls</code> — without
+  it the two would fight over the camera instead of cooperating. <code>model3d-component</code>'s
+  Playwright pass exercised drag-to-orbit and scroll-to-zoom against the real duck model
+  and confirmed the camera actually moved (live browser verification, not a prop-wiring
+  assertion under jsdom).</li>
+<li>[x] Given <code>next/dynamic({ ssr: false })</code>, when <code>&lt;Model3D&gt;</code> is imported anywhere, then
+      it's compatible with that wrapping (no server-only APIs; confirmed via a real usage
+      in a later story).
+  Verified: <code>Model3D.tsx</code>'s header comment documents that no server-only APIs are touched
+  at module scope (<code>@react-three/fiber</code>'s <code>&lt;Canvas&gt;</code> and drei's hooks only touch
+  <code>window</code>/WebGL once mounted). Two real usages confirm this in practice:
+  <code>app/(showcase)/components/model3d/page.tsx</code> (the shipped showcase page) and the
+  now-deleted <code>app/dev-preview-model3d/page.tsx</code> (superseded by the showcase page, removed
+  by this closeout story) both mount <code>&lt;Model3D&gt;</code> via
+  <code>dynamic(() =&gt; import("@/components/Model3D")..., { ssr: false })</code>, and both build/run
+  clean.</li>
+<li>[x] Given <code>npm run build</code>, when run, then it passes with no regressions.
+  Verified: clean <code>npm run build</code> re-run during this closeout story (after deleting
+  <code>app/dev-preview-model3d/</code>), <code>/components/model3d</code> present as a static route in the
+  output.</li>
+<li>[x] Given the <code>&lt;Model3D&gt;</code> showcase page visited with no passcode, when loaded, then it
+      renders the sample glTF and is orbit-controllable, with no redirect to
+      <code>/enter-passcode</code>.
+  Verified: <code>app/(showcase)/components/model3d/page.tsx</code> is not under any
+  <code>GATED_PATH_PREFIXES</code> entry — confirmed by reading <code>lib/gate.ts</code> and <code>middleware.ts</code>
+  directly (<code>GATED_PATH_PREFIXES = ["/tours", "/properties"]</code>,
+  <code>config.matcher = ["/tours/:path*", "/properties/:path*"]</code>, neither matches
+  <code>/components/*</code>). <code>model3d-showcase-pages</code>'s Playwright pass loaded the page with no
+  passcode cookie set and confirmed no redirect occurred.</li>
+<li>[x] Given <code>ModelDef</code>, when inspected, then it carries no <code>scale</code>/<code>position</code>/
+      geo-anchoring <em>transform</em> fields.
+  Verified: <code>components/Model3D/Model3D.tsx</code>'s <code>ModelDef</code> interface is
+  <code>{id: string; url: string; title: string; unitsPerMeter?: number}</code>. The one field
+  added since this criterion was first written (<code>unitsPerMeter</code>, by the
+  <code>brand-theming-and-viewer-polish</code> epic) is a measure-tool label-formatting hint, not a
+  transform — it doesn't move, resize, or reorient the mesh in any scene. Still matches
+  the <code>do_not</code> in <code>model3d-component.yaml</code> and the reasoning in <code>design-discussion.md</code>
+  §2.3, reproduced above under "Deliberately deferred."</li>
+</ul>
+<h3 id="measure-tool-controls-legend-acceptance-criteria">Measure tool + controls legend — acceptance criteria<a class="headerlink" href="#measure-tool-controls-legend-acceptance-criteria" title="Permanent link">&para;</a></h3>
+<p>Scoped to the <code>brand-theming-and-viewer-polish</code> epic's <code>model3d-measure-tool-and-legend</code>
+story. See "Measure tool + controls legend" above for the full behavior description.</p>
+<ul>
+<li>[x] Given the Measure toggle is on, when the user clicks two distinct points on the
+      mesh, then a connecting line and a distance-labeled midpoint marker render, and the
+      label reads "X.XX units" (not a fabricated real-world unit) unless the <code>ModelDef</code>
+      supplies <code>unitsPerMeter</code>.
+  Verified: <code>distanceBetweenPoints</code>/<code>formatDistance</code> (<code>components/Model3D/Model3D.tsx</code>)
+  are pure, WebGL-independent functions with direct unit coverage in
+  <code>Model3D.test.tsx</code>. Live-verified via Playwright against the real running app:
+  toggling Measure and placing two points on the sample duck produced a distance line
+  and a <code>"0.50 units"</code> label.</li>
+<li>[x] Given measure mode is active, when the user drags to orbit, then no measure point
+      is placed (orbit and measure don't conflict).
+  Verified: <code>MeasureController</code>'s click-vs-drag threshold (<code>CLICK_MAX_MOVEMENT_PX</code>,
+  <code>CLICK_MAX_DURATION_MS</code>) gates point placement on <code>pointerup</code>, and it never calls
+  <code>stopPropagation</code>/<code>preventDefault</code>, so <code>&lt;OrbitControls&gt;</code>'s own native drag listeners on
+  the same canvas element are unaffected either way. Live-verified via Playwright
+  (drag-to-orbit while measure mode is on does not add a point).</li>
+<li>[x] Given two points already placed, when a third point is clicked, then the old pair
+      clears and a fresh measurement starts at the new point; independently, the
+      "Clear measurement" button resets the same state on demand.
+  Verified: <code>handlePlacePoint</code>'s <code>prev.length &gt;= 2 ? [point] : [...prev, point]</code> reset
+  (third-click behavior) and the legend's <code>handleClearMeasurement</code>/"Clear measurement"
+  button (<code>disabled</code> when <code>points.length === 0</code>) both call the same <code>setPoints</code> reset —
+  read directly in <code>components/Model3D/Model3D.tsx</code>.</li>
+<li>[x] Given a point is placed, when the camera is observed, then it does not
+      unexpectedly re-frame or zoom.
+  Verified: <code>MeasureOverlay</code>'s markers/line render as <code>&lt;Canvas&gt;</code>-level siblings of
+  <code>&lt;Bounds fit clip observe margin={1.2}&gt;</code>, never as its children — <code>&lt;Bounds&gt;</code>'s own
+  wrapping <code>&lt;group&gt;</code> applies no transform of its own (confirmed by reading
+  <code>@react-three/drei</code>'s <code>Bounds.js</code> directly), so measure geometry can't grow the bounds
+  computation <code>observe</code> reacts to. Live-verified via Playwright: placing two points left
+  the duck pixel-identical in position/scale before and after.</li>
+<li>[x] Given the showcase page, when it loads, then an on-canvas controls legend is
+      visible, listing orbit/zoom and the Measure controls, themed via this epic's
+      design tokens.
+  Verified: <code>Model3D.tsx</code>'s legend panel (<code>bg-surface/90</code>, <code>border-border</code>,
+  <code>text-foreground</code>, <code>text-accent</code>) renders unconditionally in the returned JSX, not
+  gated behind any loaded/ready state. Live-verified via Playwright: the "Controls"
+  panel with a "Measure" toggle is visible on <code>/components/model3d</code> by default.</li>
+</ul>
+<h2 id="phase-fit">Phase fit<a class="headerlink" href="#phase-fit" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>P1 (this epic):</strong> <code>&lt;Model3D&gt;</code> renders a single free-floating glTF mesh, auto-framed,
+  orbit-controllable, shown on its own public showcase page. <code>ModelDef</code> deliberately
+  minimal (<code>{id, url, title}</code>).</li>
+<li><strong>P2 (land-overlay epic, next in priority order):</strong> geo-anchored placement — a NEW type
+  (not a field bolted onto <code>ModelDef</code>) that anchors a mesh onto <code>&lt;LayerViewer&gt;</code>'s map by
+  lat/lon/alt, resolving the scene-space-vs-geo-space <code>position</code> question this epic
+  deliberately left open. CBA's Phase 2/2.5D drape work (<code>MeasureTool</code>, <code>AnnotationLayer</code>,
+  <code>CompareSwipe</code>, <code>AlignControl</code>) is a separate, <code>&lt;LayerViewer&gt;</code>-side track, not owned by
+  <code>&lt;Model3D&gt;</code>.</li>
+<li><strong>P3 (per CBA):</strong> point-cloud rendering (potree/COPC) as an alternative or companion
+  data source to the glTF mesh path this epic ships.</li>
+<li><strong>Later (per the operator's 2026-08-07 vision expansion, <code>CLAUDE.md</code>):</strong> <code>&lt;Model3D&gt;</code> is
+  the confirmed foundation for the 3D-on-land overlay, the Minecraft voxelizer/content
+  engine, and telemetry-driven video overlay work queued after it.</li>
+</ul>
+<h2 id="real-data-update-2806-prado-real-georeferenced-fix-story">Real data update (2806 Prado, real georeferenced-fix story)<a class="headerlink" href="#real-data-update-2806-prado-real-georeferenced-fix-story" title="Permanent link">&para;</a></h2>
+<p>The showcase's primary sample swapped from the Khronos duck to a REAL textured mesh:
+<code>public/model3d-samples/prado/model.glb</code>, the operator's own 2806 Prado St nadir-grid
+photogrammetry (OpenDroneMap <code>odm_texturing_25d</code> output). Pipeline: <code>obj2gltf</code> (raw OBJ →
+glTF) → <code>@gltf-transform/cli resize</code> (textures to 512px) → a small custom axis-correction
+script (rotates the raw ODM export's Z-up convention to glTF's standard Y-up — needed
+because <code>useGLTF</code>/<code>OrbitControls</code> assume Y-up; without it the mesh rendered edge-on by
+default, confirmed live via Playwright) → <code>@gltf-transform/cli draco</code> (mesh compression).
+Net: ~29MB raw export → ~2MB committed asset, geometry/vertex counts unchanged
+(gltf-transform inspect confirmed before/after).</p>
+<p><strong>Read this before assuming the default view looks "broken":</strong> the mesh is REAL, low
+<code>--pc-quality</code>/<code>--feature-quality</code> ODM output from a NADIR-ONLY flight (no oblique/
+side-facing passes) — solid, coherent surface data when viewed top-down, but no
+reconstructed vertical walls, so a 3/4 diagonal angle (the fixed default camera at
+<code>Canvas</code>'s <code>camera={{position:[3,3,3]}}</code>) shows sparse, jagged fragments where you're
+seeing through gaps between disconnected patches. Drag to orbit toward a top-down angle for
+the real, coherent view. This is an honest characteristic of the source capture
+(CLAUDE.md's own "visual property-intelligence, NOT survey-grade" framing made visible),
+not a rendering bug — verified by comparing <code>gltf-transform inspect</code>'s vertex/face counts
+before and after compression (identical) and by live-orbiting the actual showcase page.</p>
+<p>The original <code>public/model3d-samples/duck/model.glb</code> stays in the repo — <code>&lt;LandOverlay&gt;</code>'s
+showcase still uses it (see that component's own doc for why the real mesh wasn't swapped
+in there too).</p>
+<h3 id="v2-update-nadir-oblique-orbit-real-tree-geometry">v2 update — nadir + oblique orbit, real tree geometry<a class="headerlink" href="#v2-update-nadir-oblique-orbit-real-tree-geometry" title="Permanent link">&para;</a></h3>
+<p>The "sparse, jagged fragments" characteristic described above is fixed as of v2 — not by
+better processing settings (reprocessing the same nadir-only source at high quality
+produced no meaningful change), but by adding a real oblique orbit clip (<code>0023</code>, gimbal
+tilted ~45-60°, ~3 min circling the property) to the same reconstruction. A nadir-only
+camera structurally cannot resolve a tree taller than the flight altitude — it only ever
+sees the canopy top, never the sides — so no amount of point-cloud density fixes that. The
+oblique pass gives the reconstruction real side-view data for the first time.</p>
+<p>Practical fallout worth knowing if you're extending this pipeline: the oblique orbit swept
+a much wider area than just the property (the raw reconstruction's bounding box roughly
+doubled in each direction), and a handful of far outlier vertices from neighboring
+properties were enough to make the actual house a speck once <code>&lt;Bounds&gt;</code> auto-framed the
+whole thing. Fixed by cropping the mesh to the property's real-world bounds <em>by material
+group</em>, in the reconstruction's own local coordinate frame (via <code>trimesh</code>, since
+<code>gltf-transform</code> has no spatial-crop command) — before the resize/simplify/Draco pipeline,
+not after. Final asset: ~10MB (up from v1's ~2MB — more materials, more real geometry, a
+genuinely bigger reconstruction, not just recompressed).</p>
+<p>Two other real bugs were found and fixed getting to v2, unrelated to the mesh itself: a
+Docker Desktop default-memory-allocation limit causing intermittent segfaults in
+OpenDroneMap's dense-reconstruction step under x86-on-ARM64 emulation, and an ODM
+dataset-cache footgun (partially clearing cache files between reruns breaks the dataset
+stage rather than triggering a clean rescan — wipe the whole project directory instead).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.instant", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

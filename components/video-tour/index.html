@@ -1,0 +1,1387 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.">
+      
+      
+      
+        <link rel="canonical" href="https://mdostal.github.io/drone-hub/components/video-tour/">
+      
+      
+        <link rel="prev" href="../video-annotator/">
+      
+      
+        <link rel="next" href="../voxel-terrain/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title><VideoTour> — interactive fly-through tour (hive spec) - drone-hub</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#videotour-interactive-fly-through-tour-hive-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="drone-hub" class="md-header__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            drone-hub
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="drone-hub" class="md-nav__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    drone-hub
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drone-hub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CBA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drone platform — cost-benefit analysis + build plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileList&gt; — file viewer / download list (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileUpload&gt; — drag-and-drop / click-to-browse file picker (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flight-coverage-analyzer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FlightCoverageAnalyzer&gt; — nadir-grid overlap judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Gallery&gt; — plain shots carousel (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-overlay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layer-viewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minecraft-export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minecraft export — real .schem download for &lt;VoxelTerrain&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model3d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;ProcessingStatus&gt; — presentational job-status indicator (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;TourBuilder&gt; — visual tour.json authoring tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-annotator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoAnnotator&gt; — scrub, zoom, draw, and export a single annotated frame (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-a-room-graph-reuse-the-prototypes-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — a room graph (reuse the prototype's shape)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — a room graph (reuse the prototype&#39;s shape)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-spin-video-controls-sample-clip-provenance-videotour-real-controls-and-sample-clip-2026-08-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real spin-video controls + sample clip provenance (videotour-real-controls-and-sample-clip, 2026-08-09)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior-state-machine-as-in-the-prototype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior (state machine — as in the prototype)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech-fit-the-existing-stack-see-root-claudemd-packagejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech (fit the existing stack — see root CLAUDE.md / package.json)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authoring-flow-what-mathew-does-per-house" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authoring flow (what Mathew does per house)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#importable-standalone-audit-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importable standalone — audit finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#companion-footage-components-same-family-separate-specs-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Companion footage components (same family — separate specs later)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-tour-story-2026-08-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real-tour story, 2026-08-09)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voxel-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VoxelTerrain&gt; + &lt;VoxelStructure&gt; — blocky voxel terrain renderer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-a-room-graph-reuse-the-prototypes-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model — a room graph (reuse the prototype's shape)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The model — a room graph (reuse the prototype&#39;s shape)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-spin-video-controls-sample-clip-provenance-videotour-real-controls-and-sample-clip-2026-08-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real spin-video controls + sample clip provenance (videotour-real-controls-and-sample-clip, 2026-08-09)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior-state-machine-as-in-the-prototype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior (state machine — as in the prototype)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tech-fit-the-existing-stack-see-root-claudemd-packagejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tech (fit the existing stack — see root CLAUDE.md / package.json)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authoring-flow-what-mathew-does-per-house" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authoring flow (what Mathew does per house)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#importable-standalone-audit-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importable standalone — audit finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#companion-footage-components-same-family-separate-specs-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Companion footage components (same family — separate specs later)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-tour-story-2026-08-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real-tour story, 2026-08-09)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="videotour-interactive-fly-through-tour-hive-spec"><code>&lt;VideoTour&gt;</code> — interactive fly-through tour (hive spec)<a class="headerlink" href="#videotour-interactive-fly-through-tour-hive-spec" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>A <strong>video-Matterport</strong>: click a room → the drone flies to it and spins → you're "in" it,
+with clickable doorways to adjacent rooms + a floor-plan minimap. Branching video on a
+<strong>room graph</strong>. Plug-and-play, importable into any app.</p>
+</blockquote>
+<p><strong>Update (operator, 2026-08-08):</strong> drone-hub carries no gating of any kind, and no real
+property footage — the real <code>2806-prado</code> tour (referenced throughout this doc, including
+the prototype below) was removed from this repo entirely; that content and its access
+control now live exclusively in the separate, private <code>personal-drone</code> platform. Every
+reference below to <code>middleware.ts</code>, <code>lib/gate.ts</code>, a passcode gate, or <code>/tours/[slug]</code>
+describes an architecture that no longer exists here — kept as historical record. The
+component itself is demonstrated at the public <code>/components/video-tour</code> showcase page
+against fully synthetic sample data (<code>public/showcase-samples/demo-house/</code>).</p>
+<p><strong>Reference build target (historical — file removed 2026-08-08):</strong>
+<code>docs/components/reference/prado-tour.prototype.html</code> was the original working prototype
+this component was built to match — it embedded real, un-released 2806 Prado room photos
+as base64 image data, so it was deleted along with the rest of this repo's real-content
+removal (see the Update note above). <code>&lt;VideoTour&gt;</code> was already fully built against it;
+nothing here depends on the file still existing. <strong>Flagged for operator follow-up, not
+fixable from this repo:</strong> this doc also referenced a claude.ai artifact URL
+(<code>https://claude.ai/code/artifact/d6ece8ff-...</code>) as "also published" — if that artifact
+contains the same embedded photos, it's a separate exposure surface this repo's fix
+doesn't touch; worth checking/revoking directly on claude.ai.</p>
+<h2 id="why-operator-intent-honor-this">Why (operator intent — honor this)<a class="headerlink" href="#why-operator-intent-honor-this" title="Permanent link">&para;</a></h2>
+<p>This is Mathew's <strong>own</strong> cinematic layer over the space — NOT the MLS listing, NOT for-hire
+work. He already has a Matterport for the accurate dollhouse; this is the <em>motion</em> version
+that lives on <strong>his</strong> site as a portfolio/showcase piece and reusable component. Build it as
+a general property-tour component, seeded with the Prado house.</p>
+<h2 id="the-model-a-room-graph-reuse-the-prototypes-shape">The model — a room graph (reuse the prototype's shape)<a class="headerlink" href="#the-model-a-room-graph-reuse-the-prototypes-shape" title="Permanent link">&para;</a></h2>
+<p>See <code>lib/tour-types.ts</code>. A tour is <code>nodes</code> (rooms) + <code>edges</code> (doorways):</p>
+<ul>
+<li><strong>Node (room)</strong> = a looping <strong>spin clip</strong> (drone rotating in the room). Falls back to a
+  <strong>still</strong> when no clip is set (so a tour is publishable before every clip is cut).</li>
+<li><strong>Edge (doorway)</strong> = a <strong>transition clip</strong> (drone flying <em>from this room to that one</em>).
+  Directional. Falls back to a timed cross-fade wipe when no clip is set.</li>
+<li><strong>Minimap</strong> = floor-plan node positions (<code>pos:[x%,y%]</code>) + edges drawn between them; current
+  room highlighted; nodes are clickable = jump (plays the transition if one exists).</li>
+</ul>
+<p>Authoring a new property = write one <code>tour.json</code> manifest + drop the clips on R2. No code.</p>
+<h3 id="real-spin-video-controls-sample-clip-provenance-videotour-real-controls-and-sample-clip-2026-08-09">Real spin-video controls + sample clip provenance (<code>videotour-real-controls-and-sample-clip</code>, 2026-08-09)<a class="headerlink" href="#real-spin-video-controls-sample-clip-provenance-videotour-real-controls-and-sample-clip-2026-08-09" title="Permanent link">&para;</a></h3>
+<p><strong>Spin video only, never the transition clip — the scope line is load-bearing, not a
+style choice.</strong> <code>VideoTour.go()</code>'s only path to <code>arrive()</code> (which clears <code>busyRef</code>/
+<code>busy</code>, un-disabling every <code>DoorwayControls</code>/<code>FloorPlanMap</code> button) is <code>TourStage</code>'s
+<code>onTransitionClipEnded</code> firing on the transition clip's <code>'ended'</code> event. If a visitor
+could pause that clip, or scrub it backward off the end, <code>'ended'</code> would never fire,
+<code>arrive()</code> would never run, and the tour would permanently lock up with no escape
+hatch anywhere in the current code. The <code>spin</code> video has no such dependency — nothing
+in the navigation state machine waits on it — so it's safe to give real controls.
+<code>TourStage.tsx</code>'s <code>&lt;SpinVideo&gt;</code> now renders a themed on-video controls bar (play/pause,
+a scrub/seek <code>&lt;input type="range"&gt;</code> bound to <code>currentTime</code>/<code>duration</code> via a
+<code>timeupdate</code>/<code>loadedmetadata</code> listener, a mute/unmute toggle, and 0.5x/1x/1.5x/2x
+speed buttons bound to <code>video.playbackRate</code>) — styled with this repo's design tokens
+(<code>bg-surface</code>/<code>border-border</code>/<code>text-accent</code>/<code>text-foreground</code> from <code>app/globals.css</code>),
+matching <code>Model3D</code>'s/<code>VoxelTerrain</code>'s on-canvas legend-panel visual language. The video
+still autoplays muted on arrival by default (unregressed silent-loop behavior for
+anyone who doesn't touch the controls) — the controls only add the <em>ability</em> to pause,
+scrub, unmute, and change speed, they don't change the default. The transition-clip
+<code>&lt;video&gt;</code> (see the behavior list below) is deliberately untouched: still autoplay,
+muted, no controls, <code>onEnded</code> the only path to <code>arrive()</code>.</p>
+<p><strong>Sample clip provenance (<code>public/showcase-samples/demo-house/living-spin.mp4</code>):</strong>
+every room's <code>spin</code> field was <code>null</code> in this manifest before this story — the spin
+code path had never actually rendered. A real, correctly-licensed public clip was
+sourced (same category of research as <code>layer-viewer.md</code>'s ortho-sourcing search) —
+this repo had zero video-encoding tooling before this story (<code>ffmpeg</code> not a project
+dependency; confirmed via <code>grep -i ffmpeg package.json</code> returning nothing), so the
+synthetic-fallback path was budgeted for but not needed once a suitable clip turned
+up. Source: <a href="https://commons.wikimedia.org/wiki/File:Slow_motion_ceiling_fan.webm"><strong>"Slow motion ceiling fan"</strong></a>
+by GolhaMedia, via Wikimedia Commons, licensed
+<a href="https://creativecommons.org/licenses/by-sa/4.0/"><strong>CC BY-SA 4.0</strong></a> — a real, static-camera
+interior shot of a ceiling fan spinning, genuinely plausible as an ambient "room spin"
+placeholder (unlike a thematically-unrelated clip, which was the other real PD
+candidate found during the search — a NASA/SVS eclipse-glasses demonstration video,
+public domain but with no interior/room framing at all). <strong>Derivative work, shipped
+under the same license</strong>, per CC BY-SA's share-alike term: the original 49s/800×450
+WebM was trimmed to a 5-second static-camera segment (<code>ffmpeg -ss 6 -t 5</code>, installed
+locally via <code>brew install ffmpeg</code> for this one-time edit — not a project dependency,
+same "pipeline tools live outside the bundle" convention as <code>layer-viewer.md</code>'s
+<code>scikit-image</code> note), downscaled to 640×360, re-encoded to H.264 baseline MP4 (silent —
+the audio track was dropped; the player is muted by default regardless), and a
+burned-in caption ("DEMO — stock footage, not the actual room") was composited on top
+via <code>ffmpeg</code>'s <code>overlay</code> filter (this build of <code>ffmpeg</code> has no <code>drawtext</code>/<code>libfreetype</code>
+support, so the caption was rendered as a transparent PNG with Pillow and overlaid as a
+video filter instead) — both because it's genuinely unrelated content standing in for
+a room (unlike the ortho photo, which is real aerial imagery of <em>an</em> outdoor space),
+and to match the demo-house SVG stills' own "DEMO — fictional room, not a real
+property" disclaimer convention. Final file: ~109 KiB, assigned to the Living Room
+(<code>rooms[1].spin</code> in <code>tour.json</code>) — the only room with a non-null <code>spin</code> value; every
+other room, and every edge's <code>clip</code>, remains <code>null</code>. Re-distributing or further
+modifying <code>living-spin.mp4</code> must keep the CC BY-SA 4.0 license + attribution to
+GolhaMedia intact, per the license's own terms.</p>
+<blockquote>
+<p><strong>Implementation note (deviation from this section's wording):</strong> the shipped
+<code>Tour</code> type (<code>lib/tour-types.ts</code>) doesn't have a top-level <code>edges</code> array — it's
+an adjacency list: <code>Tour.rooms: TourRoom[]</code>, and each room carries its own
+outgoing doorways as <code>TourRoom.neighbors: TourEdge[]</code>. Same graph, same
+per-edge shape (<code>{ to, clip, label? }</code>); just nested under the room rather
+than a parallel list. Decided during <code>video-tour-prado-manifest</code> — see
+<code>public/tours/2806-prado/tour.json</code> for a real example.</p>
+</blockquote>
+<h2 id="behavior-state-machine-as-in-the-prototype">Behavior (state machine — as in the prototype)<a class="headerlink" href="#behavior-state-machine-as-in-the-prototype" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Render current node: <code>spin</code> clip looping (muted, <code>playsInline</code>) OR the still with a slow
+   Ken-Burns as the placeholder.</li>
+<li>Show a <strong>doorway button</strong> per edge (<code>→ Kitchen</code>) + sync the minimap highlight.</li>
+<li>On doorway/minimap click → if <code>busy</code> ignore; set <code>busy</code>; if the edge has a <code>clip</code>, play it
+   full-frame then arrive; else show the "flying to X…" wipe (~900ms) then arrive. Arrive =
+   render the target node, clear <code>busy</code>.</li>
+<li>Preload the spin + outgoing-transition clips of the <strong>current node's neighbors</strong> (snappy hops).</li>
+</ol>
+<h2 id="tech-fit-the-existing-stack-see-root-claudemd-packagejson">Tech (fit the existing stack — see root <code>CLAUDE.md</code> / <code>package.json</code>)<a class="headerlink" href="#tech-fit-the-existing-stack-see-root-claudemd-packagejson" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Next.js 15 · React · Tailwind · shadcn</strong>, heavy player <code>next/dynamic({ssr:false})</code>.</li>
+<li>Video: <strong><code>hls.js</code></strong> (already a dep) for adaptive playback of large clips; short clips can be
+  progressive MP4. Host on <strong>Cloudflare R2 / Stream</strong> (zero-egress; NOT Vercel bandwidth).
+  <em>(Not yet true: <code>TourStage.tsx</code> ships plain <code>&lt;video&gt;</code> tags for the P2 spin/transition
+  branches, no <code>hls.js</code> wiring. Deferred to P2 along with the real clips it would serve —
+  there's nothing adaptive to stream until real spin/transition footage exists.)</em></li>
+<li>No new heavy deps required. Minimap = SVG/CSS (no map lib needed — it's a schematic, not geo).</li>
+<li>Component API: <code>&lt;VideoTour manifest={url|Tour} startNode? poster? onRoomChange? /&gt;</code>.
+  Subcomponents: <code>&lt;TourStage&gt;</code> (player), <code>&lt;DoorwayControls&gt;</code>, <code>&lt;FloorPlanMap&gt;</code>.</li>
+<li><strong>Gated</strong>: served behind the existing drone passcode/middleware; assets private until Mathew
+  flips a tour to public (nothing goes live until he says so).</li>
+</ul>
+<h2 id="authoring-flow-what-mathew-does-per-house">Authoring flow (what Mathew does per house)<a class="headerlink" href="#authoring-flow-what-mathew-does-per-house" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Fly/cut clips: one <strong>spin</strong> per room + one <strong>transition</strong> per doorway direction he wants.</li>
+<li>Upload to R2 under <code>tours/&lt;slug&gt;/</code>.</li>
+<li>Fill <code>tour.json</code> (nodes/edges/still fallbacks/minimap positions). Publish → gated URL.
+   Stills alone = a valid tour; clips upgrade it incrementally.</li>
+</ol>
+<h2 id="acceptance-criteria">Acceptance criteria<a class="headerlink" href="#acceptance-criteria" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] Loads a <code>Tour</code> manifest; renders nodes with spin-clip OR still fallback.
+  Verified: <code>VideoTour.tsx</code> fetches a manifest URL (or accepts a <code>Tour</code> object directly); <code>TourStage.tsx</code> renders <code>room.spin</code> as a looping muted video (with a real, themed play/pause/scrub/speed controls bar — <code>&lt;SpinVideo&gt;</code>, added by <code>videotour-real-controls-and-sample-clip</code>) when set, else <code>room.still</code> with the Ken-Burns treatment. Covered by <code>VideoTour.test.tsx</code> ("initial render") and <code>TourStage.test.tsx</code>. <strong>Update, 2026-08-09:</strong> this branch is no longer smoke-tested-only for <code>spin</code> — <code>public/showcase-samples/demo-house/tour.json</code>'s Living Room now sets a real <code>spin</code> clip (<code>living-spin.mp4</code>, provenance above), and the controls bar is unit-tested (play/pause toggling on real <code>'play'</code>/<code>'pause'</code> events, mute toggling, seek-slider → <code>currentTime</code>, speed buttons → <code>playbackRate</code>) plus live-Playwright-verified against a real <code>next build &amp;&amp; next start</code> server.</li>
+<li>[x] Doorway + minimap navigation with transition-clip OR wipe fallback; no double-fire (<code>busy</code>).
+  Verified: <code>VideoTour.tsx</code>'s <code>go()</code> plays <code>edge.clip</code> full-frame when set, else the timed "flying to X…" wipe; a <code>busyRef</code> (not just React state, to catch same-tick re-clicks) blocks re-entrant navigation until the wipe/clip finishes plus a cooldown. Covered by <code>VideoTour.test.tsx</code>'s "doorway navigation" busy-guard test, <code>DoorwayControls.test.tsx</code>, and <code>FloorPlanMap.test.tsx</code>. <strong>Still accurate as of 2026-08-09 — unchanged by <code>videotour-real-controls-and-sample-clip</code>, by design:</strong> the transition-clip branch remains P2-structural and uncontrolled — no manifest edge sets a real <code>clip</code> yet, so it's exercised only by "doesn't throw" smoke tests, not real clip playback, and it deliberately received NO user controls (see the "Real spin-video controls" section above for the deadlock-risk reasoning: the transition clip's <code>'ended'</code> event is the only path to <code>arrive()</code>, so pause/scrub control there without a real <code>'ended'</code>-independent fallback is a genuine, shippable deadlock — out of scope for that story, not an oversight here).</li>
+<li>[ ] Neighbor preloading; smooth on mobile (Mathew reviews on his phone).
+  Preloading is implemented and thoroughly tested: <code>useNeighborPreload.ts</code> preloads direct (1-hop) neighbors' media on every arrival, priority <code>edge.clip → neighbor.spin → neighbor.still</code>, no recursive/2-hop preloading (<code>useNeighborPreload.test.ts</code>, 9 specs). Left unchecked because the "smooth on mobile" half of this criterion is literally an on-device pass on Mathew's phone — that hasn't happened, and there's no automated substitute for it in this verification pass.</li>
+<li>[x] Floor-plan minimap: positions, edges, current-room highlight, clickable.
+  Verified: <code>FloorPlanMap.tsx</code> renders one node per room at <code>room.pos</code>, deduped connecting lines between neighbors, <code>aria-current</code> on the current room, and click-to-navigate restricted to rooms actually reachable from here. Covered by <code>FloorPlanMap.test.tsx</code> (7 specs) and <code>VideoTour.test.tsx</code>'s "minimap" block.</li>
+<li>[x] Importable into personal-site; renders behind the drone gate; passes <code>npm run build</code>.
+  Verified: <code>components/VideoTour/index.ts</code> and everything it transitively imports (<code>VideoTour.tsx</code>, <code>TourStage.tsx</code>, <code>DoorwayControls.tsx</code>, <code>FloorPlanMap.tsx</code>, <code>useNeighborPreload.ts</code>, <code>cx.ts</code>, <code>lib/tour-types.ts</code>) contain zero imports from <code>app/</code> or <code>middleware.ts</code> — see "Importable standalone" below. The real route (<code>app/tours/[slug]/page.tsx</code>) sits under <code>middleware.ts</code>'s <code>/tours/:path*</code> matcher, so it's gated. <code>npm run build</code> passes clean. (Corrected from "passes <code>pnpm build</code>" — this repo uses npm, see <code>package-lock.json</code> and <code>package.json</code>'s scripts; there was never a pnpm lockfile here.)</li>
+<li>[x] Prototype parity: a stranger can navigate the Prado house with zero instructions.
+  Verified by interaction-pattern parity with <code>docs/components/reference/prado-tour.prototype.html</code>: labeled doorway buttons (<code>→ Kitchen</code>), a clickable floor-plan minimap with a "here" highlight, and a "flying to X…" transition state — the same self-explanatory affordances as the prototype, wired to the real Prado manifest (<code>public/tours/2806-prado/tour.json</code>, 6 rooms). No formal usability test with an actual stranger was run; this is inferred from UI/interaction equivalence, not observed firsthand.</li>
+</ul>
+<h3 id="importable-standalone-audit-finding">Importable standalone — audit finding<a class="headerlink" href="#importable-standalone-audit-finding" title="Permanent link">&para;</a></h3>
+<p>Walked <code>components/VideoTour/index.ts</code>'s full export surface (<code>VideoTour</code>,
+<code>TourStage</code>, <code>DoorwayControls</code>, <code>FloorPlanMap</code>, plus the <code>lib/tour-types.ts</code>
+types) and every file it transitively imports. Clean: nothing pulls from
+<code>app/</code>, <code>middleware.ts</code>, or <code>lib/gate.ts</code>. <code>VideoTour.tsx</code> explicitly documents
+this as a design intent ("Gate-agnostic by design — this component has no
+knowledge of middleware.ts / lib/gate.ts. It just renders whatever manifest
+it's given.") and the code matches the claim. <code>useNeighborPreload.ts</code> and
+<code>cx.ts</code> exist under <code>components/VideoTour/</code> but are internal-only (not
+re-exported from <code>index.ts</code>) — fine, since nothing outside the family needs
+them directly. The "plug-and-play" bar from <code>CLAUDE.md</code> holds.</p>
+<h2 id="phase-fit">Phase fit<a class="headerlink" href="#phase-fit" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>P1 (this component):</strong> stills + wipes working end-to-end on the Prado manifest (ship-able now
+  from the frames already captured).</li>
+<li><strong>P2:</strong> real spin + transition clips swapped in as Mathew cuts them from Flight-2 footage.</li>
+<li><strong>P3:</strong> polish — audio bed, "auto-play tour" mode, deep-link to a room (<code>#kitchen</code>), analytics.</li>
+</ul>
+<h2 id="companion-footage-components-same-family-separate-specs-later">Companion footage components (same family — separate specs later)<a class="headerlink" href="#companion-footage-components-same-family-separate-specs-later" title="Permanent link">&para;</a></h2>
+<p>Mathew wants the surrounding tooling to make footage <strong>easy to upload + interact with</strong>:
+- <strong><code>&lt;FootageUploader&gt;</code> / ingest</strong> — drop clips → R2 → auto-thumbnail + register in a manifest
+  (feeds VideoTour, Gallery, VideoAnnotator). Some inputs come from <strong>WebODM</strong> outputs
+  (ortho/mesh) for the map/3D components, video from the raw flights.
+- Ties into existing planned <code>&lt;LayerViewer&gt;</code>, <code>&lt;Model3D&gt;</code>, <code>&lt;VideoAnnotator&gt;</code>, <code>&lt;Gallery&gt;</code>.
+Keep VideoTour standalone but manifest-compatible so one property folder feeds all of them.</p>
+<h2 id="real-data-update-2806-prado-real-tour-story-2026-08-09">Real data update (2806 Prado, real-tour story, 2026-08-09)<a class="headerlink" href="#real-data-update-2806-prado-real-tour-story-2026-08-09" title="Permanent link">&para;</a></h2>
+<p>The showcase's primary demo is no longer the synthetic <code>demo-house</code> sample — it's the
+operator's own real 2806 Prado St interior walkthrough
+(<code>public/showcase-samples/2806-prado-tour/</code>), sourced from the post-flight pipeline's
+already-processed, room-labeled clip catalog (<code>03_analysis/catalog.tsv</code>,
+<code>04_processed/rough/clips/</code> — see <code>personal-drone/docs/post-flight-pipeline.md</code>). See
+CLAUDE.md's 2026-08-09 correction for the full authorization history and how this differs
+from the earlier real-tour incident this page's own regression-guard test was originally
+written to prevent — read that before touching <code>page.test.tsx</code>.</p>
+<p><strong>Selection + privacy process (not assumed safe — verified):</strong> of 38 candidate interior
+clips, every single one's <code>privacy_flags</code> field was checked directly (not just trusted from
+the pipeline README's "staged-empty" claim) — zero had <code>people_visible</code>/<code>children_visible</code>.
+One representative clip per room was picked favoring <code>hero</code>-rated, <code>clean</code> motion-quality,
+<code>keep: yes</code>, <code>privacy_flags: none</code> clips (a few real rooms only had <code>other_houses_visible</code>-
+flagged options available and were skipped in favor of a clean alternative in the same
+room where one existed).</p>
+<p><strong>Compression</strong> (<code>ffmpeg</code>, matching the video-tour epic's own established small-sample
+convention): each room's real 4K source clip trimmed to an 8s representative segment,
+scaled to 960px wide, muted, h264 CRF 28 — real 4K footage down to 250–670KB per clip
+(~4MB total across 9 rooms). Each room's <code>still</code> is a real JPEG frame extracted directly
+from that same clip (<code>ffmpeg -ss 2 -frames:v 1</code>), not a synthetic placeholder.</p>
+<p><strong>Every room has a real <code>spin</code> clip</strong> (unlike <code>demo-house</code>, where only Living Room got one)
+— every <code>TourEdge.clip</code> stays <code>null</code> (wipe fallback): the pipeline produced per-room hero
+clips, not clip-to-clip transition flights between specific doorways, so there's no real
+transition footage to wire in yet. Room <code>pos</code> values are a hand-laid-out schematic based on
+the real room-adjacency implied by the catalog and one entry-clip still (not a real
+architectural floorplan — none exists for this property in this pipeline).</p>
+<p><code>public/showcase-samples/demo-house/</code> (synthetic SVG stills, one generic stock spin clip)
+stays in the repo, unreferenced by this showcase page now — same "keep the old generic
+sample around, don't delete it" precedent <code>&lt;Model3D&gt;</code>'s duck/prado swap already set.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.instant", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

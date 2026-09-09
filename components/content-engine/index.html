@@ -1,0 +1,1422 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.">
+      
+      
+      
+        <link rel="canonical" href="https://mdostal.github.io/drone-hub/components/content-engine/">
+      
+      
+        <link rel="prev" href="../../CBA/">
+      
+      
+        <link rel="next" href="../file-list/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Content engine — the /properties/[slug]/engine page (hive spec) - drone-hub</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#content-engine-the-propertiesslugengine-page-hive-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="drone-hub" class="md-header__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            drone-hub
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Content engine — the /properties/[slug]/engine page (hive spec)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="drone-hub" class="md-nav__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    drone-hub
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drone-hub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CBA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drone platform — cost-benefit analysis + build plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-it-lives-and-what-its-gated-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it lives, and what it's gated by
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-per-slug-real-vs-fallback-resolution-mechanism-the-least-obvious-most-important-part" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The per-slug real-vs-fallback resolution mechanism — the least obvious, most important part
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The per-slug real-vs-fallback resolution mechanism — the least obvious, most important part">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-it-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem it fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-visible-fallback-banner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The visible fallback banner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-and-isnt-covered-by-this-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is, and isn't, covered by this resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flightlogentry-deliberately-minimal-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FlightLogEntry — deliberately minimal scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path-traversal-safety-safe_slug_pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path-traversal safety — SAFE_SLUG_PATTERN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileList&gt; — file viewer / download list (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileUpload&gt; — drag-and-drop / click-to-browse file picker (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flight-coverage-analyzer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FlightCoverageAnalyzer&gt; — nadir-grid overlap judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Gallery&gt; — plain shots carousel (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-overlay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layer-viewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minecraft-export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minecraft export — real .schem download for &lt;VoxelTerrain&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model3d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;ProcessingStatus&gt; — presentational job-status indicator (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;TourBuilder&gt; — visual tour.json authoring tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-annotator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoAnnotator&gt; — scrub, zoom, draw, and export a single annotated frame (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voxel-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VoxelTerrain&gt; + &lt;VoxelStructure&gt; — blocky voxel terrain renderer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-it-lives-and-what-its-gated-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it lives, and what it's gated by
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-per-slug-real-vs-fallback-resolution-mechanism-the-least-obvious-most-important-part" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The per-slug real-vs-fallback resolution mechanism — the least obvious, most important part
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The per-slug real-vs-fallback resolution mechanism — the least obvious, most important part">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-it-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem it fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-visible-fallback-banner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The visible fallback banner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-and-isnt-covered-by-this-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is, and isn't, covered by this resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flightlogentry-deliberately-minimal-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FlightLogEntry — deliberately minimal scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path-traversal-safety-safe_slug_pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path-traversal safety — SAFE_SLUG_PATTERN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="content-engine-the-propertiesslugengine-page-hive-spec">Content engine — the <code>/properties/[slug]/engine</code> page (hive spec)<a class="headerlink" href="#content-engine-the-propertiesslugengine-page-hive-spec" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>This is not a new plug-and-play component.</strong> It's a per-property <em>page</em> that
+composes <code>&lt;VoxelTerrain&gt;</code>/<code>&lt;VoxelStructure&gt;</code> (see <code>docs/components/voxel-terrain.md</code>,
+which this doc assumes) alongside two sample-content panels — "engineering" and
+"flight log." The operator's own framing, verbatim: "the content engine where I let
+people see the engineering, the minecraft of it, the flight docs."</p>
+</blockquote>
+<p><strong>Update (operator, 2026-08-08):</strong> the <code>/properties/*</code> passcode gate this doc originally
+described has been removed entirely — drone-hub carries no gating of any kind now (see
+CLAUDE.md's "Scope boundary" correction of the same date). Every reference below to
+<code>middleware.ts</code>, <code>lib/gate.ts</code>, or a passcode gate describes an architecture that no
+longer exists in this repo; kept as historical record of why this page's data flow was
+originally designed the way it was, not as a description of current behavior. This page
+was always synthetic sample data only, so removing the gate changed nothing about what's
+actually shown here — just who can reach it (now: anyone, same as every other page).</p>
+<p><strong>Design discussion (RESOLVED architecture — read first):</strong>
+<code>.pHive/epics/minecraft-content-engine/docs/design-discussion.md</code>, point 5 (the
+per-slug resolution mechanism) and point 6 (<code>FlightLogEntry</code>'s scope) — this doc explains
+those decisions for a maintainer, it does not re-derive them.</p>
+<h2 id="where-it-lives-and-what-its-gated-by">Where it lives, and what it's gated by<a class="headerlink" href="#where-it-lives-and-what-its-gated-by" title="Permanent link">&para;</a></h2>
+<p><code>app/properties/[slug]/engine/page.tsx</code> — nested under the <strong>existing</strong>
+<code>/properties/:path*</code> gate prefix already registered in <code>lib/gate.ts</code>'s
+<code>GATED_PATH_PREFIXES</code> and <code>middleware.ts</code>'s matcher (added in the layer-viewer epic's
+<code>layer-viewer-gating-extension</code> story). This page adds <strong>zero</strong> new gating logic of its
+own: no passcode/session code lives in <code>page.tsx</code>, <code>EnginePageClient.tsx</code>, or
+<code>VoxelScene.tsx</code> — middleware enforces the gate server-side before the page is ever
+reached, the same "gating is applied at the route/middleware layer, not inside
+components/pages" discipline every gated route in this repo follows. Unauthenticated
+access to <code>/properties/&lt;any-slug&gt;/engine</code> redirects to
+<code>/enter-passcode?next=/properties/&lt;any-slug&gt;/engine</code>.</p>
+<p><code>page.tsx</code> is a <strong>Server Component</strong>, not a client component — unlike its sibling
+<code>app/properties/[slug]/page.tsx</code> (which is <code>"use client"</code> + <code>useParams</code>, purely so it can
+call <code>next/dynamic({ ssr: false })</code> directly). This page needs to synchronously check
+whether real per-slug files exist on the server filesystem and read them — a Node <code>fs</code>
+operation, only legal in a Server Component. Since Next's App Router rejects
+<code>ssr: false</code> on a <code>next/dynamic</code> call made directly inside a Server Component,
+<code>EnginePageClient.tsx</code> is the <code>"use client"</code> boundary that owns the actual
+<code>next/dynamic(() =&gt; import("./VoxelScene"), { ssr: false })</code> call for the heavy WebGL
+viewer — <code>page.tsx</code> does the server-side data resolution and hands the resolved
+props down.</p>
+<h2 id="the-per-slug-real-vs-fallback-resolution-mechanism-the-least-obvious-most-important-part">The per-slug real-vs-fallback resolution mechanism — the least obvious, most important part<a class="headerlink" href="#the-per-slug-real-vs-fallback-resolution-mechanism-the-least-obvious-most-important-part" title="Permanent link">&para;</a></h2>
+<p><strong>Read this section carefully — it's the actual fix a grill review forced into this
+epic's design, and it's easy to misdescribe as "just show sample data" if you haven't
+read <code>lib/content-engine-resolution.ts</code> directly.</strong></p>
+<h3 id="the-problem-it-fixes">The problem it fixes<a class="headerlink" href="#the-problem-it-fixes" title="Permanent link">&para;</a></h3>
+<p>The original draft of this page would have shown <strong>identical, hardcoded sample content on
+every property's <code>/engine</code> page, forever</strong> — no path to real per-property data ever
+existing, and no way for a visitor to tell "this property genuinely has no records yet"
+apart from "this is generic demo content, indistinguishable from every other property's
+page." A second, related problem: the sample terrain <code>&lt;VoxelTerrain&gt;</code> renders is the
+<em>exact same</em> grid the public, ungated <code>/components/voxel-terrain</code> showcase page already
+displays — showing that identical content behind a passcode gate, with no signal that
+it's the same public demo data, would misleadingly imply an exclusivity that doesn't
+exist.</p>
+<h3 id="the-fix">The fix<a class="headerlink" href="#the-fix" title="Permanent link">&para;</a></h3>
+<p><code>lib/content-engine-resolution.ts</code> implements a genuine <strong>per-slug lookup with an
+explicit, visible fallback</strong>, mirroring conventions already established elsewhere in this
+codebase for exactly this shape of problem (<code>TourEdge.clip: null</code> → wipe fallback,
+<code>LayerDef.disabled: true</code> → no render — see <code>lib/tour-types.ts</code> / <code>lib/layer-types.ts</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">resolveContentEngineData</span><span class="p">(</span><span class="nx">baseDir</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">slug</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">ContentEngineResolution</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">real</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">readContentEngineFiles</span><span class="p">(</span><span class="nx">baseDir</span><span class="p">,</span><span class="w"> </span><span class="nx">slug</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">isFallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">real</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">real</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">readContentEngineFiles</span><span class="p">(</span><span class="nx">baseDir</span><span class="p">,</span><span class="w"> </span><span class="nx">SAMPLE_SLUG</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">isFallback</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="w"> </span><span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>readContentEngineFiles(baseDir, slug)</code> looks for <strong>both</strong>
+<code>&lt;baseDir&gt;/&lt;slug&gt;/engineering.md</code> <strong>and</strong> <code>&lt;baseDir&gt;/&lt;slug&gt;/flight-log.json</code> on disk; it
+returns the parsed content only if <strong>both</strong> files exist, and <code>null</code> if either is missing.
+<code>resolveContentEngineData</code> tries the real slug first; if that comes back <code>null</code>, it falls
+back to the generic dataset at <code>&lt;baseDir&gt;/sample-house/</code> (<code>SAMPLE_SLUG</code>) instead. The
+resulting <code>isFallback: boolean</code> is <strong>exactly</strong> the signal
+<code>EnginePageClient.tsx</code> uses to decide whether to render the visible banner — it is
+computed from "did a real per-slug folder actually exist," not hardcoded, not a
+constant, and not inferred from anything about the slug string itself (the safety guard
+below is a separate, narrower check — see "Path-traversal safety" below).</p>
+<p>In production, <code>page.tsx</code> calls this with <code>baseDir = path.join(process.cwd(), "public",
+"content-engine")</code>, so for a real request the actual filesystem layout is:</p>
+<div class="highlight"><pre><span></span><code>public/content-engine/
+├── sample-house/              # the fallback dataset (minecraft-content-engine-data)
+│   ├── engineering.md
+│   └── flight-log.json
+└── &lt;real-slug&gt;/               # only created once real per-property data exists
+    ├── engineering.md
+    └── flight-log.json
+</code></pre></div>
+<p>Today, <strong>no property has a real <code>public/content-engine/&lt;slug&gt;/</code> folder</strong> — every request
+currently resolves to the <code>sample-house</code> fallback and the banner always renders. That's
+expected and correct, not a bug: the mechanism exists so that dropping a real
+<code>public/content-engine/2806-prado/{engineering.md,flight-log.json}</code> pair in later
+transparently switches that one slug over to real content (banner disappears for that
+slug only) with <strong>no code change</strong> — the whole point of building the resolution mechanism
+now, before any real per-property content exists.</p>
+<p><code>baseDir</code> is an explicit parameter on both functions — <strong>never</strong> hardcoded to
+<code>public/content-engine</code> inside <code>lib/content-engine-resolution.ts</code> itself — purely so the
+resolution logic is unit-testable against a throwaway fixture directory
+(<code>fs.mkdtempSync</code>-created, torn down in <code>afterAll</code>) without touching the real
+<code>public/</code> tree. See "Test coverage" below.</p>
+<h3 id="the-visible-fallback-banner">The visible fallback banner<a class="headerlink" href="#the-visible-fallback-banner" title="Permanent link">&para;</a></h3>
+<p><code>EnginePageClient.tsx</code> renders a <code>role="alert"</code>, high-contrast, full-width, top-of-page
+banner — "Showing sample data — no real records exist yet for this property." — whenever
+<code>isFallback</code> is true. <code>role="alert"</code> matches the same convention <code>app/enter-passcode/</code>
+and <code>&lt;LayerViewer&gt;</code> already use for their own user-facing status messages, so assistive
+tech announces it immediately rather than it being silently skippable. This is
+deliberately <strong>not</strong> a small footnote: the story's explicit requirement was that the
+banner be genuinely visible, because this is the actual fix for the rights/trust concern
+above — a gated page silently showing generic public demo content, indistinguishable from
+real data, would be misleading even though the stakes are lower than an unreleased asset
+leaking publicly.</p>
+<h3 id="what-is-and-isnt-covered-by-this-resolution">What is, and isn't, covered by this resolution<a class="headerlink" href="#what-is-and-isnt-covered-by-this-resolution" title="Permanent link">&para;</a></h3>
+<p>The <strong>engineering notes and flight log</strong> are resolved per-slug as described above. The
+<strong>terrain</strong> (<code>&lt;VoxelTerrain&gt;</code>/<code>&lt;VoxelStructure&gt;</code>, fed from
+<code>public/minecraft-samples/2806-prado/heightmap.json</code>) is a <strong>separate, deliberately
+simpler concern</strong>: it is the <em>same</em> sample grid on every slug's <code>/engine</code> page,
+regardless of <code>isFallback</code> — there's no real per-property DSM/heightmap data to fall
+back <em>from</em> yet (2806 Prado's real photogrammetry pipeline is still blocked on
+CLAUDE.md's Phase-0 nadir-pass requirement), so there's no real-vs-fallback distinction
+to make for terrain today. <code>page.tsx</code>'s own <code>TERRAIN_SAMPLE_SLUG</code> constant carries a
+comment flagging this explicitly as a known future concern: once real per-property
+WebODM/DSM output exists, terrain will need the identical
+<code>resolveContentEngineData</code>-style per-slug resolution pattern applied to it too — tracked,
+not built, here.</p>
+<h2 id="flightlogentry-deliberately-minimal-scope"><code>FlightLogEntry</code> — deliberately minimal scope<a class="headerlink" href="#flightlogentry-deliberately-minimal-scope" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">FlightLogEntry</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">timestampMs</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">   </span><span class="c1">// milliseconds since flight start (or epoch — display-only)</span>
+<span class="w">  </span><span class="nx">lat</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">            </span><span class="c1">// latitude, degrees</span>
+<span class="w">  </span><span class="nx">lon</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">             </span><span class="c1">// longitude, degrees</span>
+<span class="w">  </span><span class="nx">altitudeMeters</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w"> </span><span class="c1">// altitude above ground/takeoff point, in meters</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>That's the whole type — exactly <code>{timestampMs, lat, lon, altitudeMeters}</code>, enough to
+render the flight-log table/panel this page actually displays (time, position, altitude
+columns) and nothing more.</p>
+<p><strong>This was a real, named grill correction, not an incidental design choice — read this
+before touching the type.</strong> An earlier draft of this epic designed <code>FlightLogEntry</code> with
+fields anticipated for a <em>different, not-yet-planned</em> future epic: gimbal
+pitch/yaw/roll, intended to support that future epic's camera-pose computation for a
+telemetry-driven video overlay. Grill flagged this as speculative design, inconsistent
+with this project's own established practice — <code>GeoAnchoredModel</code>
+(<code>lib/geo-model-types.ts</code>) was deliberately kept separate from <code>&lt;Model3D&gt;</code>'s <code>ModelDef</code>
+rather than pre-unified for the land-overlay epic's own then-future needs (see
+<code>docs/components/land-overlay.md</code>), and this project doesn't design a type today to guess
+a future epic's requirements — it designs each type against its own current, real
+consuming code, and lets the future epic define whatever type <em>it</em> actually needs once
+it has real requirements to design against.</p>
+<p><strong>The future telemetry-video-overlay epic (queued next per CLAUDE.md's priority order)
+will define its own, richer type for its own camera-pose/gimbal needs — it will not
+extend or reuse <code>FlightLogEntry</code>.</strong> Do not add gimbal/orientation/camera-pose fields to
+<code>FlightLogEntry</code> for that epic's anticipated benefit, even though it might look like a
+natural, low-cost extension once that epic starts — that's precisely the speculative
+design this type was corrected away from, and doing it "for later" now would silently
+reintroduce the exact mistake grill caught. If a future session is tempted to grow this
+type, re-read <code>.pHive/epics/minecraft-content-engine/docs/design-discussion.md</code> point 6
+and <code>lib/flight-log-types.ts</code>'s own header comment first — both say this explicitly.</p>
+<h2 id="path-traversal-safety-safe_slug_pattern">Path-traversal safety — <code>SAFE_SLUG_PATTERN</code><a class="headerlink" href="#path-traversal-safety-safe_slug_pattern" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">SAFE_SLUG_PATTERN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/^[a-zA-Z0-9_-]+$/</span><span class="p">;</span>
+</code></pre></div>
+<p><code>slug</code> is attacker/user-influenced — it's a URL path segment (<code>/properties/[slug]/engine</code>)
+— and both <code>readContentEngineFiles</code> and (transitively) <code>resolveContentEngineData</code> join it
+directly into a filesystem path (<code>path.join(baseDir, slug, "engineering.md")</code>). Without a
+guard, a crafted slug like <code>../../../../etc</code> could walk <code>path.join</code> outside <code>baseDir</code>
+entirely. <code>readContentEngineFiles</code> checks <code>SAFE_SLUG_PATTERN.test(slug)</code> <strong>first</strong>, before
+any path is built, and returns <code>null</code> — the same "no real content for this slug" result
+an ordinary non-matching property slug produces — rather than throwing or attempting the
+join at all.</p>
+<p>This is framed deliberately as <strong>both</strong> a security guard <strong>and</strong> the semantically correct
+behavior, not a bolt-on patch: a slug shaped like a path-traversal attempt can never
+correspond to a real property folder name anyway, so treating it identically to "no real
+data exists for this slug" (i.e. falling through to the <code>sample-house</code> fallback) is the
+right behavior on its own terms, independent of the security motivation. The regression
+coverage for this (<code>app/properties/[slug]/engine/page.test.tsx</code>) asserts both properties
+directly: <code>SAFE_SLUG_PATTERN.test("../../etc")</code> is <code>false</code>, and
+<code>readContentEngineFiles(REAL_CONTENT_ENGINE_DIR, "../../../../etc")</code> returns <code>null</code>
+rather than throwing or escaping <code>baseDir</code>.</p>
+<h2 id="test-coverage">Test coverage<a class="headerlink" href="#test-coverage" title="Permanent link">&para;</a></h2>
+<p>The resolution logic was <strong>extracted</strong> out of <code>page.tsx</code> into
+<code>lib/content-engine-resolution.ts</code> specifically so it's unit-testable in isolation — a
+Server Component doing a synchronous <code>fs</code> read isn't itself renderable/callable from a
+Vitest+RTL spec, but the plain functions it delegates to are. This is a pure,
+behavior-preserving refactor (<code>page.tsx</code>'s actual behavior is unchanged, just relocated),
+the same "extract pure/testable logic out of what can't be unit-tested directly"
+precedent <code>components/VoxelTerrain/voxel-geometry.ts</code> follows for the exact same reason
+(see <code>docs/components/voxel-terrain.md</code>).</p>
+<p><code>app/properties/[slug]/engine/page.test.tsx</code> is the regression guard for the exact gap
+grill caught during planning — the story's own framing put it at the same weight as the
+model3d epic's video-tour rights-regression guard. Two directions, both exercised against
+<strong>real</strong> filesystem behavior (nothing mocked out from under the function under test):</p>
+<ol>
+<li><strong>Fallback direction</strong>, run against the <strong>real</strong> <code>public/content-engine/</code> directory
+   (not a fixture), using slug <code>"2806-prado"</code> — a precondition assertion first confirms
+   <code>public/content-engine/2806-prado/</code> genuinely does not exist yet, so the test fails
+   loudly instead of silently testing nothing if that ever changes. Asserts
+   <code>isFallback === true</code> and that the returned content is <strong>byte-for-byte</strong> the real
+   <code>sample-house</code> files read straight off disk (not just "non-null").</li>
+<li><strong>Real-data direction</strong>, using an injectable <code>baseDir</code> pointed at a throwaway
+   <code>fs.mkdtempSync</code> fixture directory (never touches <code>public/</code>), containing both a
+   <code>fixture-property/</code> folder with content <strong>deliberately different</strong> from
+   <code>sample-house</code>'s real content, and its <strong>own</strong> distinct <code>sample-house/</code> stand-in (so a
+   resolver bug that ignored <code>slug</code> and always fell through to <em>some</em> <code>sample-house</code>
+   folder can't accidentally pass by reading the fixture's own fallback content and
+   matching it against itself). Asserts <code>isFallback === false</code> and that the returned
+   content equals the fixture's real files <strong>and is explicitly not equal to</strong> the
+   fixture's own sample-house stand-in — this is what makes the test a genuine regression
+   guard: a resolver hardcoded to always return the fallback regardless of slug would
+   still produce non-null content, so a same-content-only comparison could not have caught
+   it. A third case in the same describe block confirms a different, genuinely-absent
+   slug against the <em>same</em> fixture directory still falls back correctly — proving the
+   resolver is per-slug, not just "always real once a baseDir happens to contain some
+   real folder."</li>
+<li><strong>Safety-guard coverage</strong>: <code>SAFE_SLUG_PATTERN</code> rejecting path-traversal-shaped slugs,
+   <code>readContentEngineFiles</code> returning <code>null</code> (never throwing) for one, and returning
+   <code>null</code> when only one of the two required files exists (partial data is treated the
+   same as no data — a page must never render an engineering panel with no matching
+   flight log, or vice versa).</li>
+</ol>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>Not directly importable — this is a page, not a component. To find it: sign in at
+<code>/enter-passcode</code>, then visit <code>/properties/&lt;slug&gt;/engine</code> (e.g.
+<code>/properties/2806-prado/engine</code>, which today always shows the fallback banner, since no
+real per-slug data exists yet). The page composes:</p>
+<ul>
+<li><code>&lt;VoxelScene grid={grid} /&gt;</code> (<code>app/properties/[slug]/engine/VoxelScene.tsx</code>) — a thin
+  wrapper fixing the <code>&lt;VoxelTerrain&gt;</code>/<code>&lt;VoxelStructure&gt;</code> composition (structure centered
+  at grid cell <code>(16, 16)</code> on the 32×32 sample grid) into a single <code>next/dynamic</code>
+  boundary, so <code>EnginePageClient.tsx</code> only needs one dynamic import for the whole scene
+  rather than nesting two.</li>
+<li>An "Engineering" panel — the resolved <code>engineeringMarkdown</code>, rendered as preformatted
+  text (<code>&lt;pre className="whitespace-pre-wrap"&gt;</code>). No markdown-rendering library is a
+  dependency of this repo; the content is short, already-readable structured markdown, so
+  plain preformatted text avoids both a new dependency for one display-only panel and the
+  <code>dangerouslySetInnerHTML</code> risk of a hand-rolled converter.</li>
+<li>A "Flight Log" panel — the resolved <code>flightLog: FlightLogEntry[]</code>, rendered as a plain
+  table (time in seconds, lat/lon to 5 decimal places, altitude in meters), keyed by each
+  row's <code>timestampMs</code> (monotonic and unique per entry, a stable key).</li>
+</ul>
+<h2 id="phase-fit">Phase fit<a class="headerlink" href="#phase-fit" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>This epic:</strong> the gated content-engine page, the per-slug real-vs-fallback
+  resolution mechanism with a visible banner, and <code>FlightLogEntry</code> scoped to exactly
+  this page's display need.</li>
+<li><strong>Deferred, tracked but not built here:</strong> per-property real terrain resolution (see
+  "What is, and isn't, covered by this resolution" above) once real WebODM/DSM output
+  exists for a given slug.</li>
+<li><strong>Next (per the operator's 2026-08-07 priority order):</strong> the telemetry-driven video
+  overlay epic defines its own richer telemetry type against its own real requirements —
+  it does not extend <code>FlightLogEntry</code> (see the section above).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.instant", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

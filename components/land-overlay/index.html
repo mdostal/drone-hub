@@ -1,0 +1,1618 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shadcn-style component framework for drone property intelligence — plug-and-play React components with live demos and docs.">
+      
+      
+      
+        <link rel="canonical" href="https://mdostal.github.io/drone-hub/components/land-overlay/">
+      
+      
+        <link rel="prev" href="../gallery/">
+      
+      
+        <link rel="next" href="../layer-viewer/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Land overlay — geo-anchored 3D models on <LayerViewer> (hive spec) - drone-hub</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#land-overlay-geo-anchored-3d-models-on-layerviewer-hive-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="drone-hub" class="md-header__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            drone-hub
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="drone-hub" class="md-nav__button md-logo" aria-label="drone-hub" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    drone-hub
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mdostal/drone-hub" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mdostal/drone-hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drone-hub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CBA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drone platform — cost-benefit analysis + build plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content engine — the /properties/[slug]/engine page (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileList&gt; — file viewer / download list (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FileUpload&gt; — drag-and-drop / click-to-browse file picker (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flight-coverage-analyzer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;FlightCoverageAnalyzer&gt; — nadir-grid overlap judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Gallery&gt; — plain shots carousel (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land overlay — geo-anchored 3D models on &lt;LayerViewer&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-type-geoanchoredmodel-libgeo-model-typests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The type — GeoAnchoredModel (lib/geo-model-types.ts)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-custom-layer-engine-works-libmaplibre-model-layerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the custom-layer engine works (lib/maplibre-model-layer.ts)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How the custom-layer engine works (lib/maplibre-model-layer.ts)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-five-corrections-a-design-review-forced-into-the-naive-happy-path-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The five corrections a design review forced into the "naive happy path" recipe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-pure-unit-tested-core-vs-the-webgl-dependent-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The pure, unit-tested core vs. the WebGL-dependent shell
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-numeric-verification-approach-actually-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The numeric verification approach actually used
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-limitation-gltf-meshes-only-no-point-cloud-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current limitation — glTF meshes only, no point-cloud overlay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixed-geomaticomaplibre-cog-protocol-misreported-wgs84-bounds-for-non-epsg3857-cogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed — @geomatico/maplibre-cog-protocol misreported WGS84 bounds for non-EPSG:3857 COGs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layer-viewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;LayerViewer&gt; — georeferenced layer map viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../minecraft-export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minecraft export — real .schem download for &lt;VoxelTerrain&gt; (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model3d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;Model3D&gt; — glTF mesh viewer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;ProcessingStatus&gt; — presentational job-status indicator (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;TourBuilder&gt; — visual tour.json authoring tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-annotator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoAnnotator&gt; — scrub, zoom, draw, and export a single annotated frame (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VideoTour&gt; — interactive fly-through tour (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voxel-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    &lt;VoxelTerrain&gt; + &lt;VoxelStructure&gt; — blocky voxel terrain renderer (hive spec)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-operator-intent-honor-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why (operator intent — honor this)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-type-geoanchoredmodel-libgeo-model-typests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The type — GeoAnchoredModel (lib/geo-model-types.ts)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-custom-layer-engine-works-libmaplibre-model-layerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the custom-layer engine works (lib/maplibre-model-layer.ts)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How the custom-layer engine works (lib/maplibre-model-layer.ts)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-five-corrections-a-design-review-forced-into-the-naive-happy-path-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The five corrections a design review forced into the "naive happy path" recipe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-pure-unit-tested-core-vs-the-webgl-dependent-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The pure, unit-tested core vs. the WebGL-dependent shell
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-numeric-verification-approach-actually-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The numeric verification approach actually used
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-limitation-gltf-meshes-only-no-point-cloud-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current limitation — glTF meshes only, no point-cloud overlay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixed-geomaticomaplibre-cog-protocol-misreported-wgs84-bounds-for-non-epsg3857-cogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed — @geomatico/maplibre-cog-protocol misreported WGS84 bounds for non-EPSG:3857 COGs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase fit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-data-update-2806-prado-real-georeferenced-fix-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real data update (2806 Prado, real georeferenced-fix story)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real data update (2806 Prado, real georeferenced-fix story)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v2-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2 update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="land-overlay-geo-anchored-3d-models-on-layerviewer-hive-spec">Land overlay — geo-anchored 3D models on <code>&lt;LayerViewer&gt;</code> (hive spec)<a class="headerlink" href="#land-overlay-geo-anchored-3d-models-on-layerviewer-hive-spec" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>This is not a new component.</strong> It's a capability extension of
+<strong><code>&lt;LayerViewer&gt;</code></strong> (see <code>docs/components/layer-viewer.md</code>, which this doc
+assumes and cross-references throughout): a new <code>models?: GeoAnchoredModel[]</code>
+prop that composites real 3D glTF meshes onto the same georeferenced map
+<code>&lt;LayerViewer&gt;</code> already owns, anchored at a real lat/lon so a model reads as
+genuinely "in the land" rather than a flat icon. There is no <code>&lt;LandOverlay&gt;</code>
+import — you use <code>&lt;LayerViewer models={...} /&gt;</code>.</p>
+</blockquote>
+<p><strong>Design discussion (RESOLVED architecture — read first):</strong>
+<code>.pHive/epics/land-overlay/docs/design-discussion.md</code> — this doc documents
+those decisions, it does not re-derive them.</p>
+<h2 id="why-operator-intent-honor-this">Why (operator intent — honor this)<a class="headerlink" href="#why-operator-intent-honor-this" title="Permanent link">&para;</a></h2>
+<p>CBA's target pipeline (nadir passes → WebODM → orthomosaic + DSM + point cloud
++ glTF mesh) and CLAUDE.md's 2026-08-07 vision expansion both point at the
+same next step after <code>&lt;Model3D&gt;</code> shipped the free-floating glTF viewer:
+composite that mesh <em>onto the map</em>, not just in its own orbiting canvas.
+<code>&lt;Model3D&gt;</code>'s own doc deliberately deferred inventing a geo-anchoring type
+(<code>ModelDef {id, url, title}</code> carries no <code>scale</code>/<code>position</code>/lat-lon — see
+<code>docs/components/model3d.md</code>'s "Deliberately deferred" section) until an epic
+that actually needed it existed. This epic is that epic, and it's also the
+confirmed prerequisite for what's queued next (the Minecraft voxelizer /
+content-engine work — CLAUDE.md's priority order: Model3D → land overlay →
+Minecraft voxelizer → telemetry-driven video overlay), which will reuse the
+same "3D content composited into the map" muscle this epic built.</p>
+<h2 id="the-type-geoanchoredmodel-libgeo-model-typests">The type — <code>GeoAnchoredModel</code> (<code>lib/geo-model-types.ts</code>)<a class="headerlink" href="#the-type-geoanchoredmodel-libgeo-model-typests" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">GeoAnchoredModel</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">lat</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">lon</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">altitudeMeters?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">      </span><span class="c1">// default 0 (ground level)</span>
+<span class="w">  </span><span class="nx">rotationDegrees?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// yaw about the vertical axis, default 0</span>
+<span class="w">  </span><span class="nx">scale?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">               </span><span class="c1">// multiplier on top of meters-per-glTF-unit, default 1</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is <strong>deliberately a different shape from <code>&lt;Model3D&gt;</code>'s <code>ModelDef</code></strong>, not
+a superset or a shared base — <code>ModelDef</code> is scene-space (a mesh at the origin
+of its own free-floating <code>&lt;Canvas&gt;</code>); <code>GeoAnchoredModel</code> is geo-space (a mesh
+draped onto a real map at a real lat/lon, the same way every entry in
+<code>lib/layer-types.ts</code>'s <code>LayerDef</code> registry is real-world-anchored). Do not
+import, extend, or alias one from the other — <code>lib/geo-model-types.ts</code>'s own
+header comment states this explicitly, and it's asserted by the field-level
+diff having no overlap beyond <code>{id, url, title}</code>.</p>
+<p><code>scale</code> is <em>not</em> a raw Mercator-space multiplier. <code>createModelLayer</code> already
+computes a meters→Mercator-units factor from the anchor's latitude
+(<code>MercatorCoordinate.meterInMercatorCoordinateUnits()</code>); <code>scale</code> sits on top
+of that and answers "how many real-world meters should one unit of the
+glTF's own coordinate space represent" — i.e. it corrects for a glTF authored
+in some arbitrary unit rather than meters. The sample duck (an oversized,
+non-metric export — its position-accessor min/max span roughly 165×154×115
+raw units) needed <code>scale: 10</code> to read as a recognizable, non-speck,
+non-frame-swallowing silhouette; that number was arrived at empirically
+(Playwright pixel readback at <code>scale: 0.1</code>, <code>5</code>, <code>10</code>, <code>50</code>), not guessed —
+see <code>app/(showcase)/components/land-overlay/page.tsx</code>'s <code>SAMPLE_MODEL_SCALE</code>
+comment for the full search.</p>
+<h2 id="how-the-custom-layer-engine-works-libmaplibre-model-layerts">How the custom-layer engine works (<code>lib/maplibre-model-layer.ts</code>)<a class="headerlink" href="#how-the-custom-layer-engine-works-libmaplibre-model-layerts" title="Permanent link">&para;</a></h2>
+<p><code>&lt;LayerViewer&gt;</code> doesn't render 3D models itself. <code>createModelLayer(model:
+GeoAnchoredModel): ModelLayer</code> builds a MapLibre <code>CustomLayerInterface</code> — a
+layer type where MapLibre hands you its raw WebGL context and calls your own
+<code>onAdd</code>/<code>render</code>/<code>onRemove</code> once per frame, instead of MapLibre drawing
+anything for you. <code>LayerViewer.tsx</code> just calls
+<code>map.addLayer(createModelLayer(model))</code> / <code>map.removeLayer(model.id)</code>, the
+same arm's-length way it already wires in <code>@geomatico/maplibre-cog-protocol</code>
+(see layer-viewer.md's "Tech" section) — it does not reimplement any of this
+inline.</p>
+<p><strong>Why raw three.js, not <code>@react-three/fiber</code> (unlike <code>&lt;Model3D&gt;</code>):</strong> r3f's
+<code>&lt;Canvas&gt;</code> assumes it owns the render loop and the WebGL context. A MapLibre
+custom layer has to render <em>into</em> MapLibre's existing loop and context
+instead, so this is a genuinely different code path from <code>&lt;Model3D&gt;</code>'s r3f
+approach, not a style choice — <code>lib/maplibre-model-layer.ts</code>'s own header
+comment is explicit about this.</p>
+<p><strong>The pipeline, per frame:</strong></p>
+<ol>
+<li><strong><code>onAdd(map, gl)</code></strong> (called once, synchronously, when the layer is
+   added): kicks off a lazy <code>import("three")</code> + <code>GLTFLoader</code> +
+   <code>maplibre-gl</code>'s <code>MercatorCoordinate</code> (mirrors <code>LayerViewer.tsx</code>'s own
+   <code>loadMapLibreModules()</code> lazy-load pattern — <code>maplibre-gl</code> touches
+   browser-only globals at module-load time and would crash <code>next build</code>'s
+   server-side prerender if imported eagerly). Once resolved, it builds a
+   <code>THREE.Scene</code> + a minimal two-light rig (ambient + one directional — glTF
+   PBR materials render solid black with zero scene lights; this was found
+   live during the showcase-page story, not anticipated up front), a
+   <code>THREE.Camera</code> whose <code>projectionMatrix</code> is fully overwritten every frame
+   (its constructor params are irrelevant), and a <code>THREE.WebGLRenderer</code>
+   constructed with <code>{ canvas: map.getCanvas(), context: gl }</code> — <strong>sharing</strong>
+   MapLibre's own GL context rather than owning a separate one, with
+   <code>autoClear = false</code> so it doesn't wipe what MapLibre already drew this
+   frame (the basemap + raster/geojson layers, drawn earlier in the frame).
+   It also converts <code>{lat, lon, altitudeMeters}</code> to Mercator space via
+   <code>MercatorCoordinate.fromLngLat</code> and builds the model's object-space →
+   Mercator-space transform (<code>buildModelMatrix</code>, pure/unit-tested — see
+   below), then kicks off <code>GLTFLoader.load(model.url, ...)</code>.</li>
+<li><strong><code>render(gl, matrix)</code></strong> (called by MapLibre once per map frame,
+   <code>matrix</code> = MapLibre's current projection matrix for that frame):
+   multiplies MapLibre's matrix by the model's own transform
+   (<code>combineMatrices</code>, pure), hands the result to the three.js camera as its
+   <code>projectionMatrix</code>, and calls <code>renderer.render(scene, camera)</code>. This one
+   multiply is what makes the model automatically track pan/zoom/tilt/bearing
+   — MapLibre owns all the camera math every frame; three.js only ever draws
+   into the matrix it's handed.</li>
+<li><strong><code>onRemove()</code></strong>: disposes every geometry/material/texture the loaded glTF
+   created (three.js does not garbage-collect GPU resources just because a
+   reference is dropped) and clears all internal references.</li>
+</ol>
+<h3 id="the-five-corrections-a-design-review-forced-into-the-naive-happy-path-recipe">The five corrections a design review forced into the "naive happy path" recipe<a class="headerlink" href="#the-five-corrections-a-design-review-forced-into-the-naive-happy-path-recipe" title="Permanent link">&para;</a></h3>
+<p>MapLibre's own official custom-layer example is a straight-line happy path —
+<code>onAdd</code> loads synchronously, <code>render</code> always draws, cleanup is an
+afterthought. None of that survives a real, ref-counted, remount-tolerant
+React component. Every one of these is load-bearing, not defensive
+boilerplate — a future maintainer touching this file should not "simplify"
+any of them away:</p>
+<ol>
+<li><strong>Ready-guard.</strong> <code>onAdd</code> is synchronous; loading <code>three</code>/<code>GLTFLoader</code> and
+   fetching/parsing the glTF are both async. <code>render()</code> checks <code>if (!ready)
+   return;</code> <strong>first, before touching anything else</strong> — MapLibre <em>will</em> call
+   <code>render()</code> before the model has loaded on a real map, and without this
+   guard that's a null-dereference or a draw call against a half-built scene.</li>
+<li><strong>Cancelled-guard.</strong> Checked twice: once before the lazy module import
+   resolves, and once — the case that actually matters — before the
+   in-flight <code>GLTFLoader.load()</code> success callback calls <code>scene.add()</code>. Both
+   guard against <code>onRemove()</code> firing (component unmounts, or the <code>models</code>
+   prop drops this entry) while an async step is still in flight; without it,
+   a load that resolves post-unmount adds a mesh to a scene nobody will ever
+   render or dispose again — a leak, not just a wasted draw.</li>
+<li><strong><code>resetState()</code> after every <code>render()</code>, before returning to MapLibre.</strong>
+   three.js's <code>WebGLRenderer</code> mutates GL state (depth/blend/cull/viewport) as
+   a side effect of <code>render()</code>. Left unreset, MapLibre's <em>own</em> subsequent
+   layer draws — the ortho/hillshade/parcel-boundary raster/geojson layers,
+   drawn after this custom layer in z-order — can render corrupted. This is
+   the single correction with its own dedicated regression test (see
+   "GL-state-pollution regression" below).</li>
+<li><strong>Full disposal on <code>onRemove()</code>.</strong> Every geometry, material, and texture
+   the loaded glTF created gets <code>.dispose()</code>'d explicitly — three.js objects
+   don't auto-release GPU buffers/textures/programs just because a JS
+   reference is dropped. Textures are found via a fixed list of known
+   texture-slot property names (<code>map</code>, <code>normalMap</code>, <code>roughnessMap</code>, …) since
+   they live as named properties on a material, not in a traversable
+   collection.</li>
+<li><strong>Scene-graph-wide opacity.</strong> Raw three.js has no single "layer opacity"
+   knob the way MapLibre's <code>raster-opacity</code> paint property is one number.
+   <code>setOpacity()</code> walks the whole loaded scene graph and stamps
+   <code>transparent = true; opacity = value</code> onto every mesh's material(s)
+   individually (a mesh may carry one material or an array of them).</li>
+</ol>
+<p>Plus <strong>the lighting fix</strong> found live during the showcase-page story (the
+duck rendered as a solid black silhouette — position/scale were correct,
+only lighting was missing) and <strong><code>getMap()</code>/<code>isReady()</code></strong>, added by the
+test-suite story purely so Playwright could reach the live <code>Map</code> instance and
+wait deterministically for "the model has actually rendered a frame" instead
+of guessing with a fixed timeout (see below).</p>
+<h3 id="the-pure-unit-tested-core-vs-the-webgl-dependent-shell">The pure, unit-tested core vs. the WebGL-dependent shell<a class="headerlink" href="#the-pure-unit-tested-core-vs-the-webgl-dependent-shell" title="Permanent link">&para;</a></h3>
+<p><code>lib/maplibre-model-layer.ts</code>'s own header comment lays out a "TESTABILITY
+MAP" worth repeating here, because it explains why this doc cites two
+different kinds of test evidence:</p>
+<ul>
+<li><code>buildModelMatrix</code> / <code>combineMatrices</code> / <code>multiplyMat4</code> and the
+  <code>make*Mat4</code> helpers are 100% pure array arithmetic — no three.js, no
+  maplibre-gl, no WebGL — fully covered by ordinary Vitest unit tests.</li>
+<li><code>applyOpacityToSceneGraph</code> / <code>disposeSceneGraph</code> are pure recursive
+  traversals typed against <strong>minimal structural shapes</strong>
+  (<code>Object3DLike</code>/<code>DisposableObject3DLike</code>, not <code>THREE.Object3D</code> itself), so
+  they're exercised with plain object literals in unit tests, while real
+  <code>THREE.Group</code>/<code>Mesh</code>/<code>Material</code> instances satisfy those shapes for free at
+  runtime (structural typing) — same functions, no separate "real" version.</li>
+<li><code>createModelLayer()</code>'s own <code>onAdd</code>/<code>render</code>/<code>onRemove</code> control flow (do the
+  guards fire in the right order? is <code>resetState()</code> actually called? does
+  disposal walk the right objects?) is unit-tested by mocking the <code>"three"</code>
+  and <code>GLTFLoader</code> module specifiers with lightweight call-recording fakes —
+  this proves the <strong>wiring</strong>, not that the resulting pixels are correct.
+  jsdom has no WebGL; a real <code>new THREE.WebGLRenderer(...)</code> throws the
+  instant it queries a GL context under jsdom, so this file's <code>npm test</code>
+  coverage stops at wiring by construction, not by oversight.</li>
+<li>Whether the rendered pixels actually land in the right place on screen is
+  <strong>Playwright's job exclusively</strong> — see the next section.</li>
+</ul>
+<h2 id="the-numeric-verification-approach-actually-used">The numeric verification approach actually used<a class="headerlink" href="#the-numeric-verification-approach-actually-used" title="Permanent link">&para;</a></h2>
+<p>The epic's design discussion was explicit, after adversarial review, that
+qualitative "looks roughly right" checking is not sufficient for the hardest
+rendering work in the project — a matrix/unit mistake in this code tends to
+fail <em>silently</em> (nothing renders, or renders at the wrong scale/position)
+rather than erroring loudly. <code>lib/maplibre-model-layer.placement.test.ts</code>
+(run via <code>npx playwright test</code>, <strong>not</strong> <code>npm test</code> — jsdom has no WebGL) is
+where that commitment is honored. Concretely, against the real
+<code>/components/land-overlay</code> showcase page:</p>
+<ul>
+<li><strong>Reaching the live map instance.</strong> <code>page.evaluate</code> runs in the browser
+  with no way to reach into a React ref from outside the component tree, and
+  <code>&lt;LayerViewer&gt;</code> doesn't otherwise expose its internal <code>Map</code>. The showcase
+  page stashes its <code>LayerViewerHandle</code> ref onto
+  <code>window.__layerViewerHandle</code> in a <code>NODE_ENV !== "production"</code>-gated effect,
+  purely for this — <code>LayerViewerHandle</code> grew a <code>getMap()</code> accessor
+  specifically to make that handle useful for this, and <code>ModelLayer</code> grew
+  <code>isReady()</code> so the test can wait for "the model has actually rendered a
+  frame" instead of a fixed timeout (<code>map.getLayer("duck").implementation
+  .isReady()</code>).</li>
+<li><strong>Reading back real rendered pixels.</strong> <code>&lt;canvas&gt;.getImageData()</code> on a WebGL
+  canvas only returns real content if the readback happens <strong>synchronously
+  inside the map's own <code>"render"</code> event callback</strong>, before control returns
+  to the browser's event loop/compositor (<code>&lt;LayerViewer&gt;</code>'s context isn't
+  created with <code>preserveDrawingBuffer: true</code>, matching MapLibre's own
+  default) — verified live: a <code>setTimeout</code>/microtask readback after
+  <code>"render"</code> reliably came back all-zero/transparent; a synchronous readback
+  inside the <code>"render"</code> callback reliably captured the real frame. Every
+  capture uses <code>map.once("render", () =&gt; { /* synchronous getImageData */
+  })</code> + <code>map.triggerRepaint()</code>.</li>
+<li><strong>Locating the model in the captured frame.</strong> A duck-colored-pixel mask
+  (<code>R - B &gt; 60</code> per RGBA pixel) isolates the sample duck (the classic
+  Khronos "Duck" glTF, yellow-bodied/orange-beaked) from every background
+  this scene can show at its anchor coordinates (satellite tiles, Esri's
+  "no imagery" placeholder, the sample parcel's green boundary fill) — those
+  cluster at <code>R - B</code> in roughly <code>[-15, 35]</code>; the duck clusters in roughly
+  <code>[140, 255]</code>. The masked pixels' intensity centroid and bounding box are
+  the model's <strong>actual</strong> rendered position.</li>
+<li><strong>The comparison, at each camera state, is two independent numeric
+  checks:</strong></li>
+<li><strong>Containment</strong> (the story's literal ask): <code>map.project(lngLat)</code> of the
+     model's real anchor — the <strong>expected</strong> screen position, straight from
+     MapLibre's own camera math — must land inside the duck's actual
+     rendered bounding box (±20px slop for anti-aliasing/mask-threshold
+     edge effects). This holds for <em>any</em> correct rigid transform, because
+     the anchor is verified (by reading the glTF's own accessor min/max) to
+     sit within the mesh's local horizontal footprint.</li>
+<li><strong>Golden-centroid distance</strong> (tighter, more sensitive to
+     rotation/axis-sign bugs specifically): the measured centroid must be
+     within 15px of a previously-measured reference value for that exact
+     camera state — rendering here is fully deterministic, so two
+     independent live measurements against known-correct code reproduced
+     each golden value to sub-pixel precision.</li>
+<li><strong>The pitch/bearing sweep is mandatory, not optional.</strong> Both checks above
+  run at <strong>pitch 0/bearing 0</strong> (default view) <em>and</em> <strong>pitch 45/bearing 90</strong>
+  (tilted/rotated) — a matrix bug that cancels out at the default view is a
+  real, common failure mode this sweep exists specifically to catch. This
+  wasn't just asserted to matter: dropping the fixed glTF-Y-up →
+  Mercator-Z-up rotation term from <code>buildModelMatrix</code>'s multiply chain was
+  deliberately injected during development and re-measured — it shifted the
+  golden-centroid distance to ~90–95px at <strong>both</strong> camera states (i.e. it
+  does not conveniently cancel out at the default view for this asset),
+  comfortably outside the 15px tolerance. The same injected bug is also
+  caught more directly by a unit test asserting the Y-axis handedness sign.</li>
+<li><strong>GL-state-pollution regression</strong> (Correction 3 above, made concrete):
+  compares a pixel fingerprint of the ortho layer's own appearance on a
+  page that never adds the model layer at all
+  (<code>/components/layer-viewer</code>, used as ground truth) against the same
+  fingerprint on <code>/components/land-overlay</code> <em>after</em> the model layer has
+  rendered at least one frame <strong>and</strong> the ortho layer has been toggled off
+  then back on through the real <code>&lt;LayerControl&gt;</code>-equivalent imperative-handle
+  path (<code>toggleLayer</code>). Every sampled pixel must match within a small
+  decode/anti-aliasing tolerance (<code>8</code> per channel) — zero samples are
+  allowed to exceed it. A genuinely separate model-free page is used as the
+  "before" state rather than an early-as-possible capture on the same page,
+  specifically because the duck's glTF is a small local asset that can load
+  fast enough to race an early-page-load capture — a construction-based
+  ground truth sidesteps that instead of relying on timing.</li>
+</ul>
+<h2 id="current-limitation-gltf-meshes-only-no-point-cloud-overlay">Current limitation — glTF meshes only, no point-cloud overlay<a class="headerlink" href="#current-limitation-gltf-meshes-only-no-point-cloud-overlay" title="Permanent link">&para;</a></h2>
+<p><code>GeoAnchoredModel</code>/<code>createModelLayer</code> only render glTF/glb meshes via
+three.js's <code>GLTFLoader</code>. There is no path here for draping a raw point cloud
+(COPC/LAZ, potree) onto the map — that's CBA's separate, later
+point-cloud-rendering phase, tracked against <code>&lt;Model3D&gt;</code> too (see
+<code>docs/components/model3d.md</code>'s Phase fit: "P3 — point-cloud rendering as an
+alternative or companion data source to the glTF mesh path"). Nothing in
+<code>lib/maplibre-model-layer.ts</code> assumes or blocks a future point-cloud custom
+layer being added alongside this one; it just doesn't exist yet.</p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">LayerViewer</span><span class="p">,</span><span class="w"> </span><span class="nx">LayerControl</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">"@/components/LayerViewer"</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">LayerDef</span><span class="p">,</span><span class="w"> </span><span class="nx">LayerViewerHandle</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">"@/components/LayerViewer"</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">GeoAnchoredModel</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">"@/lib/geo-model-types"</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">viewerRef</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useRef</span><span class="p">&lt;</span><span class="nt">LayerViewerHandle</span><span class="p">&gt;(</span><span class="kc">null</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">layers</span><span class="p">,</span><span class="w"> </span><span class="nx">setLayers</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">&lt;</span><span class="nt">LayerDef</span><span class="err">[]</span><span class="p">&gt;([]);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">models</span><span class="o">:</span><span class="w"> </span><span class="kt">GeoAnchoredModel</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">"duck"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s2">"/model3d-samples/duck/model.glb"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s2">"Duck (sample glTF)"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">lat</span><span class="o">:</span><span class="w"> </span><span class="kt">73.46748426410694</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">lon</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">56.808326092516914</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">altitudeMeters</span><span class="o">:</span><span class="w"> </span><span class="kt">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">scale</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">];</span>
+
+<span class="p">&lt;</span><span class="nt">LayerViewer</span>
+<span class="w">  </span><span class="na">ref</span><span class="o">=</span><span class="p">{</span><span class="nx">viewerRef</span><span class="p">}</span>
+<span class="w">  </span><span class="na">manifest</span><span class="o">=</span><span class="s">"/layer-viewer-samples/2806-prado/layers.json"</span>
+<span class="w">  </span><span class="na">models</span><span class="o">=</span><span class="p">{</span><span class="nx">models</span><span class="p">}</span>
+<span class="w">  </span><span class="na">onLayersChange</span><span class="o">=</span><span class="p">{</span><span class="nx">setLayers</span><span class="p">}</span>
+<span class="p">/&gt;</span>
+<span class="p">&lt;</span><span class="nt">LayerControl</span>
+<span class="w">  </span><span class="na">layers</span><span class="o">=</span><span class="p">{</span><span class="nx">layers</span><span class="p">}</span>
+<span class="w">  </span><span class="na">onToggle</span><span class="o">=</span><span class="p">{(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">toggle</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">viewerRef</span><span class="p">.</span><span class="nx">current</span><span class="o">?</span><span class="p">.</span><span class="nx">toggleLayer</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">toggle</span><span class="p">)}</span>
+<span class="w">  </span><span class="na">onOpacityChange</span><span class="o">=</span><span class="p">{(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">opacity</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">viewerRef</span><span class="p">.</span><span class="nx">current</span><span class="o">?</span><span class="p">.</span><span class="nx">setOpacity</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">opacity</span><span class="p">)}</span>
+<span class="p">/&gt;</span>
+</code></pre></div>
+<p><code>models</code> is fully optional and backward-compatible: omitted entirely (every
+pre-existing <code>&lt;LayerViewer&gt;</code> usage), no model-layer code runs at all —
+<code>createModelLayer</code> is imported but never called. The prop is diffed by <code>id</code>
+against what's currently added to the map on every change (an entry added
+gets <code>map.addLayer(createModelLayer(model))</code>'d, one removed gets
+<code>map.removeLayer(id)</code>'d, which triggers <code>onRemove</code>'s own cleanup).</p>
+<p>The showcase demo lives at <code>/components/land-overlay</code>
+(<code>app/(showcase)/components/land-overlay/page.tsx</code>), public/ungated, same as
+every other <code>app/(showcase)/components/*</code> page — deliberately a separate page
+from <code>/components/layer-viewer</code>, not a modification of it, since this is a
+distinct capability worth its own demo (the same reasoning <code>&lt;Model3D&gt;</code> got
+its own page rather than being bolted onto <code>&lt;LayerViewer&gt;</code>'s).</p>
+<h2 id="fixed-geomaticomaplibre-cog-protocol-misreported-wgs84-bounds-for-non-epsg3857-cogs">Fixed — <code>@geomatico/maplibre-cog-protocol</code> misreported WGS84 bounds for non-EPSG:3857 COGs<a class="headerlink" href="#fixed-geomaticomaplibre-cog-protocol-misreported-wgs84-bounds-for-non-epsg3857-cogs" title="Permanent link">&para;</a></h2>
+<p><strong>Status: fixed (2026-08-08), by reprojecting the sample COGs.</strong> This
+section previously documented an open bug; kept here (renamed from "Known
+open issue") since the root-cause writeup below is still the reference for
+why any future non-3857 sample/real COG would hit the same failure mode.</p>
+<p>This bug was <strong>not specific to land-overlay</strong> — it lived in
+<code>&lt;LayerViewer&gt;</code>'s own COG-loading path (<code>@geomatico/maplibre-cog-protocol</code>,
+wired in by the layer-viewer epic) and affected <code>/components/layer-viewer</code>
+too. It was pinned down precisely during this epic's ground-truth placement
+work: verifying the sample duck's real-world anchor against <code>map.project()</code>
+required knowing the sample ortho's <em>actual</em> geography, which is when the
+mismatch became impossible to miss.</p>
+<p><strong>Root cause:</strong> <code>@geomatico/maplibre-cog-protocol</code> v0.4.0 hardcodes a Web
+Mercator assumption for every COG it loads — its minified bundle constructs
+<code>new SphericalMercator({size:256, antimeridian:true})</code> and derives tile
+bounds via <code>bbox(x,y,z,false,"900913")</code> (the "900913" EPSG:3857 alias),
+unconditionally, regardless of the COG's actual embedded CRS. It never reads
+the file's real coordinate-reference-system metadata. So a COG whose pixel
+grid isn't already in EPSG:3857 has its raw projected-meter values
+misinterpreted as if they <em>were</em> Web Mercator meters.</p>
+<p><code>public/layer-viewer-samples/2806-prado/ortho.tif</code> was a real, valid COG in
+<strong>EPSG:32621</strong> (UTM zone 21N) — verified directly with <code>rasterio</code>, its true
+WGS84 extent is ~<strong>73.47°N, 56.8°W</strong> (high Arctic — matches the sample
+duck/parcel coordinates used throughout this epic). Before the fix, the
+library's <code>RasterTileSource.bounds</code> for this file, live-verified via
+<code>map.getSource("layer-ortho").bounds</code>, came back as <strong>lon 3.35–5.74 / lat
+58.25–59.49</strong> — off the coast of <strong>Norway</strong> — matching the Web Mercator
+inverse projection of the COG's raw UTM meter values. The actual tile
+fetches shared the same bug, so the ortho imagery itself painted near
+Norway, not at the real parcel location.</p>
+<p><strong>The fix:</strong> reprojected both <code>ortho.tif</code> and <code>hillshade.tif</code> from
+EPSG:32621 to EPSG:3857 ahead of time (<code>rio warp --dst-crs EPSG:3857
+--resampling bilinear</code>, then re-cogged with <code>rio cogeo create</code> and validated
+with <code>rio cogeo validate</code>), rather than patching the library. This sidesteps
+the library's hardcoded assumption entirely and matches CLAUDE.md's own
+target pipeline, which already tiles/reprojects WebODM output before it
+reaches <code>&lt;LayerViewer&gt;</code> (target format is PMTiles/COG in a web-safe
+projection already). Post-fix, <code>ortho.tif</code>'s computed WGS84 bounds are
+<code>[-61.288, 72.230, -52.302, 74.663]</code> — correctly containing the known
+duck/parcel coordinates (lon -56.808, lat 73.467). Both showcase pages
+(<code>/components/layer-viewer</code>, <code>/components/land-overlay</code>) now land on the
+correct real-world location by default, with no manual pan/zoom or
+<code>map.jumpTo()</code> workaround needed.</p>
+<p><strong>Side effect:</strong> <code>hillshade.tif</code>'s pixel dimensions shifted from 512×512 to
+549×522 and its value range from [78,216] to [0,213] due to bilinear
+resampling during reprojection. <code>public/minecraft-samples/2806-prado/heightmap.json</code>
+(minecraft-content-engine epic) derives from this file, so it was
+regenerated in lockstep using the same 32×32 average-pool +
+linear-quantize-to-[1,8] approach as originally used — see
+<code>docs/components/voxel-terrain.md</code> for that derivation's own notes. Both
+<code>public/layer-viewer-samples/2806-prado/manifest.test.ts</code> and
+<code>public/minecraft-samples/2806-prado/heightmap.test.ts</code> re-derive/validate
+against the actual committed files at test time (not hardcoded CRS/bounds
+values), so both continued passing with zero test-file edits.</p>
+<p><strong>Any future real or sample COG that isn't already EPSG:3857 will hit this
+identical bug</strong> — reproject ahead of time (as done here) rather than relying
+on the library to handle it. If someone wants to fix it at the library layer
+instead, the specific code to patch is <code>@geomatico/maplibre-cog-protocol</code>'s
+<code>_e=({x,y,z})=&gt;Le.bbox(x,y,z,false,"900913")</code> (or its equivalent in whatever
+version is installed) — it needs to read the COG's actual CRS and reproject
+accordingly rather than assuming "900913" unconditionally.</p>
+<h2 id="phase-fit">Phase fit<a class="headerlink" href="#phase-fit" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>P1 (<code>&lt;Model3D&gt;</code>, done):</strong> free-floating glTF mesh viewer, scene-space
+  only, no geo-anchoring.</li>
+<li><strong>P2 (this epic):</strong> <code>GeoAnchoredModel</code> + <code>createModelLayer</code> + <code>&lt;LayerViewer&gt;</code>'s
+  <code>models</code> prop — a glTF mesh composited onto the real georeferenced map at a
+  real lat/lon, numerically verified against <code>map.project()</code> across a
+  pitch/bearing sweep, with a GL-state-pollution regression guard.</li>
+<li><strong>P3 (per CBA, not built here):</strong> point-cloud rendering (potree/COPC) as an
+  alternative or companion data source to the glTF-mesh path this epic ships.</li>
+<li><strong>Next (per the operator's 2026-08-07 priority order):</strong> the Minecraft
+  voxelizer/content-engine epic reuses this epic's "3D content composited
+  into the map" muscle — and, per <code>.pHive/CONTEXT.md</code>'s Conventions entry,
+  its likely need for its own MapLibre custom layer should follow this
+  module's <code>resetState()</code>/ready-guard/cancelled-guard pattern rather than
+  rediscovering it.</li>
+</ul>
+<h2 id="real-data-update-2806-prado-real-georeferenced-fix-story">Real data update (2806 Prado, real georeferenced-fix story)<a class="headerlink" href="#real-data-update-2806-prado-real-georeferenced-fix-story" title="Permanent link">&para;</a></h2>
+<p>The underlying <code>&lt;LayerViewer&gt;</code> sample data (ortho/hillshade/parcel/contours) was replaced
+with the operator's real, rights-cleared 2806 Prado St photogrammetry — see
+<code>docs/components/layer-viewer.md</code>'s own "Real data update" section for the full
+provenance/GPS-bug writeup. The sample duck's anchor moved to the new real parcel's
+centroid (~30.262°N/-97.708°W) and <code>scale</code>/<code>DUCK_ZOOM</code>/the golden-centroid values in
+<code>lib/maplibre-model-layer.placement.test.ts</code> were all re-verified LIVE against the new
+ortho (not blindly copied) — the default-camera golden centroid changed (from
+<code>{345.25, 235.82}</code> to <code>{363.32, 221.82}</code>, deterministic across two independent live runs);
+the rotated-camera golden and the R-B&gt;100 duck-color mask both still held unchanged.</p>
+<p>The demo model deliberately stayed the duck, not the real reconstructed Prado mesh now
+used by <code>&lt;Model3D&gt;</code>'s own showcase (<code>public/model3d-samples/prado/model.glb</code>): that mesh
+is Z-up in its raw ODM/OBJ export, and this component's absolute map-alignment requirement
+needs a real axis-correction pass (verified live, same as everything else in this file) —
+budget for that as its own follow-up, don't guess at it.</p>
+<h3 id="v2-update">v2 update<a class="headerlink" href="#v2-update" title="Permanent link">&para;</a></h3>
+<p>The underlying ortho was replaced again with v2 (nadir + oblique orbit — see
+<code>docs/components/layer-viewer.md</code>'s "v2 update" section). The duck's anchor and all golden
+pixel-centroid values above held unchanged — v2 was cropped to within ~15m of v1's original
+extent specifically to keep this placement test valid without re-deriving new goldens, and
+that was verified live (re-ran the full e2e placement suite against the v2 ortho, not
+assumed). The Z-up mesh/axis-correction follow-up noted above is still open.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.instant", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
